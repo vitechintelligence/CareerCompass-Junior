@@ -57,13 +57,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Curriculum activity is not published." }, { status: 409 });
   }
 
+  // Prefer a partner-managed class enrollment when one exists. Only learners who
+  // are not attached to a class use the personal/unclassed enrollment fallback.
   let enrollments = await sql`
-    select id
-    from student_enrollments
-    where student_id = ${profile.id}
-      and book_id = ${String(ref.book_id)}
-      and class_id is null
-      and status in ('active','completed')
+    select se.id, se.class_id, c.organization_id
+    from student_enrollments se
+    left join classes c on c.id = se.class_id
+    where se.student_id = ${profile.id}
+      and se.book_id = ${String(ref.book_id)}
+      and se.status in ('active','completed')
+    order by (se.class_id is null) asc, se.enrolled_at desc
     limit 1
   `;
 
@@ -74,16 +77,19 @@ export async function POST(request: Request) {
       on conflict do nothing
     `;
     enrollments = await sql`
-      select id
-      from student_enrollments
-      where student_id = ${profile.id}
-        and book_id = ${String(ref.book_id)}
-        and class_id is null
+      select se.id, se.class_id, c.organization_id
+      from student_enrollments se
+      left join classes c on c.id = se.class_id
+      where se.student_id = ${profile.id}
+        and se.book_id = ${String(ref.book_id)}
+      order by (se.class_id is null) asc, se.enrolled_at desc
       limit 1
     `;
   }
 
   const enrollmentId = String(enrollments[0]?.id ?? "");
+  const classId = enrollments[0]?.class_id ? String(enrollments[0].class_id) : null;
+  const organizationId = enrollments[0]?.organization_id ? String(enrollments[0].organization_id) : null;
   if (!enrollmentId) {
     return NextResponse.json({ error: "Unable to create learner enrollment." }, { status: 500 });
   }
@@ -178,6 +184,8 @@ export async function POST(request: Request) {
         insert into learning_capsules (
           semantic_id,
           learner_id,
+          organization_id,
+          class_id,
           source_type,
           source_id,
           title_en,
@@ -193,6 +201,8 @@ export async function POST(request: Request) {
         values (
           ${capsuleSemanticId},
           ${profile.id},
+          ${organizationId},
+          ${classId},
           'activity_attempt',
           ${attemptId},
           ${String(ref.title_en)},
@@ -206,6 +216,8 @@ export async function POST(request: Request) {
           current_date
         )
         on conflict (semantic_id) do update set
+          organization_id = excluded.organization_id,
+          class_id = excluded.class_id,
           source_id = excluded.source_id,
           evidence_summary = excluded.evidence_summary,
           integrity_hash = excluded.integrity_hash,
@@ -221,5 +233,6 @@ export async function POST(request: Request) {
     attemptNumber,
     progressPercent,
     capsuleCreated,
+    classScoped: Boolean(classId),
   });
 }
