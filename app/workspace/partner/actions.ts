@@ -89,6 +89,40 @@ export async function createClass(formData: FormData) {
   revalidatePath("/workspace/partner");
 }
 
+export async function activateTeacher(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const semanticId = String(formData.get("teacherSemanticId") || "").trim();
+  if (!organizationId || !semanticId) throw new Error("Organization and account ID are required.");
+
+  await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const account = await sql`
+    select id, account_type
+    from profiles
+    where semantic_id = ${semanticId}
+      and status = 'active'
+    limit 1
+  `;
+  const profileId = String(account[0]?.id || "");
+  if (!profileId) throw new Error("Active account not found.");
+  if (String(account[0]?.account_type) === "partner_admin" || String(account[0]?.account_type) === "platform_admin") {
+    throw new Error("Administrative accounts cannot be converted to teacher access here.");
+  }
+
+  await sql`
+    update profiles
+    set account_type = 'teacher', updated_at = now()
+    where id = ${profileId}
+  `;
+  await sql`
+    insert into organization_memberships (organization_id, profile_id, role, status)
+    values (${organizationId}, ${profileId}, 'teacher', 'active')
+    on conflict (organization_id, profile_id, role) do update set status = 'active'
+  `;
+
+  revalidatePath("/workspace/partner");
+}
+
 export async function assignTeacher(formData: FormData) {
   const classId = String(formData.get("classId") || "");
   const semanticId = String(formData.get("teacherSemanticId") || "").trim();
