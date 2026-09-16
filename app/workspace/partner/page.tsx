@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-import { assignTeacher, createClass, enrollStudent, requestPartnerAccess } from "./actions";
+import { activateTeacher, assignTeacher, createClass, enrollStudent, requestPartnerAccess } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -116,19 +116,31 @@ export default async function PartnerWorkspacePage() {
 
         <section className="workspaceGrid">
           <article className="panel">
-            <div className="eyebrow">People</div><h2 className="workspaceTitle">Assign activated teacher</h2>
-            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={assignTeacher} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Teacher semantic ID</span><input name="teacherSemanticId" required placeholder="vn-teacher-…" /></label><button className="button soft" type="submit">Assign teacher</button></form>}
+            <div className="eyebrow">Teacher activation</div><h2 className="workspaceTitle">Approve an account as teacher</h2>
+            <p className="muted">The teacher first creates normal account access. You then activate that account using its semantic ID; this prevents public self-promotion into staff roles.</p>
+            <form action={activateTeacher} className="workspaceForm">
+              <input type="hidden" name="organizationId" value={organizationId} />
+              <label><span>Account semantic ID</span><input name="teacherSemanticId" required placeholder="vn-learner-…" /></label>
+              <button className="button soft" type="submit">Activate teacher access</button>
+            </form>
           </article>
 
+          <article className="panel">
+            <div className="eyebrow">Class staffing</div><h2 className="workspaceTitle">Assign activated teacher</h2>
+            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={assignTeacher} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Teacher semantic ID</span><input name="teacherSemanticId" required placeholder="vn-learner-… after activation" /></label><button className="button soft" type="submit">Assign teacher</button></form>}
+          </article>
+        </section>
+
+        <section className="workspaceGrid">
           <article className="panel">
             <div className="eyebrow">Learners</div><h2 className="workspaceTitle">Enroll activated student</h2>
             {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={enrollStudent} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Learner semantic ID</span><input name="studentSemanticId" required placeholder="vn-learner-…" /></label><button className="button soft" type="submit">Enroll learner</button></form>}
           </article>
-        </section>
 
-        <section className="panel">
-          <div className="eyebrow">Operational pulse</div><h2 className="workspaceTitle">Live program state</h2>
-          <div className="miniGrid partnerPulse"><div className="miniCard light"><strong>{String(total.assignments || 0)}</strong><span>published assignments</span></div><div className="miniCard light"><strong>{String(total.pending_payments || 0)}</strong><span>pending payment records</span></div><div className="miniCard light"><strong>{String(classes.reduce((sum, item) => sum + Number(item.student_count || 0), 0))}</strong><span>class enrollments</span></div><div className="miniCard light"><strong>{String(classes.reduce((sum, item) => sum + Number(item.teacher_count || 0), 0))}</strong><span>teacher assignments</span></div></div>
+          <article className="panel">
+            <div className="eyebrow">Operational pulse</div><h2 className="workspaceTitle">Live program state</h2>
+            <div className="miniGrid partnerPulse"><div className="miniCard light"><strong>{String(total.assignments || 0)}</strong><span>published assignments</span></div><div className="miniCard light"><strong>{String(total.pending_payments || 0)}</strong><span>pending payment records</span></div><div className="miniCard light"><strong>{String(classes.reduce((sum, item) => sum + Number(item.student_count || 0), 0))}</strong><span>class enrollments</span></div><div className="miniCard light"><strong>{String(classes.reduce((sum, item) => sum + Number(item.teacher_count || 0), 0))}</strong><span>teacher assignments</span></div></div>
+          </article>
         </section>
       </div>
     </main>
