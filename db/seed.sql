@@ -29,12 +29,13 @@ insert into book_units (
   book_id, unit_number, code, title_en, title_vi, objective_en, objective_vi,
   career_compass_focus, mastery_english_focus, sort_order, status
 )
-select book.id, 1, 'U01', 'Who Am I?', 'Em là ai?',
+select book.id, 1, 'U01', 'My Voice & Strengths', 'Tiếng nói và điểm mạnh của em',
   'Introduce yourself with simple, confident English and identify personal interests.',
   'Giới thiệu bản thân bằng tiếng Anh đơn giản, tự tin và nhận biết sở thích cá nhân.',
-  'Identity and self-awareness', 'Introductions, I am / I like / I can', 1, 'published'
+  'Identity, confidence and self-awareness', 'Greetings, introductions, classroom language and first speaking confidence', 1, 'published'
 from book
 on conflict (book_id, unit_number) do update set
+  code = excluded.code,
   title_en = excluded.title_en,
   title_vi = excluded.title_vi,
   objective_en = excluded.objective_en,
@@ -90,4 +91,50 @@ on conflict (unit_id, code) do update set
   instructions_vi = excluded.instructions_vi,
   content = excluded.content,
   evidence_eligible = excluded.evidence_eligible,
+  status = excluded.status;
+
+-- One persistence anchor per interactive lesson. The renderer can evolve independently;
+-- attempts and progress always reference stable activity codes.
+with unit as (
+  select bu.id
+  from book_units bu
+  join books b on b.id = bu.book_id
+  where b.code = 'CCJ-MASTERY-BEGINNER' and bu.code = 'U01'
+), lesson_seed(code, title_en, title_vi, kind, lesson_id, evidence_eligible, sort_order) as (
+  values
+    ('U01-L01','Hello team','Xin chào các bạn','choice',1,false,11),
+    ('U01-L02','My age and my voice','Tuổi của em','age',2,false,12),
+    ('U01-L03','Listen and move','Lắng nghe và làm theo','sequence',3,false,13),
+    ('U01-L04','Please help me','Nhờ giúp đỡ một cách lịch sự','build',4,false,14),
+    ('U01-L05','Colors around me','Màu sắc quanh em','color',5,false,15),
+    ('U01-L06','Feelings and choices','Cảm xúc và sở thích','pair',6,false,16),
+    ('U01-L07','My first introduction','Lời giới thiệu đầu tiên','sequence',7,true,17),
+    ('U01-L08','Checkpoint one welcome club','Trạm ôn tập một','checkpoint',8,true,18)
+)
+insert into activities (
+  unit_id, code, activity_type, title_en, title_vi,
+  instructions_en, instructions_vi, content, max_score,
+  evidence_eligible, sort_order, status
+)
+select
+  unit.id,
+  lesson_seed.code,
+  'self_check',
+  lesson_seed.title_en,
+  lesson_seed.title_vi,
+  'Complete the interactive lesson check. Retry is allowed.',
+  'Hoàn thành phần kiểm tra tương tác. Có thể thử lại.',
+  jsonb_build_object('kind', lesson_seed.kind, 'lessonId', lesson_seed.lesson_id),
+  1,
+  lesson_seed.evidence_eligible,
+  lesson_seed.sort_order,
+  'published'
+from unit cross join lesson_seed
+on conflict (unit_id, code) do update set
+  title_en = excluded.title_en,
+  title_vi = excluded.title_vi,
+  content = excluded.content,
+  max_score = excluded.max_score,
+  evidence_eligible = excluded.evidence_eligible,
+  sort_order = excluded.sort_order,
   status = excluded.status;
