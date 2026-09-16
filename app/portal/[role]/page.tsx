@@ -91,6 +91,13 @@ export default async function PortalPage({
             <div className="eyebrow">Career Compass Junior Mastery</div>
             <h3 style={{ marginTop: 10 }}>{locale === "en" ? "Interactive book journey" : "Hành trình sách tương tác"}</h3>
             <p className="muted">{locale === "en" ? "The book remains the curriculum anchor; digital activities add practice, feedback and evidence." : "Sách vẫn là trục chương trình; hoạt động số bổ sung luyện tập, phản hồi và minh chứng."}</p>
+            {role === "student" && (
+              <div className="actions" style={{ marginTop: 14, marginBottom: 6 }}>
+                <Link className="button primary" href={`/learn/unit-1?lang=${locale}`}>
+                  {locale === "en" ? "Start Unit 1 interactive" : "Bắt đầu Bài 1 tương tác"}
+                </Link>
+              </div>
+            )}
             <div>
               {bookUnits.map((unit) => (
                 <div className="unit" key={unit.code}>
