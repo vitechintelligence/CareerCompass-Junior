@@ -49,8 +49,9 @@ export default function Home() {
           </p>
           <p className="muted">Nền tảng song ngữ biến sách Career Compass Junior thành hành trình học tương tác, dễ theo dõi và phù hợp với học sinh Việt Nam.</p>
           <div className="actions">
-            <Link className="button primary" href="/portal/student">Explore Student Portal</Link>
-            <Link className="button soft" href="/portal/partner">Open Partner Preview</Link>
+            <Link className="button primary" href="/learn/unit-1?lang=en">Try Unit 1 Interactive</Link>
+            <Link className="button soft" href="/portal/student">Explore Student Portal</Link>
+            <Link className="button" href="/portal/partner">Open Partner Preview</Link>
           </div>
         </div>
         <div className="heroBoard" aria-label="Program snapshot">
@@ -91,6 +92,10 @@ export default function Home() {
           <div className="eyebrow">Book → interactive learning</div>
           <h2>The printed program becomes a living e-learning experience.</h2>
           <p className="muted">Every book can be represented as units and activities: Look–Listen–Say vocabulary, speaking models, listening, reflection, matching, sorting, writing, projects and teacher-reviewed evidence. The book remains the curriculum anchor; the app makes it easier to practice, repeat and document mastery.</p>
+          <div className="actions">
+            <Link className="button primary" href="/learn/unit-1?lang=en">Open the live Unit 1 experience</Link>
+            <Link className="button" href="/learn/unit-1?lang=vi">Mở Bài 1 bằng tiếng Việt</Link>
+          </div>
         </div>
         <div className="cardGrid">
           <div className="card"><div className="cardIcon">🎧</div><h3>Learn & practice</h3><p className="muted">Audio-ready vocabulary, speaking prompts and scaffolded bilingual instructions.</p></div>
