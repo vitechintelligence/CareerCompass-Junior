@@ -1,5 +1,6 @@
 "use server";
 
+import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { ensureStudentProfile, getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
@@ -74,7 +75,7 @@ export async function createClass(formData: FormData) {
 
   await requirePartnerOrganization(organizationId);
   const sql = getDb();
-  const suffix = crypto.randomUUID().slice(0, 8);
+  const suffix = randomUUID().slice(0, 8);
   await sql`
     insert into classes (
       organization_id, semantic_id, name, level_label, academic_cycle, status
@@ -93,7 +94,7 @@ export async function assignTeacher(formData: FormData) {
   const semanticId = String(formData.get("teacherSemanticId") || "").trim();
   if (!classId || !semanticId) throw new Error("Class and teacher ID are required.");
 
-  await requirePartnerClass(classId);
+  const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
   const teacher = await sql`
     select id from profiles
@@ -104,6 +105,12 @@ export async function assignTeacher(formData: FormData) {
   `;
   const teacherId = String(teacher[0]?.id || "");
   if (!teacherId) throw new Error("Active teacher profile not found.");
+
+  await sql`
+    insert into organization_memberships (organization_id, profile_id, role, status)
+    values (${organizationId}, ${teacherId}, 'teacher', 'active')
+    on conflict (organization_id, profile_id, role) do update set status = 'active'
+  `;
 
   await sql`
     insert into teacher_assignments (class_id, teacher_id, assignment_role)
@@ -119,7 +126,7 @@ export async function enrollStudent(formData: FormData) {
   const semanticId = String(formData.get("studentSemanticId") || "").trim();
   if (!classId || !semanticId) throw new Error("Class and learner ID are required.");
 
-  await requirePartnerClass(classId);
+  const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
   const learner = await sql`
     select id from profiles
@@ -130,6 +137,12 @@ export async function enrollStudent(formData: FormData) {
   `;
   const studentId = String(learner[0]?.id || "");
   if (!studentId) throw new Error("Active learner profile not found.");
+
+  await sql`
+    insert into organization_memberships (organization_id, profile_id, role, status)
+    values (${organizationId}, ${studentId}, 'student', 'active')
+    on conflict (organization_id, profile_id, role) do update set status = 'active'
+  `;
 
   await sql`
     insert into class_memberships (class_id, student_id, status)
