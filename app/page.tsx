@@ -3,6 +3,8 @@ import Link from "next/link";
 const roles = [
   {
     role: "student",
+    href: "/portal/student",
+    workspaceHref: "/learn/unit-1?lang=en",
     icon: "🧭",
     title: "Student / Học sinh",
     copy: "Interactive books, English practice, activities, progress and achievements.",
@@ -10,6 +12,8 @@ const roles = [
   },
   {
     role: "teacher",
+    href: "/portal/teacher",
+    workspaceHref: "/workspace/teacher",
     icon: "✏️",
     title: "Teacher / Giáo viên",
     copy: "Classes, attendance, assignments, submissions, feedback and learning evidence.",
@@ -17,6 +21,8 @@ const roles = [
   },
   {
     role: "partner",
+    href: "/portal/partner",
+    workspaceHref: "/workspace/partner",
     icon: "🏫",
     title: "Partner / Đối tác",
     copy: "Manage your teachers, students, classes, resources, program delivery and reporting.",
@@ -37,7 +43,10 @@ export default function Home() {
           <a href="#learning">Interactive Learning</a>
           <a href="#partners">Partners</a>
         </nav>
-        <span className="pill">EN · VI</span>
+        <div className="lessonHeaderActions">
+          <Link className="pill" href="/auth/sign-in">Sign in</Link>
+          <Link className="pill" href="/auth/sign-up">Activate learner</Link>
+        </div>
       </header>
 
       <section className="hero">
@@ -50,8 +59,8 @@ export default function Home() {
           <p className="muted">Nền tảng song ngữ biến sách Career Compass Junior thành hành trình học tương tác, dễ theo dõi và phù hợp với học sinh Việt Nam.</p>
           <div className="actions">
             <Link className="button primary" href="/learn/unit-1?lang=en">Try Unit 1 Interactive</Link>
-            <Link className="button soft" href="/portal/student">Explore Student Portal</Link>
-            <Link className="button" href="/portal/partner">Open Partner Preview</Link>
+            <Link className="button soft" href="/workspace/teacher">Teacher Workspace</Link>
+            <Link className="button" href="/workspace/partner">Partner Workspace</Link>
           </div>
         </div>
         <div className="heroBoard" aria-label="Program snapshot">
@@ -77,12 +86,16 @@ export default function Home() {
         </div>
         <div className="cardGrid">
           {roles.map((item) => (
-            <Link className="card" href={`/portal/${item.role}`} key={item.role}>
+            <div className="card" key={item.role}>
               <div className="cardIcon">{item.icon}</div>
               <h3>{item.title}</h3>
               <p className="muted">{item.copy}</p>
               <div className="tagRow">{item.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div>
-            </Link>
+              <div className="actions">
+                <Link className="button soft" href={item.href}>Preview</Link>
+                <Link className="button primary" href={item.workspaceHref}>{item.role === "student" ? "Start learning" : "Open workspace"}</Link>
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -95,6 +108,7 @@ export default function Home() {
           <div className="actions">
             <Link className="button primary" href="/learn/unit-1?lang=en">Open the live Unit 1 experience</Link>
             <Link className="button" href="/learn/unit-1?lang=vi">Mở Bài 1 bằng tiếng Việt</Link>
+            <Link className="button" href="/learn/CCJ-MASTERY-BEGINNER/U01?lang=en">Database-driven book view</Link>
           </div>
         </div>
         <div className="cardGrid">
@@ -108,8 +122,12 @@ export default function Home() {
         <div className="portalIntro">
           <div className="eyebrow">For schools & training centers</div>
           <h2 style={{ marginTop: 10 }}>Manage delivery without losing the learner.</h2>
-          <p className="lead" style={{ fontSize: 18 }}>Partner administrators can manage controlled student credentials, teachers, classes, assignments, attendance, resources, payments and reporting—without turning the system into a heavy ERP.</p>
-          <div className="actions"><Link className="button primary" href="/portal/partner">Preview Partner Portal</Link><Link className="button" href="/portal/teacher">Preview Teacher Portal</Link></div>
+          <p className="lead" style={{ fontSize: 18 }}>Partner administrators can manage teachers, students, classes, assignments, attendance, resources, payments and reporting—without turning the system into a heavy ERP.</p>
+          <div className="actions">
+            <Link className="button primary" href="/workspace/partner">Open Partner Workspace</Link>
+            <Link className="button" href="/workspace/teacher">Open Teacher Workspace</Link>
+            <Link className="button" href="/auth/sign-up?callbackURL=%2Fworkspace%2Fpartner">Request partner access</Link>
+          </div>
         </div>
       </section>
 
