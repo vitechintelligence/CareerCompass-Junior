@@ -2,7 +2,7 @@
 
 Bilingual interactive LMS for **students, teachers and partner organizations**, built around the Career Compass Junior curriculum and Mastery English learning journey.
 
-## What is included in this foundation
+## What is included in the platform
 
 - Student Portal
 - Teacher Portal
@@ -23,6 +23,27 @@ Bilingual interactive LMS for **students, teachers and partner organizations**, 
 - Neon PostgreSQL adapter
 - Vercel-compatible Next.js app
 - GitHub Actions CI
+
+## Interactive learning milestone
+
+The first integrated learner experience is available at:
+
+```text
+/learn/unit-1?lang=en
+/learn/unit-1?lang=vi
+```
+
+Unit 1 currently provides eight lesson-specific learning experiences with:
+
+- bilingual lesson navigation
+- Look · Listen · Say vocabulary
+- browser pronunciation playback
+- speaking models and rhythm practice
+- retryable interactive checks
+- local reflection and preview progress
+- an ephemeral speaking recorder for record → replay → retry
+
+The preview recorder never uploads audio. Audio blobs remain temporary in the learner's browser and disappear when the page/session is cleared. Preview reflections and completion state are stored only in browser local storage until authenticated learner persistence is connected to Neon.
 
 ## Stack
 
