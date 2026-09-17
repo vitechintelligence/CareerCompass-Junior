@@ -9,6 +9,13 @@ type Props = {
   callbackUrl: string;
 };
 
+type HealthPayload = {
+  auth?: {
+    configured?: boolean;
+    missing?: string[];
+  };
+};
+
 export default function AuthForm({ mode, callbackUrl }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -44,7 +51,25 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
 
       window.location.assign(callbackUrl);
     } catch {
-      setMessage("Authentication is unavailable on this deployment right now.");
+      let nextMessage = "Authentication service could not be reached. Please try again in a moment.";
+
+      try {
+        const healthResponse = await fetch("/api/health", { cache: "no-store" });
+        const health = (await healthResponse.json()) as HealthPayload;
+
+        if (health.auth?.configured === false) {
+          const missing = health.auth.missing?.join(", ");
+          nextMessage = missing
+            ? `Authentication deployment setup is incomplete (${missing}).`
+            : "Authentication deployment setup is incomplete.";
+        } else if (health.auth?.configured) {
+          nextMessage = "Authentication is configured, but Neon Auth rejected or could not complete the request. Check the deployment URL in Neon Auth trusted domains.";
+        }
+      } catch {
+        // Keep the generic connectivity message when the health endpoint is also unavailable.
+      }
+
+      setMessage(nextMessage);
     } finally {
       setBusy(false);
     }
