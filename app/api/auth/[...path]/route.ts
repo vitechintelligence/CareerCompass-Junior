@@ -1,4 +1,4 @@
-import { getAuth } from "@/lib/auth/server";
+import { getAuth, getAuthConfigurationStatus } from "@/lib/auth/server";
 
 export const dynamic = "force-dynamic";
 
@@ -7,8 +7,13 @@ type AuthRouteContext = {
 };
 
 function unavailable() {
+  const configuration = getAuthConfigurationStatus();
+
   return Response.json(
-    { error: "Authentication is not configured for this deployment." },
+    {
+      error: "Authentication is not configured for this deployment.",
+      missing: configuration.missing,
+    },
     { status: 503 },
   );
 }
