@@ -49,7 +49,7 @@ export function getAuthConfigurationStatus() {
 
   const configured = missing.length === 0 && invalid.length === 0;
   const baseUrlValid = isValidAuthBaseUrl(baseUrl);
-  const cookieSecretValid = typeof secret === "string" && secret.length >= MIN_COOKIE_SECRET_LENGTH;
+  const cookieSecretValid = Boolean(secret && secret.length >= MIN_COOKIE_SECRET_LENGTH);
 
   return {
     configured,
@@ -68,13 +68,16 @@ export function getAuth() {
   if (cachedAuth) return cachedAuth;
 
   const configuration = getAuthConfigurationStatus();
-  if (!configuration.configured || !configuration.baseUrl || !configuration.secret) {
+  const baseUrl = configuration.baseUrl;
+  const secret = configuration.secret;
+
+  if (!configuration.configured || !baseUrl || !secret) {
     return null;
   }
 
   cachedAuth = createNeonAuth({
-    baseUrl: configuration.baseUrl,
-    cookies: { secret: configuration.secret },
+    baseUrl,
+    cookies: { secret },
   });
 
   return cachedAuth;
