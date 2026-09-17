@@ -29,7 +29,7 @@ export default async function TeacherWorkspacePage() {
         where c.status = 'active'
         group by c.id, o.name
         order by c.name
-n      `
+      `
     : await sql`
         select c.id, c.name, c.level_label, c.academic_cycle, o.name as organization_name,
           count(distinct cm.student_id)::int as student_count
