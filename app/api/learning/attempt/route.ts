@@ -5,6 +5,9 @@ import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+const MAX_REQUEST_BYTES = 64 * 1024;
+const MAX_RESPONSE_BYTES = 32 * 1024;
+
 type AttemptPayload = {
   bookCode?: string;
   unitCode?: string;
@@ -19,25 +22,39 @@ function cleanCode(value: unknown) {
   return typeof value === "string" && /^[A-Za-z0-9._-]{1,80}$/.test(value) ? value : null;
 }
 
+function jsonError(message: string, status: number, extra: Record<string, unknown> = {}) {
+  return NextResponse.json({ error: message, ...extra }, { status, headers: { "Cache-Control": "no-store" } });
+}
+
 export async function POST(request: Request) {
+  const advertisedLength = Number(request.headers.get("content-length") || 0);
+  if (Number.isFinite(advertisedLength) && advertisedLength > MAX_REQUEST_BYTES) {
+    return jsonError("Learning response is too large.", 413);
+  }
+
   let payload: AttemptPayload;
   try {
     payload = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    return jsonError("Invalid JSON payload.", 400);
   }
 
   const bookCode = cleanCode(payload.bookCode);
   const unitCode = cleanCode(payload.unitCode);
   const activityCode = cleanCode(payload.activityCode);
   if (!bookCode || !unitCode || !activityCode) {
-    return NextResponse.json({ error: "Book, unit and activity codes are required." }, { status: 400 });
+    return jsonError("Book, unit and activity codes are required.", 400);
+  }
+
+  const responseJson = JSON.stringify(payload.response ?? {});
+  if (Buffer.byteLength(responseJson, "utf8") > MAX_RESPONSE_BYTES) {
+    return jsonError("Learning response is too large.", 413);
   }
 
   const locale = payload.locale === "en" ? "en" : "vi";
   const profile = await ensureStudentProfile(locale);
   if (!profile) {
-    return NextResponse.json({ error: "Sign in to sync learning progress.", localOnly: true }, { status: 401 });
+    return jsonError("Sign in to sync learning progress.", 401, { localOnly: true });
   }
 
   const sql = getDb();
@@ -65,10 +82,7 @@ export async function POST(request: Request) {
 
   const ref = refs[0];
   if (!ref) {
-    return NextResponse.json({
-      error: "This starter activity is not published to the database yet.",
-      localOnly: true,
-    }, { status: 409 });
+    return jsonError("This starter activity is not published to the database yet.", 409, { localOnly: true });
   }
 
   let enrollments = await sql`
@@ -100,9 +114,7 @@ export async function POST(request: Request) {
   }
 
   const enrollmentId = String(enrollments[0]?.id ?? "");
-  if (!enrollmentId) {
-    return NextResponse.json({ error: "Unable to create learner enrollment." }, { status: 500 });
-  }
+  if (!enrollmentId) return jsonError("Unable to create learner enrollment.", 500);
 
   const attemptRows = await sql`
     select coalesce(max(attempt_number), 0)::int + 1 as next_attempt
@@ -112,10 +124,9 @@ export async function POST(request: Request) {
   `;
   const attemptNumber = Number(attemptRows[0]?.next_attempt ?? 1);
   const completed = payload.completed === true;
-  const maxScore = ref.max_score == null ? 1 : Number(ref.max_score);
+  const maxScore = Math.max(0, ref.max_score == null ? 1 : Number(ref.max_score));
   const requestedScore = typeof payload.score === "number" && Number.isFinite(payload.score) ? payload.score : (completed ? maxScore : 0);
   const score = Math.max(0, Math.min(maxScore || 1, requestedScore));
-  const responseJson = JSON.stringify(payload.response ?? {});
 
   const inserted = await sql`
     insert into activity_attempts (
@@ -161,7 +172,7 @@ export async function POST(request: Request) {
     if (ref.evidence_eligible === true) {
       const attemptId = String(inserted[0]?.id ?? "");
       const content = (ref.content || {}) as Record<string, unknown>;
-      const rawTags = Array.isArray(content.skillTags) ? content.skillTags.map(String).filter(Boolean) : [];
+      const rawTags = Array.isArray(content.skillTags) ? content.skillTags.map(String).filter(Boolean).slice(0, 20) : [];
       const skillTags = rawTags.length > 0 ? rawTags : ["english-communication", "future-readiness"];
       const evidenceSummary = JSON.stringify({ activityCode, score, maxScore, completionStatus: "completed" });
       const integrityHash = createHash("sha256")
@@ -202,5 +213,5 @@ export async function POST(request: Request) {
     progressPercent,
     capsuleCreated,
     classScoped: Boolean(enrollments[0]?.class_id),
-  });
+  }, { headers: { "Cache-Control": "no-store" } });
 }
