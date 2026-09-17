@@ -69,7 +69,7 @@ export default async function StudentWorkspacePage() {
     left join student_enrollments se on se.book_id = r.book_id and se.student_id = ${profile.id} and se.status in ('active','completed')
     left join organization_memberships om on om.organization_id = r.organization_id and om.profile_id = ${profile.id} and om.status='active'
     where r.visibility in ('all','students')
-      and (r.class_id is null and r.book_id is null and r.organization_id is null or cm.student_id is not null or se.student_id is not null or om.profile_id is not null)
+      and ((r.class_id is null and r.book_id is null and r.organization_id is null) or cm.student_id is not null or se.student_id is not null or om.profile_id is not null)
     order by r.created_at desc
     limit 6
   `;
@@ -107,10 +107,10 @@ export default async function StudentWorkspacePage() {
             ) : (
               <div className="workspaceList">
                 {enrollments.map((item) => (
-                  <div className="studentLearningRow" key={String(item.id)}>
-                    <div className="studentLearningCopy">
+                  <div className="workspaceRow" key={String(item.id)}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
                       <strong>{String(item.title_en)}</strong>
-                      <span className="muted">{String(item.class_name || item.level_label || item.age_band || "Independent learning")}</span>
+                      <div className="muted" style={{ margin: "4px 0 8px" }}>{String(item.class_name || item.level_label || item.age_band || "Independent learning")}</div>
                       <div className="progressTrack"><div className="progressFill" style={{ width: `${Math.min(100, Math.max(0, Number(item.progress_percent || 0)))}%` }} /></div>
                     </div>
                     <Link className="button primary" href={`/learn/${encodeURIComponent(String(item.code))}`}>Open</Link>
@@ -151,7 +151,7 @@ export default async function StudentWorkspacePage() {
             <div className="eyebrow">Class updates</div>
             <h2 className="workspaceTitle">Announcements</h2>
             {announcements.length === 0 ? <EmptyState text="No current announcements." /> : (
-              <div className="workspaceList">{announcements.map((item) => <div className="studentAnnouncement" key={String(item.id)}><strong>{String(item.title_en)}</strong><p className="muted">{String(item.body_en)}</p></div>)}</div>
+              <div className="workspaceList">{announcements.map((item) => <div className="feedbackCard" key={String(item.id)}><strong>{String(item.title_en)}</strong><p className="muted" style={{ margin: 0 }}>{String(item.body_en)}</p></div>)}</div>
             )}
           </article>
         </section>
@@ -159,7 +159,7 @@ export default async function StudentWorkspacePage() {
         {resources.length > 0 && (
           <section className="panel">
             <div className="eyebrow">Resources</div><h2 className="workspaceTitle">Learning resources</h2>
-            <div className="studentResourceGrid">{resources.map((item) => <a className="actionItem" href={String(item.resource_url)} key={String(item.id)} target="_blank" rel="noreferrer"><div><strong>{String(item.title_en)}</strong><div className="muted">{String(item.resource_type).replace("_", " ")}</div></div><span>↗</span></a>)}</div>
+            <div className="actionList">{resources.map((item) => <a className="actionItem" href={String(item.resource_url)} key={String(item.id)} target="_blank" rel="noreferrer"><div><strong>{String(item.title_en)}</strong><div className="muted">{String(item.resource_type).replace("_", " ")}</div></div><span>↗</span></a>)}</div>
           </section>
         )}
       </div>
