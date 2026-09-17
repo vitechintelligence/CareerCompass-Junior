@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { activateTeacher, assignTeacher, createClass, enrollStudent, requestPartnerAccess } from "./actions";
@@ -33,7 +34,7 @@ export default async function PartnerWorkspacePage() {
             <p className="muted">Partner administrator privileges are approved separately. Submitting this form does not grant elevated access automatically.</p>
             {request[0] && <div className="statusBanner"><strong>Current request: {String(request[0].status)}</strong><span>{String(request[0].organization_name)} · {String(request[0].organization_type).replace("_", " ")}</span></div>}
             <form action={requestPartnerAccess} className="workspaceForm partnerRequestForm">
-              <label><span>School / center name</span><input name="organizationName" required defaultValue={String(request[0]?.organization_name || "")} /></label>
+              <label><span>School / center name</span><input name="organizationName" maxLength={160} required defaultValue={String(request[0]?.organization_name || "")} /></label>
               <label><span>Organization type</span><select name="organizationType" defaultValue={String(request[0]?.organization_type || "training_center")}><option value="training_center">Training center</option><option value="school">School</option></select></label>
               <button className="button primary" type="submit">Submit partner access request</button>
             </form>
@@ -106,9 +107,9 @@ export default async function PartnerWorkspacePage() {
             <div className="eyebrow">Create class</div><h2 className="workspaceTitle">New delivery group</h2>
             <form action={createClass} className="workspaceForm">
               <input type="hidden" name="organizationId" value={organizationId} />
-              <label><span>Class name</span><input name="name" required placeholder="Junior A1 · Saturday" /></label>
-              <label><span>Level</span><input name="levelLabel" placeholder="Beginner / A1" /></label>
-              <label><span>Academic cycle</span><input name="academicCycle" placeholder="2026–2027" /></label>
+              <label><span>Class name</span><input name="name" maxLength={120} required placeholder="Junior A1 · Saturday" /></label>
+              <label><span>Level</span><input name="levelLabel" maxLength={80} placeholder="Beginner / A1" /></label>
+              <label><span>Academic cycle</span><input name="academicCycle" maxLength={40} placeholder="2026–2027" /></label>
               <button className="button primary" type="submit">Create class</button>
             </form>
           </article>
@@ -120,21 +121,21 @@ export default async function PartnerWorkspacePage() {
             <p className="muted">The teacher first creates normal account access. You then activate that account using its semantic ID; this prevents public self-promotion into staff roles.</p>
             <form action={activateTeacher} className="workspaceForm">
               <input type="hidden" name="organizationId" value={organizationId} />
-              <label><span>Account semantic ID</span><input name="teacherSemanticId" required placeholder="vn-learner-…" /></label>
+              <label><span>Account semantic ID</span><input name="teacherSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
               <button className="button soft" type="submit">Activate teacher access</button>
             </form>
           </article>
 
           <article className="panel">
             <div className="eyebrow">Class staffing</div><h2 className="workspaceTitle">Assign activated teacher</h2>
-            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={assignTeacher} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Teacher semantic ID</span><input name="teacherSemanticId" required placeholder="vn-learner-… after activation" /></label><button className="button soft" type="submit">Assign teacher</button></form>}
+            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={assignTeacher} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Teacher semantic ID</span><input name="teacherSemanticId" maxLength={100} required placeholder="vn-learner-… after activation" /></label><button className="button soft" type="submit">Assign teacher</button></form>}
           </article>
         </section>
 
         <section className="workspaceGrid">
           <article className="panel">
             <div className="eyebrow">Learners</div><h2 className="workspaceTitle">Enroll activated student</h2>
-            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={enrollStudent} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Learner semantic ID</span><input name="studentSemanticId" required placeholder="vn-learner-…" /></label><button className="button soft" type="submit">Enroll learner</button></form>}
+            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={enrollStudent} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label><button className="button soft" type="submit">Enroll learner</button></form>}
           </article>
 
           <article className="panel">
@@ -152,6 +153,6 @@ function PartnerGate({ mode }: { mode: "signin" | "membership" }) {
   return <main className="workspacePage"><PartnerHeader /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signIn ? "Sign in required" : "Partner membership not assigned"}</h2><p className="muted">{signIn ? "Sign in before opening the partner onboarding and management workspace." : "Your account has partner-level access but is not attached to an active organization yet."}</p><div className="actions"><Link className="button primary" href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace/partner")}`}>Sign in</Link><Link className="button" href="/portal/partner">View partner preview</Link></div></section></div></main>;
 }
 
-function PartnerHeader() { return <header className="topbar"><Link className="brand" href="/"><span className="brandMark">CC</span><span>Career Compass Junior</span></Link><div><strong>Partner Workspace</strong><div className="muted" style={{ fontSize: 12 }}>Schools · training centers · live delivery</div></div><Link className="pill" href="/portal/partner">Portal preview</Link></header>; }
+function PartnerHeader() { return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>Partner Workspace</strong><div className="muted" style={{ fontSize: 12 }}>Schools · training centers · live delivery</div></div><Link className="pill" href="/portal/partner">Portal preview</Link></header>; }
 function Metric({ label, value, detail }: { label: string; value: string; detail: string }) { return <div className="metric"><span className="muted">{label}</span><strong>{value}</strong><span className="muted">{detail}</span></div>; }
 function EmptyState({ text }: { text: string }) { return <div className="emptyState"><span>◎</span><p className="muted">{text}</p></div>; }
