@@ -13,8 +13,34 @@ type HealthPayload = {
   auth?: {
     configured?: boolean;
     missing?: string[];
+    invalid?: string[];
+    baseUrlValid?: boolean;
+    cookieSecretValid?: boolean;
   };
 };
+
+function authSetupMessage(auth: NonNullable<HealthPayload["auth"]>) {
+  const missing = auth.missing ?? [];
+  const invalid = auth.invalid ?? [];
+
+  if (missing.length > 0) {
+    return `Authentication deployment setup is incomplete (${missing.join(", ")}).`;
+  }
+
+  if (invalid.includes("NEON_AUTH_COOKIE_SECRET") || auth.cookieSecretValid === false) {
+    return "Authentication deployment setup is invalid: NEON_AUTH_COOKIE_SECRET must be a full random secret of at least 32 characters. Update it in Vercel and redeploy.";
+  }
+
+  if (invalid.includes("NEON_AUTH_BASE_URL") || auth.baseUrlValid === false) {
+    return "Authentication deployment setup is invalid: NEON_AUTH_BASE_URL must be the HTTPS Neon Auth URL for this branch. Update it in Vercel and redeploy.";
+  }
+
+  if (invalid.length > 0) {
+    return `Authentication deployment setup is invalid (${invalid.join(", ")}).`;
+  }
+
+  return "Authentication reached the deployment, but Neon Auth could not complete the request. Check the Neon Auth URL, trusted origin and deployment runtime logs.";
+}
 
 export default function AuthForm({ mode, callbackUrl }: Props) {
   const [name, setName] = useState("");
@@ -57,13 +83,8 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
         const healthResponse = await fetch("/api/health", { cache: "no-store" });
         const health = (await healthResponse.json()) as HealthPayload;
 
-        if (health.auth?.configured === false) {
-          const missing = health.auth.missing?.join(", ");
-          nextMessage = missing
-            ? `Authentication deployment setup is incomplete (${missing}).`
-            : "Authentication deployment setup is incomplete.";
-        } else if (health.auth?.configured) {
-          nextMessage = "Authentication is configured, but Neon Auth rejected or could not complete the request. Check the deployment URL in Neon Auth trusted domains.";
+        if (health.auth) {
+          nextMessage = authSetupMessage(health.auth);
         }
       } catch {
         // Keep the generic connectivity message when the health endpoint is also unavailable.

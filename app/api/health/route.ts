@@ -10,8 +10,11 @@ export async function GET() {
   const authStatus = {
     configured: auth.configured,
     baseUrlConfigured: auth.baseUrlConfigured,
+    baseUrlValid: auth.baseUrlValid,
     cookieSecretConfigured: auth.cookieSecretConfigured,
+    cookieSecretValid: auth.cookieSecretValid,
     missing: auth.missing,
+    invalid: auth.invalid,
   };
 
   if (!hasDatabase) {
