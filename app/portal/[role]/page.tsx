@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
+import { getCurrentProfile } from "@/lib/auth/profile";
 import { bookUnits, portalCopy, t, type Locale, type PortalRole } from "@/lib/platform";
+
+export const dynamic = "force-dynamic";
 
 const roles: PortalRole[] = ["student", "teacher", "partner"];
 
@@ -17,6 +20,11 @@ export default async function PortalPage({
   if (!roles.includes(rawRole as PortalRole)) notFound();
 
   const role = rawRole as PortalRole;
+  if (role === "student") {
+    const profile = await getCurrentProfile();
+    if (profile?.account_type === "student") redirect("/workspace/student");
+  }
+
   const locale: Locale = lang === "vi" ? "vi" : "en";
   const copy = portalCopy[role];
   const otherLocale: Locale = locale === "en" ? "vi" : "en";
@@ -73,7 +81,7 @@ export default async function PortalPage({
               {role === "partner" && (locale === "en" ? "A partner administrator can review delivery health across the organization they manage." : "Quản trị viên đối tác có thể xem tình hình triển khai trong tổ chức mình quản lý.")}
             </p>
             <div className="actions">
-              {role === "student" && <Link className="button primary" href="/auth/sign-up?callbackURL=%2Fportal%2Fstudent">Activate student access</Link>}
+              {role === "student" && <Link className="button primary" href="/auth/sign-up?callbackURL=%2Fworkspace%2Fstudent">Activate student access</Link>}
               {role === "teacher" && <Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace%2Fteacher">Teacher sign in</Link>}
               {role === "partner" && <Link className="button primary" href="/workspace/partner">Partner access</Link>}
             </div>
