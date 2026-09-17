@@ -5,8 +5,16 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 
 const attendanceStates = new Set(["present", "late", "absent", "excused"]);
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+function boundedText(value: FormDataEntryValue | null, max: number) {
+  return String(value || "").trim().slice(0, max);
+}
 
 async function requireTeacherForClass(classId: string) {
+  if (!UUID_RE.test(classId)) throw new Error("Invalid class reference.");
+
   const profile = await getCurrentProfile();
   if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
     throw new Error("Teacher access required.");
@@ -33,7 +41,7 @@ export async function recordAttendance(formData: FormData) {
   const status = String(formData.get("status") || "");
   const sessionDate = String(formData.get("sessionDate") || "");
 
-  if (!classId || !studentId || !sessionDate || !attendanceStates.has(status)) {
+  if (!UUID_RE.test(classId) || !UUID_RE.test(studentId) || !DATE_RE.test(sessionDate) || !attendanceStates.has(status)) {
     throw new Error("Invalid attendance entry.");
   }
 
@@ -63,13 +71,14 @@ export async function recordAttendance(formData: FormData) {
 
 export async function createAssignment(formData: FormData) {
   const classId = String(formData.get("classId") || "");
-  const titleEn = String(formData.get("titleEn") || "").trim();
-  const titleVi = String(formData.get("titleVi") || "").trim();
-  const instructionsEn = String(formData.get("instructionsEn") || "").trim();
-  const instructionsVi = String(formData.get("instructionsVi") || "").trim();
-  const dueAt = String(formData.get("dueAt") || "").trim();
+  const titleEn = boundedText(formData.get("titleEn"), 160);
+  const titleVi = boundedText(formData.get("titleVi"), 160);
+  const instructionsEn = boundedText(formData.get("instructionsEn"), 4000);
+  const instructionsVi = boundedText(formData.get("instructionsVi"), 4000);
+  const dueAt = boundedText(formData.get("dueAt"), 40);
 
-  if (!classId || !titleEn || !titleVi) throw new Error("Assignment title is required in both languages.");
+  if (!UUID_RE.test(classId) || !titleEn || !titleVi) throw new Error("Assignment title is required in both languages.");
+  if (dueAt && Number.isNaN(Date.parse(dueAt))) throw new Error("Invalid assignment due date.");
 
   const profile = await requireTeacherForClass(classId);
   const sql = getDb();
@@ -91,12 +100,12 @@ export async function createAssignment(formData: FormData) {
 
 export async function saveFeedback(formData: FormData) {
   const submissionId = String(formData.get("submissionId") || "");
-  const feedbackText = String(formData.get("feedbackText") || "").trim();
-  const rawScore = String(formData.get("score") || "").trim();
+  const feedbackText = boundedText(formData.get("feedbackText"), 4000);
+  const rawScore = boundedText(formData.get("score"), 16);
   const score = rawScore ? Number(rawScore) : null;
 
-  if (!submissionId || !feedbackText || (score !== null && !Number.isFinite(score))) {
-    throw new Error("Valid feedback is required.");
+  if (!UUID_RE.test(submissionId) || !feedbackText || (score !== null && (!Number.isFinite(score) || score < 0 || score > 100))) {
+    throw new Error("Valid feedback and a score between 0 and 100 are required.");
   }
 
   const profile = await getCurrentProfile();
