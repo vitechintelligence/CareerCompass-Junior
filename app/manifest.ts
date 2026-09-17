@@ -23,10 +23,10 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     shortcuts: [
       {
-        name: "Student Portal",
+        name: "Student Workspace",
         short_name: "Student",
-        description: "Open the Career Compass learner space",
-        url: "/portal/student",
+        description: "Open the live Career Compass learner workspace",
+        url: "/workspace/student",
         icons: [{ src: "/vitech-logo.svg", sizes: "any", type: "image/svg+xml" }],
       },
       {
