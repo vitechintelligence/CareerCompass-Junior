@@ -48,13 +48,15 @@ export function getAuthConfigurationStatus() {
   }
 
   const configured = missing.length === 0 && invalid.length === 0;
+  const baseUrlValid = isValidAuthBaseUrl(baseUrl);
+  const cookieSecretValid = typeof secret === "string" && secret.length >= MIN_COOKIE_SECRET_LENGTH;
 
   return {
     configured,
     baseUrlConfigured: Boolean(baseUrl),
-    baseUrlValid: Boolean(baseUrl) && isValidAuthBaseUrl(baseUrl),
+    baseUrlValid,
     cookieSecretConfigured: Boolean(secret),
-    cookieSecretValid: Boolean(secret) && secret.length >= MIN_COOKIE_SECRET_LENGTH,
+    cookieSecretValid,
     missing,
     invalid,
     baseUrl,
