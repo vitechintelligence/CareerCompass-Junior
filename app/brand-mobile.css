@@ -9,6 +9,11 @@
 .brandLogoMark img { width: 100%; height: 100%; object-fit: contain; display: block; }
 .ccjSignIn { color: #fff !important; }
 .ccjSignIn:visited { color: #fff !important; }
+.previewNotice { max-width: 900px; margin: 4px 0 8px; display: flex; align-items: flex-start; gap: 9px; padding: 11px 14px; border: 1px solid #cfe0f1; border-radius: 14px; background: #f6faff; color: #52647e; font-size: 12px; line-height: 1.5; }
+.previewNotice strong { flex: 0 0 auto; color: #174bbf; }
+.offlinePage { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at 80% 10%,rgba(36,88,214,.11),transparent 28rem),#eef3f8; }
+.offlineCard { width: min(100%,620px); padding: clamp(28px,6vw,52px); border-radius: 28px; background: #fff; border: 1px solid #dfe6f0; box-shadow: 0 24px 60px rgba(15,39,69,.12); }
+.offlineCard h1 { margin-top: 14px; }
 
 /* Keep the hero collection composed as one visual unit instead of four independent objects. */
 .ccjHeroVisual { max-width: 540px; width: 100%; margin-inline: auto; }
@@ -61,6 +66,7 @@
   .topbar > div { min-width: 0; }
   .topbar > div strong { font-size: 13px; }
   .topbar .pill { min-height: 40px; padding-inline: 11px; }
+  .previewNotice { flex-direction: column; gap: 3px; }
   .portalShell, .workspaceContent { padding-left: 13px; padding-right: 13px; padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
   .portalHero, .workspaceGrid { grid-template-columns: 1fr !important; }
   .metricGrid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
