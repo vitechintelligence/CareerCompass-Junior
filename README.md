@@ -4,46 +4,42 @@ Bilingual interactive LMS for **students, teachers and partner organizations**, 
 
 ## What is included in the platform
 
-- Student Portal
-- Teacher Portal
-- Partner / School / Training Center Portal
+- Student Portal and interactive learner experience
+- Live Teacher Class Workspace
+- Live Partner / School / Training Center Workspace
+- Neon Auth with controlled role assignment
 - English + Vietnamese UI/content model
 - Career Compass Junior interactive-book data model
-- Classes and memberships
-- Controlled student credential model
-- Teacher assignments
-- Student enrollments and book progress
-- Interactive activities and attempts
-- Attendance
-- Assignments and submissions
-- Teacher feedback
-- Payments status
-- Announcements and resources
+- database-driven reusable book/unit renderer
+- classes and organization memberships
+- teacher activation and class assignments
+- student enrollments and persistent book progress
+- interactive activities and attempts
+- attendance
+- assignments and submissions
+- teacher feedback
+- payments status
+- announcements and resources
 - `learning_capsules` as the central learner evidence layer
 - Neon PostgreSQL adapter
 - Vercel-compatible Next.js app
 - GitHub Actions CI
 
-## Interactive learning milestone
-
-The first integrated learner experience is available at:
+## Live routes
 
 ```text
-/learn/unit-1?lang=en
-/learn/unit-1?lang=vi
+/learn/unit-1?lang=en                 Enhanced Unit 1 learner experience
+/learn/unit-1?lang=vi                 Vietnamese learner experience
+/learn/CCJ-MASTERY-BEGINNER/U01       Database-driven curriculum view
+/auth/sign-in                         Neon Auth sign-in
+/auth/sign-up                         Learner activation
+/workspace/teacher                    Role-protected Teacher Workspace
+/workspace/partner                    Partner onboarding / management
 ```
 
-Unit 1 currently provides eight lesson-specific learning experiences with:
+Unit 1 provides eight lesson-specific learning experiences with bilingual navigation, Look · Listen · Say vocabulary, browser pronunciation, speaking models, retryable interactive checks, reflection and an ephemeral record → replay → retry speaking recorder.
 
-- bilingual lesson navigation
-- Look · Listen · Say vocabulary
-- browser pronunciation playback
-- speaking models and rhythm practice
-- retryable interactive checks
-- local reflection and preview progress
-- an ephemeral speaking recorder for record → replay → retry
-
-The preview recorder never uploads audio. Audio blobs remain temporary in the learner's browser and disappear when the page/session is cleared. Preview reflections and completion state are stored only in browser local storage until authenticated learner persistence is connected to Neon.
+Anonymous preview progress remains on-device. When a learner signs in, completed Unit 1 lessons synchronize to Neon `activity_attempts` and `book_progress`. Evidence-eligible milestones create metadata-only `learning_capsules`. Recorded learner audio is never uploaded by this flow.
 
 ## Stack
 
@@ -51,6 +47,7 @@ The preview recorder never uploads audio. Audio blobs remain temporary in the le
 - React 19
 - TypeScript
 - Neon PostgreSQL
+- Neon Auth / Better Auth
 - Vercel
 
 ## Local development
@@ -65,29 +62,42 @@ Open `http://localhost:3000`.
 
 ## Environment
 
-Set the Neon pooled connection string:
+Configure server-only deployment variables:
 
 ```bash
 DATABASE_URL=postgresql://...
+NEON_AUTH_BASE_URL=https://.../neondb/auth
+NEON_AUTH_COOKIE_SECRET=<32+-character-random-secret>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 Do not commit real credentials.
 
 ## Database
 
-The complete bootstrap schema is in:
+Bootstrap the core model with:
 
 ```text
 db/schema.sql
 ```
 
-A curriculum-only demo seed is in:
+Apply later additive migrations from:
+
+```text
+db/migrations/
+```
+
+Seed published curriculum metadata with:
 
 ```text
 db/seed.sql
 ```
 
 The seed intentionally contains **no real learner data**.
+
+## Access model
+
+Self-registration maps to learner/student access only. Teacher access is activated by an approved partner administrator, and partner-administrator access is separately approved. The application does not allow public self-promotion into staff or partner roles.
 
 ## Platform architecture
 

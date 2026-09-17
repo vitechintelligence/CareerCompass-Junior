@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./live-workspaces.css";
 
 export const metadata: Metadata = {
   title: "Career Compass Junior Mastery",
