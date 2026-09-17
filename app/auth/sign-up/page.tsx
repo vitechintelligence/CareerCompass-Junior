@@ -7,5 +7,5 @@ export default async function SignUpPage({
   searchParams: Promise<{ callbackURL?: string }>;
 }) {
   const { callbackURL } = await searchParams;
-  return <AuthForm mode="sign-up" callbackUrl={safeInternalPath(callbackURL, "/portal/student")} />;
+  return <AuthForm mode="sign-up" callbackUrl={safeInternalPath(callbackURL, "/workspace/student")} />;
 }
