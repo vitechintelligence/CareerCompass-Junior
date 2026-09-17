@@ -2,8 +2,24 @@ import { createNeonAuth } from "@neondatabase/auth/next/server";
 
 let cachedAuth: ReturnType<typeof createNeonAuth> | null = null;
 
+const MIN_COOKIE_SECRET_LENGTH = 32;
+
 function firstConfigured(...values: Array<string | undefined>) {
   return values.find((value) => value?.trim())?.trim();
+}
+
+function isValidAuthBaseUrl(value: string | undefined) {
+  if (!value) return false;
+
+  try {
+    const url = new URL(value);
+    const localDevelopment = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    const protocolAllowed = url.protocol === "https:" || (localDevelopment && url.protocol === "http:");
+
+    return protocolAllowed && Boolean(url.hostname);
+  } catch {
+    return false;
+  }
 }
 
 export function getAuthConfigurationStatus() {
@@ -17,14 +33,30 @@ export function getAuthConfigurationStatus() {
   );
 
   const missing: string[] = [];
-  if (!baseUrl) missing.push("NEON_AUTH_BASE_URL");
-  if (!secret) missing.push("NEON_AUTH_COOKIE_SECRET");
+  const invalid: string[] = [];
+
+  if (!baseUrl) {
+    missing.push("NEON_AUTH_BASE_URL");
+  } else if (!isValidAuthBaseUrl(baseUrl)) {
+    invalid.push("NEON_AUTH_BASE_URL");
+  }
+
+  if (!secret) {
+    missing.push("NEON_AUTH_COOKIE_SECRET");
+  } else if (secret.length < MIN_COOKIE_SECRET_LENGTH) {
+    invalid.push("NEON_AUTH_COOKIE_SECRET");
+  }
+
+  const configured = missing.length === 0 && invalid.length === 0;
 
   return {
-    configured: missing.length === 0,
+    configured,
     baseUrlConfigured: Boolean(baseUrl),
+    baseUrlValid: Boolean(baseUrl) && isValidAuthBaseUrl(baseUrl),
     cookieSecretConfigured: Boolean(secret),
+    cookieSecretValid: Boolean(secret) && secret.length >= MIN_COOKIE_SECRET_LENGTH,
     missing,
+    invalid,
     baseUrl,
     secret,
   };
