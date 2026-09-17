@@ -1,22 +1,30 @@
 {
-  "name": "career-compass-junior-interactive",
-  "private": true,
+  "name": "career-compass-junior-mastery",
   "version": "0.1.0",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 5173",
-    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
-    "preview": "vite preview --host 0.0.0.0 --port 4173"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@neondatabase/auth": "0.5.0-beta",
+    "@neondatabase/serverless": "1.1.0",
+    "next": "16.3.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "typescript": "^5.6.2",
-    "vite": "^5.4.8"
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "16.3.5",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=20.19.0"
   }
 }
