@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">ViTech Intelligence Solutions</title>
+  <desc id="desc">ViTech navy and blue geometric brand mark</desc>
+  <defs>
+    <linearGradient id="vitechBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#12a8f4"/>
+      <stop offset="1" stop-color="#1357c8"/>
+    </linearGradient>
+    <linearGradient id="vitechNavy" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b315d"/>
+      <stop offset="1" stop-color="#081f45"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#vitechNavy)" d="M72 84h368l-37 58-111 8-25 139-43-139-116-9z"/>
+  <path fill="url(#vitechNavy)" d="M127 181h83l108 216-46 66z"/>
+  <path fill="url(#vitechBlue)" d="M328 181h91l-94 196-36-78z"/>
+</svg>

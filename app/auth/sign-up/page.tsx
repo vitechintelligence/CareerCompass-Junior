@@ -1,4 +1,5 @@
 import AuthForm from "../AuthForm";
+import { safeInternalPath } from "@/lib/navigation";
 
 export default async function SignUpPage({
   searchParams,
@@ -6,5 +7,5 @@ export default async function SignUpPage({
   searchParams: Promise<{ callbackURL?: string }>;
 }) {
   const { callbackURL } = await searchParams;
-  return <AuthForm mode="sign-up" callbackUrl={callbackURL || "/portal/student"} />;
+  return <AuthForm mode="sign-up" callbackUrl={safeInternalPath(callbackURL, "/workspace/student")} />;
 }

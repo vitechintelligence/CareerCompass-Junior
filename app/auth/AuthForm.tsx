@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
+import { VitechMark } from "@/app/VitechMark";
 import { authClient } from "@/lib/auth/client";
 
 type Props = {
@@ -59,13 +60,13 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
     try {
       const result = isSignUp
         ? await authClient.signUp.email({
-            name: name.trim() || "Learner",
-            email: email.trim(),
+            name: name.trim().slice(0, 80) || "Learner",
+            email: email.trim().slice(0, 254),
             password,
             callbackURL: callbackUrl,
           })
         : await authClient.signIn.email({
-            email: email.trim(),
+            email: email.trim().slice(0, 254),
             password,
             callbackURL: callbackUrl,
           });
@@ -82,12 +83,9 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
       try {
         const healthResponse = await fetch("/api/health", { cache: "no-store" });
         const health = (await healthResponse.json()) as HealthPayload;
-
-        if (health.auth) {
-          nextMessage = authSetupMessage(health.auth);
-        }
+        if (health.auth) nextMessage = authSetupMessage(health.auth);
       } catch {
-        // Keep the generic connectivity message when the health endpoint is also unavailable.
+        // Keep the generic connectivity message when the health endpoint is unavailable too.
       }
 
       setMessage(nextMessage);
@@ -100,7 +98,7 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
     <main className="authPage">
       <section className="authCard">
         <Link className="brand" href="/">
-          <span className="brandMark">CC</span>
+          <VitechMark />
           <span>Career Compass Junior</span>
         </Link>
         <div className="eyebrow" style={{ marginTop: 30 }}>
@@ -117,16 +115,16 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
           {isSignUp && (
             <label>
               <span>Name</span>
-              <input autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} />
+              <input autoComplete="name" maxLength={80} value={name} onChange={(event) => setName(event.target.value)} />
             </label>
           )}
           <label>
             <span>Email</span>
-            <input autoComplete="email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
+            <input autoComplete="email" maxLength={254} type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <label>
             <span>Password</span>
-            <input autoComplete={isSignUp ? "new-password" : "current-password"} minLength={8} type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+            <input autoComplete={isSignUp ? "new-password" : "current-password"} minLength={8} maxLength={128} type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
           </label>
           <button className="button primary" disabled={busy} type="submit">
             {busy ? "Please wait…" : isSignUp ? "Create student account" : "Sign in"}

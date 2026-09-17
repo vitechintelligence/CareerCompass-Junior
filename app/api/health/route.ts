@@ -3,6 +3,7 @@ import { getAuthConfigurationStatus } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
+const noStore = { "Cache-Control": "no-store, max-age=0" };
 
 export async function GET() {
   const hasDatabase = Boolean(process.env.DATABASE_URL);
@@ -23,7 +24,7 @@ export async function GET() {
       app: "career-compass-junior-mastery",
       database: "not-configured",
       auth: authStatus,
-    });
+    }, { headers: noStore });
   }
 
   try {
@@ -35,7 +36,7 @@ export async function GET() {
       database: "connected",
       serverTime: result[0]?.server_time ?? null,
       auth: authStatus,
-    });
+    }, { headers: noStore });
   } catch {
     return NextResponse.json(
       {
@@ -44,7 +45,7 @@ export async function GET() {
         database: "unreachable",
         auth: authStatus,
       },
-      { status: 503 },
+      { status: 503, headers: noStore },
     );
   }
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { VitechMark } from "@/app/VitechMark";
 import { getBookCatalogItem } from "@/lib/book-catalog";
 
 export default async function BookOverviewPage({ params, searchParams }: { params: Promise<{ bookCode: string }>; searchParams: Promise<{ lang?: string }> }) {
@@ -12,7 +13,7 @@ export default async function BookOverviewPage({ params, searchParams }: { param
   return (
     <main className="lessonApp">
       <header className="topbar lessonTopbar">
-        <Link className="brand" href="/books"><span className="brandMark">CC</span><span>Interactive Books</span></Link>
+        <Link className="brand" href="/books"><VitechMark /><span>Interactive Books</span></Link>
         <div className="lessonHeaderActions"><Link className="pill" href={`/learn/${book.code}?lang=${locale === "vi" ? "en" : "vi"}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link></div>
       </header>
       <div className="lessonShell">

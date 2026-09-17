@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { createAssignment, recordAttendance, saveFeedback } from "./actions";
@@ -140,10 +141,10 @@ export default async function TeacherWorkspacePage() {
             {classes.length === 0 ? <EmptyState text="Assign a class before publishing work." /> : (
               <form action={createAssignment} className="workspaceForm">
                 <label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label>
-                <label><span>English title</span><input name="titleEn" required /></label>
-                <label><span>Vietnamese title</span><input name="titleVi" required /></label>
-                <label><span>English instructions</span><textarea name="instructionsEn" rows={3} /></label>
-                <label><span>Vietnamese instructions</span><textarea name="instructionsVi" rows={3} /></label>
+                <label><span>English title</span><input name="titleEn" maxLength={160} required /></label>
+                <label><span>Vietnamese title</span><input name="titleVi" maxLength={160} required /></label>
+                <label><span>English instructions</span><textarea name="instructionsEn" maxLength={4000} rows={3} /></label>
+                <label><span>Vietnamese instructions</span><textarea name="instructionsVi" maxLength={4000} rows={3} /></label>
                 <label><span>Due</span><input name="dueAt" type="datetime-local" /></label>
                 <button className="button primary" type="submit">Publish assignment</button>
               </form>
@@ -160,8 +161,8 @@ export default async function TeacherWorkspacePage() {
                     <input type="hidden" name="submissionId" value={String(item.id)} />
                     <strong>{String(item.title_en)}</strong>
                     <div className="muted">{String(item.class_name)} · {String(item.learner_semantic_id)}</div>
-                    <textarea name="feedbackText" rows={2} placeholder="Teacher feedback" required />
-                    <div className="inlineFields"><input name="score" type="number" min="0" step="0.5" placeholder="Score" /><button className="button soft" type="submit">Return feedback</button></div>
+                    <textarea name="feedbackText" maxLength={4000} rows={2} placeholder="Teacher feedback" required />
+                    <div className="inlineFields"><input name="score" type="number" min="0" max="100" step="0.5" placeholder="Score" /><button className="button soft" type="submit">Return feedback</button></div>
                   </form>
                 ))}
               </div>
@@ -178,7 +179,7 @@ function WorkspaceGate({ title, copy, signedIn = false }: { title: string; copy:
 }
 
 function WorkspaceHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  return <header className="topbar"><Link className="brand" href="/"><span className="brandMark">CC</span><span>Career Compass Junior</span></Link><div><strong>{title}</strong><div className="muted" style={{ fontSize: 12 }}>{subtitle}</div></div><Link className="pill" href="/portal/teacher">Portal preview</Link></header>;
+  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>{title}</strong><div className="muted" style={{ fontSize: 12 }}>{subtitle}</div></div><Link className="pill" href="/portal/teacher">Portal preview</Link></header>;
 }
 
 function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {

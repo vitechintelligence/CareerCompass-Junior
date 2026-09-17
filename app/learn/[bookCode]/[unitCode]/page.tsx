@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { VitechMark } from "@/app/VitechMark";
 import { getPublishedUnit, listPublishedUnits } from "@/lib/curriculum";
 import { getBookCatalogItem, getCatalogUnit } from "@/lib/book-catalog";
 import GenericActivity from "./GenericActivity";
@@ -36,7 +37,7 @@ export default async function DatabaseUnitPage({
   return (
     <main className="lessonApp">
       <header className="topbar lessonTopbar">
-        <Link className="brand" href={`/learn/${encodeURIComponent(bookCode)}`}><span className="brandMark">CC</span><span>Career Compass Junior</span></Link>
+        <Link className="brand" href={`/learn/${encodeURIComponent(bookCode)}`}><VitechMark /><span>Career Compass Junior</span></Link>
         <div className="lessonHeaderActions">
           {bookCode === "CCJ-MASTERY-BEGINNER" && unitCode === "U01" && <Link className="pill" href={`/learn/unit-1?lang=${locale}`}>{locale === "vi" ? "Mở trải nghiệm nâng cao" : "Open enhanced experience"}</Link>}
           <Link className="pill" href={`/learn/${encodeURIComponent(bookCode)}/${encodeURIComponent(unitCode)}?lang=${locale === "vi" ? "en" : "vi"}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link>

@@ -2,18 +2,31 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import { VitechMark } from "@/app/VitechMark";
+import { SITE_URL } from "@/lib/site";
 import styles from "./international.module.css";
 
 export const metadata: Metadata = {
   title: "Career Compass Junior | English, Life Skills & Future Readiness",
   description:
     "Career Compass Junior is a connected bilingual learning collection for ages 4–18, combining English communication, human skills, life skills and future discovery.",
+  alternates: {
+    canonical: "/international",
+    languages: { en: "/international", vi: "/vn" },
+  },
   robots: { index: true, follow: true },
   openGraph: {
     title: "Career Compass Junior | English, Life Skills & Future Readiness",
     description:
       "Books, learning portals and partner-ready program delivery from ViTech Intelligence Solutions.",
     type: "website",
+    url: `${SITE_URL}/international`,
+    siteName: "Career Compass Junior",
+  },
+  twitter: {
+    card: "summary",
+    title: "Career Compass Junior",
+    description: "English communication, human skills, life skills and future readiness for ages 4–18.",
   },
 };
 
@@ -90,6 +103,47 @@ const partnerBenefits = [
   ["Transferable capability", "Practice reasoning and communication that can travel beyond the English classroom."],
 ] as const;
 
+const faqItems = [
+  ["What is Career Compass Junior?", "Career Compass Junior is a connected learning ecosystem from ViTech Intelligence Solutions. It uses English communication as a practical medium for human skills, reflection, projects, life skills and age-appropriate future discovery."],
+  ["Who is the program for?", "The current learning collection spans ages 4–18: EERS Action City for ages 4–6, two Career Compass Junior pathways for ages 7–12, and MY COMPASS for teens ages 13–18."],
+  ["Is the program bilingual?", "The beginner and teen pathways include English–Vietnamese support. Big Ideas, Bright Futures is an English pathway for learners ready for higher-level communication and reasoning."],
+  ["What do the Student, Teacher and Partner portals do?", "Students learn and build progress evidence; teachers manage assigned classes, attendance, assignments and feedback; approved partner administrators manage their school or training-center delivery."],
+  ["Can Career Compass Junior be installed on a phone?", "Yes. The platform is an installable progressive web app. Supported phones can add Career Compass Junior to the home screen for app-like access while private LMS data remains live and protected."],
+  ["Can schools and training centers use the platform?", "Yes. Partner access is controlled rather than self-promoted. Approved organizations can manage classes, teachers, learners, enrollment and connected program operations."],
+  ["Does the platform store learner recordings?", "The current interactive speaking flow can record and replay practice on the learner's device, but that flow does not upload the raw audio. The central learner evidence layer is metadata-first."],
+  ["Who is the author of the current book editions?", "The current public book editions display the author / pen name Zxynn Khang and are published within the ViTech Intelligence Solutions learning collection."],
+] as const;
+
+const structuredData = [
+  {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: "ViTech Intelligence Solutions",
+    url: "https://vitechintelligence.com",
+    logo: `${SITE_URL}/vitech-logo.svg`,
+    email: "Hello@vitechintelligence.com",
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Career Compass Junior",
+    applicationCategory: "EducationalApplication",
+    operatingSystem: "Web, iOS, Android",
+    url: `${SITE_URL}/international`,
+    description: "Installable bilingual learning platform for students, teachers, schools and training centers.",
+    publisher: { "@type": "Organization", name: "ViTech Intelligence Solutions" },
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqItems.map(([question, answer]) => ({
+      "@type": "Question",
+      name: question,
+      acceptedAnswer: { "@type": "Answer", text: answer },
+    })),
+  },
+];
+
 function CoverImage({ src, alt }: { src: string; alt: string }) {
   if (!src) return <span className={styles.coverFallback}>{alt}</span>;
   return (
@@ -101,7 +155,8 @@ function CoverImage({ src, alt }: { src: string; alt: string }) {
 
 export default function InternationalLanding() {
   return (
-    <main className={styles.page}>
+    <main className={styles.page} id="top">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       <div className={styles.progressTrack} aria-hidden="true"><span /></div>
 
       <div className={styles.launchStrip}>
@@ -111,7 +166,7 @@ export default function InternationalLanding() {
 
       <header className={styles.header}>
         <Link href="/international" className={styles.brand} aria-label="Career Compass Junior home">
-          <span className={styles.brandMark}>CC</span>
+          <VitechMark className={styles.brandMark} />
           <span><b>Career Compass Junior</b><small>by ViTech Intelligence Solutions</small></span>
         </Link>
         <nav className={styles.nav} aria-label="International landing navigation">
@@ -120,11 +175,12 @@ export default function InternationalLanding() {
           <a href="#journey">Journey</a>
           <a href="#portals">Portals</a>
           <a href="#centers">For partners</a>
+          <a href="#faq">FAQs</a>
         </nav>
         <div className={styles.headerActions}>
           <Link className={styles.language} href="/vn">VI</Link>
           <span className={styles.languageActive}>EN</span>
-          <Link className={styles.signIn} href="/auth/sign-in">Sign in</Link>
+          <Link className={`${styles.signIn} ccjSignIn`} href="/auth/sign-in">Sign in</Link>
         </div>
       </header>
 
@@ -150,10 +206,10 @@ export default function InternationalLanding() {
           </div>
         </div>
 
-        <div className={styles.heroVisual} aria-label="Career Compass Junior book collection">
+        <div className={`${styles.heroVisual} ccjHeroVisual`} aria-label="Career Compass Junior book collection">
           <div className={styles.bookHalo} aria-hidden="true" />
           {books.map((book, index) => (
-            <div className={`${styles.heroBook} ${styles[`heroBook${index + 1}`]}`} key={book.subtitle}>
+            <div className={`${styles.heroBook} ${styles[`heroBook${index + 1}`]} ccjHeroBook${index + 1}`} key={book.subtitle}>
               <CoverImage src={book.cover} alt={`${book.title} — ${book.subtitle}, by Zxynn Khang`} />
             </div>
           ))}
@@ -182,7 +238,7 @@ export default function InternationalLanding() {
             </article>
           ))}
         </div>
-        <div className={styles.motionHint}><b>Interactive collection</b><span>Hover or focus a book to lift, tilt and reveal a subtle light sweep. On touch devices, the collection becomes a smooth visual browsing experience.</span></div>
+        <div className={styles.motionHint}><b>Interactive collection</b><span>Hover or focus a book to lift, tilt and reveal a subtle light sweep. On touch devices, motion stays intentionally gentle for comfortable mobile browsing.</span></div>
       </section>
 
       <section id="difference" className={`${styles.section} ${styles.tint}`}>
@@ -256,7 +312,14 @@ export default function InternationalLanding() {
 
       <section className={styles.helpdesk}>
         <div className={styles.helpCopy}><span>Concierge helpdesk</span><h2>Need class setup, portal access, roster help, parent materials or partnership guidance?</h2><p>Choose the fastest path for your question. We can support families, teachers, schools and training centers from inquiry through implementation.</p><div className={styles.actions}><a className={styles.primary} href="https://zalo.me/84967243150" target="_blank" rel="noreferrer">Zalo Mr. Chung</a><a className={styles.secondary} href="mailto:Hello@vitechintelligence.com?subject=Career%20Compass%20Junior%20Helpdesk">Email helpdesk</a><a className={styles.secondary} href="mailto:business@vitechintelligence.com?subject=Career%20Compass%20Junior%20Partnership">Partnership inquiry</a></div></div>
-        <div className={styles.helpOrb}><span>CHAT</span><b>Zalo · Email</b><small>Partnership</small></div>
+        <div className={styles.helpOrb}><span className="ccjHelpOrbLogo"><img src="/vitech-logo.svg" alt="" /></span><b>Zalo · Email</b><small>ViTech support</small></div>
+      </section>
+
+      <section className="ccjFaq" id="faq">
+        <div className="ccjFaqHeader"><span>Frequently asked questions</span><h2>Clear answers for families, teachers and partners.</h2><p>These answers are visible in the page itself and also published as structured FAQ data so search engines and AI discovery systems can understand the program accurately.</p></div>
+        <div className="ccjFaqList">
+          {faqItems.map(([question, answer]) => <details key={question}><summary>{question}</summary><p>{answer}</p></details>)}
+        </div>
       </section>
 
       <section className={styles.cta}>
@@ -265,7 +328,7 @@ export default function InternationalLanding() {
       </section>
 
       <details className={styles.contactWidget}>
-        <summary aria-label="Open contact options"><span className={styles.contactPulse} />Need help?</summary>
+        <summary aria-label="Open contact options"><span className="vitechWidgetMark"><img src="/vitech-logo.svg" alt="" /></span><span>Need help?</span></summary>
         <div><b>How can we help?</b><a href="https://zalo.me/84967243150" target="_blank" rel="noreferrer">Zalo · fast reply</a><a href="mailto:Hello@vitechintelligence.com">Student / teacher support</a><a href="mailto:business@vitechintelligence.com">School / center partnership</a><a href="#top">Back to top ↑</a></div>
       </details>
 

@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { VitechMark } from "@/app/VitechMark";
 import { interactiveBooks } from "@/lib/book-catalog";
 
 export default function BooksPage() {
   return (
     <main className="workspacePage">
       <header className="topbar">
-        <Link className="brand" href="/"><span className="brandMark">CC</span><span>Career Compass Junior</span></Link>
+        <Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link>
         <div><strong>Interactive Book Collection</strong><div className="muted" style={{ fontSize: 12 }}>Ages 4–18 · bilingual learning</div></div>
         <Link className="pill" href="/portal/student">Student Portal</Link>
       </header>

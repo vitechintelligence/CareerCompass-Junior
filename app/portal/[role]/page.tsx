@@ -1,6 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { VitechMark } from "@/app/VitechMark";
+import { getCurrentProfile } from "@/lib/auth/profile";
 import { bookUnits, portalCopy, t, type Locale, type PortalRole } from "@/lib/platform";
+
+export const dynamic = "force-dynamic";
 
 const roles: PortalRole[] = ["student", "teacher", "partner"];
 
@@ -16,6 +20,11 @@ export default async function PortalPage({
   if (!roles.includes(rawRole as PortalRole)) notFound();
 
   const role = rawRole as PortalRole;
+  if (role === "student") {
+    const profile = await getCurrentProfile();
+    if (profile?.account_type === "student") redirect("/workspace/student");
+  }
+
   const locale: Locale = lang === "vi" ? "vi" : "en";
   const copy = portalCopy[role];
   const otherLocale: Locale = locale === "en" ? "vi" : "en";
@@ -24,7 +33,7 @@ export default async function PortalPage({
     <main className="portalPage">
       <header className="topbar">
         <Link className="brand" href="/">
-          <span className="brandMark">CC</span>
+          <VitechMark />
           <span>Career Compass Junior</span>
         </Link>
         <nav className="nav" aria-label="Portal switcher">
@@ -38,6 +47,11 @@ export default async function PortalPage({
       </header>
 
       <div className="portalShell">
+        <div className="previewNotice" role="note">
+          <strong>{locale === "en" ? "Public portal preview" : "Bản xem trước cổng thông tin"}</strong>
+          <span>{locale === "en" ? "Example metrics below demonstrate the interface. Signed-in workspaces use live Neon data and role-scoped access." : "Các số liệu bên dưới chỉ minh họa giao diện. Không gian đăng nhập sử dụng dữ liệu Neon thực và quyền truy cập theo vai trò."}</span>
+        </div>
+
         <section className="portalHero">
           <div className="portalIntro">
             <div className="eyebrow">{t(copy.eyebrow, locale)}</div>
@@ -55,18 +69,22 @@ export default async function PortalPage({
           </div>
 
           <aside className="focusPanel">
-            <span className="pill">{locale === "en" ? "Today" : "Hôm nay"}</span>
+            <span className="pill">{locale === "en" ? "Example day" : "Ngày minh họa"}</span>
             <h3 style={{ fontSize: 26, marginTop: 18 }}>
               {role === "student" && (locale === "en" ? "Your next small win" : "Bước tiến tiếp theo của em")}
               {role === "teacher" && (locale === "en" ? "What needs attention" : "Nội dung cần xử lý")}
               {role === "partner" && (locale === "en" ? "Program pulse" : "Tình hình chương trình")}
             </h3>
             <p className="muted">
-              {role === "student" && (locale === "en" ? "Finish Unit 3 reflection and record one 30-second speaking response." : "Hoàn thành phần phản tư Bài 3 và ghi một đoạn nói 30 giây.")}
-              {role === "teacher" && (locale === "en" ? "12 submissions are ready for feedback; Class J2 has two attendance exceptions." : "12 bài nộp đang chờ phản hồi; Lớp J2 có 2 trường hợp chuyên cần cần kiểm tra.")}
-              {role === "partner" && (locale === "en" ? "Most classes are on track. One class is below the expected activity completion pace." : "Hầu hết các lớp đang đúng tiến độ. Một lớp đang thấp hơn tốc độ hoàn thành hoạt động dự kiến.")}
+              {role === "student" && (locale === "en" ? "A learner might finish a reflection and record one short speaking response." : "Học sinh có thể hoàn thành phần phản tư và ghi một đoạn nói ngắn.")}
+              {role === "teacher" && (locale === "en" ? "A teacher can see submissions awaiting feedback and attendance exceptions for assigned classes." : "Giáo viên có thể xem bài nộp chờ phản hồi và trường hợp chuyên cần của lớp được phân công.")}
+              {role === "partner" && (locale === "en" ? "A partner administrator can review delivery health across the organization they manage." : "Quản trị viên đối tác có thể xem tình hình triển khai trong tổ chức mình quản lý.")}
             </p>
-            <div className="actions"><a className="button soft" href="#workspace">{locale === "en" ? "Open workspace" : "Mở không gian làm việc"}</a></div>
+            <div className="actions">
+              {role === "student" && <Link className="button primary" href="/auth/sign-up?callbackURL=%2Fworkspace%2Fstudent">Activate student access</Link>}
+              {role === "teacher" && <Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace%2Fteacher">Teacher sign in</Link>}
+              {role === "partner" && <Link className="button primary" href="/workspace/partner">Partner access</Link>}
+            </div>
           </aside>
         </section>
 
@@ -101,7 +119,7 @@ export default async function PortalPage({
             <div>
               {bookUnits.map((unit) => (
                 <div className="unit" key={unit.code}>
-                  <div className="unitTop"><strong>{unit.code} · {locale === "en" ? unit.en : unit.vi}</strong><span className="muted">{unit.progress}%</span></div>
+                  <div className="unitTop"><strong>{unit.code} · {locale === "en" ? unit.en : unit.vi}</strong><span className="muted">Sample {unit.progress}%</span></div>
                   <div className="progressTrack"><div className="progressFill" style={{ width: `${unit.progress}%` }} /></div>
                   <div className="muted" style={{ fontSize: 13, marginTop: 7 }}>{unit.focus}</div>
                 </div>
