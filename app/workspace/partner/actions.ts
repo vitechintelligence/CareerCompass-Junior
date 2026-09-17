@@ -5,7 +5,16 @@ import { revalidatePath } from "next/cache";
 import { ensureStudentProfile, getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const SEMANTIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
+
+function boundedText(value: FormDataEntryValue | null, max: number) {
+  return String(value || "").trim().slice(0, max);
+}
+
 async function requirePartnerOrganization(organizationId: string) {
+  if (!UUID_RE.test(organizationId)) throw new Error("Invalid organization reference.");
+
   const profile = await getCurrentProfile();
   if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
     throw new Error("Partner administrator access required.");
@@ -29,8 +38,9 @@ async function requirePartnerOrganization(organizationId: string) {
 }
 
 async function requirePartnerClass(classId: string) {
+  if (!UUID_RE.test(classId)) throw new Error("Invalid class reference.");
   const sql = getDb();
-  const rows = await sql`select organization_id from classes where id = ${classId} limit 1`;
+  const rows = await sql`select organization_id from classes where id = ${classId} and status='active' limit 1`;
   const organizationId = String(rows[0]?.organization_id || "");
   if (!organizationId) throw new Error("Class not found.");
   await requirePartnerOrganization(organizationId);
@@ -38,9 +48,9 @@ async function requirePartnerClass(classId: string) {
 }
 
 export async function requestPartnerAccess(formData: FormData) {
-  const organizationName = String(formData.get("organizationName") || "").trim();
+  const organizationName = boundedText(formData.get("organizationName"), 160);
   const organizationType = String(formData.get("organizationType") || "");
-  if (!organizationName || !["school", "training_center"].includes(organizationType)) {
+  if (organizationName.length < 2 || !["school", "training_center"].includes(organizationType)) {
     throw new Error("A valid school or training center is required.");
   }
 
@@ -68,10 +78,10 @@ export async function requestPartnerAccess(formData: FormData) {
 
 export async function createClass(formData: FormData) {
   const organizationId = String(formData.get("organizationId") || "");
-  const name = String(formData.get("name") || "").trim();
-  const levelLabel = String(formData.get("levelLabel") || "").trim();
-  const academicCycle = String(formData.get("academicCycle") || "").trim();
-  if (!organizationId || !name) throw new Error("Organization and class name are required.");
+  const name = boundedText(formData.get("name"), 120);
+  const levelLabel = boundedText(formData.get("levelLabel"), 80);
+  const academicCycle = boundedText(formData.get("academicCycle"), 40);
+  if (!UUID_RE.test(organizationId) || name.length < 2) throw new Error("Organization and class name are required.");
 
   await requirePartnerOrganization(organizationId);
   const sql = getDb();
@@ -91,8 +101,8 @@ export async function createClass(formData: FormData) {
 
 export async function activateTeacher(formData: FormData) {
   const organizationId = String(formData.get("organizationId") || "");
-  const semanticId = String(formData.get("teacherSemanticId") || "").trim();
-  if (!organizationId || !semanticId) throw new Error("Organization and account ID are required.");
+  const semanticId = boundedText(formData.get("teacherSemanticId"), 100);
+  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId)) throw new Error("Organization and valid account ID are required.");
 
   await requirePartnerOrganization(organizationId);
   const sql = getDb();
@@ -125,8 +135,8 @@ export async function activateTeacher(formData: FormData) {
 
 export async function assignTeacher(formData: FormData) {
   const classId = String(formData.get("classId") || "");
-  const semanticId = String(formData.get("teacherSemanticId") || "").trim();
-  if (!classId || !semanticId) throw new Error("Class and teacher ID are required.");
+  const semanticId = boundedText(formData.get("teacherSemanticId"), 100);
+  if (!UUID_RE.test(classId) || !SEMANTIC_ID_RE.test(semanticId)) throw new Error("Class and valid teacher ID are required.");
 
   const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
@@ -157,8 +167,8 @@ export async function assignTeacher(formData: FormData) {
 
 export async function enrollStudent(formData: FormData) {
   const classId = String(formData.get("classId") || "");
-  const semanticId = String(formData.get("studentSemanticId") || "").trim();
-  if (!classId || !semanticId) throw new Error("Class and learner ID are required.");
+  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
+  if (!UUID_RE.test(classId) || !SEMANTIC_ID_RE.test(semanticId)) throw new Error("Class and valid learner ID are required.");
 
   const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
