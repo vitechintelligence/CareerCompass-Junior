@@ -1,0 +1,33 @@
+# Career Compass Junior
+
+Career Compass Junior is a ViTech Intelligence Solutions learning ecosystem for ages 4–18. It connects English communication with human skills, life skills, reflection, projects and age-appropriate future or career discovery.
+
+## Public learning collection
+- Career Compass Junior — Big Ideas, Bright Futures: ages 7–12, English, CEFR B1+.
+- Career Compass Junior Mastery — Beginner: ages 7–12, bilingual English–Vietnamese, 96 lessons, CEFR A0–A1 progressing toward early A2.
+- MY COMPASS: ages 13–18, bilingual/Vietnamese-first English + life skills + career discovery.
+- EERS Action City — My First Sound Adventures: ages 4–6, early English sounds and action-based learning.
+- Public author / pen name on the current editions: Zxynn Khang.
+
+## Platform roles
+- Student: interactive books, learning activities, progress, feedback and learner evidence.
+- Teacher: assigned classes, attendance, assignments, submissions and structured feedback.
+- Partner administrator: controlled school/training-center onboarding, classes, teacher assignment, learner enrollment and program operations.
+
+## Public pages
+- /international — main program landing page
+- /books — public book catalog
+- /portal/student — public student portal preview
+- /portal/teacher — public teacher portal preview
+- /portal/partner — public partner portal preview
+- /learn/unit-1?lang=en — public interactive Unit 1 preview
+- /vn — Vietnam-facing landing experience
+
+## Privacy and access
+Authenticated routes under /workspace and /auth and application APIs under /api are not public documentation surfaces and should not be indexed as public content. The LMS follows data-minimization principles; private learner data and authenticated operations are not intended for crawler access.
+
+## Organization
+ViTech Intelligence Solutions
+Program: Career Compass Junior
+Public support: Hello@vitechintelligence.com
+Partnership: business@vitechintelligence.com
