@@ -1,0 +1,112 @@
+/* ViTech brand + mobile-first product polish. Loaded after the base styles. */
+.brandLogoMark {
+  overflow: hidden;
+  background: rgba(255,255,255,.96) !important;
+  border: 1px solid rgba(185,205,229,.78);
+  box-shadow: 0 9px 22px rgba(15,39,69,.12) !important;
+  padding: 5px;
+}
+.brandLogoMark img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.ccjSignIn { color: #fff !important; }
+.ccjSignIn:visited { color: #fff !important; }
+
+/* Keep the hero collection composed as one visual unit instead of four independent objects. */
+.ccjHeroVisual { max-width: 540px; width: 100%; margin-inline: auto; }
+.ccjHeroBook1 { width: 224px !important; height: 310px !important; left: calc(50% - 112px) !important; top: 82px !important; right: auto !important; z-index: 5 !important; transform: rotate(-1deg) !important; animation: ccjFloatMain 8s ease-in-out infinite !important; }
+.ccjHeroBook2 { width: 168px !important; height: 233px !important; left: 24px !important; top: 142px !important; right: auto !important; z-index: 3 !important; transform: rotate(-5deg) !important; animation: ccjFloatLeft 8.8s ease-in-out .5s infinite !important; }
+.ccjHeroBook3 { width: 158px !important; height: 220px !important; left: auto !important; right: 29px !important; top: 52px !important; z-index: 2 !important; transform: rotate(4deg) !important; animation: ccjFloatRight 9.2s ease-in-out 1s infinite !important; }
+.ccjHeroBook4 { width: 145px !important; height: 201px !important; left: auto !important; right: 22px !important; top: 218px !important; z-index: 1 !important; transform: rotate(5deg) !important; animation: ccjFloatBack 9.6s ease-in-out 1.5s infinite !important; }
+.ccjHeroVisual:hover .ccjHeroBook1 { transform: translateY(-5px) rotate(-2deg) scale(1.015) !important; }
+.ccjHeroVisual:hover .ccjHeroBook2 { transform: translateY(-3px) rotate(-6deg) scale(1.01) !important; }
+.ccjHeroVisual:hover .ccjHeroBook3 { transform: translateY(-4px) rotate(5deg) scale(1.01) !important; }
+.ccjHeroVisual:hover .ccjHeroBook4 { transform: translateY(-2px) rotate(6deg) scale(1.008) !important; }
+@keyframes ccjFloatMain { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-7px) rotate(-.4deg)} }
+@keyframes ccjFloatLeft { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-5px) rotate(-4.5deg)} }
+@keyframes ccjFloatRight { 0%,100%{transform:translateY(0) rotate(4deg)} 50%{transform:translateY(-6px) rotate(3.5deg)} }
+@keyframes ccjFloatBack { 0%,100%{transform:translateY(0) rotate(5deg)} 50%{transform:translateY(-4px) rotate(5.5deg)} }
+
+/* FAQ content is plain semantic HTML so humans, search engines and AI crawlers see the same answers. */
+.ccjFaq { max-width: 1180px; margin: 0 auto; padding: 76px 24px; }
+.ccjFaqHeader { max-width: 760px; margin-bottom: 26px; }
+.ccjFaqHeader > span { color: #1d5fd6; font-size: 11px; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+.ccjFaqHeader h2 { margin: 10px 0 12px; color: #0a1e3f; font-size: clamp(32px,4vw,50px); line-height: 1.07; letter-spacing: -.04em; }
+.ccjFaqHeader p { color: #5b6b80; line-height: 1.7; }
+.ccjFaqList { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.ccjFaqList details { background: #fff; border: 1px solid #dfe7f1; border-radius: 19px; padding: 18px 20px; box-shadow: 0 9px 26px rgba(10,25,55,.045); }
+.ccjFaqList summary { cursor: pointer; color: #0a1e3f; font-weight: 850; line-height: 1.45; }
+.ccjFaqList p { margin: 12px 0 2px; color: #5b6b80; font-size: 13px; line-height: 1.68; }
+
+/* Branded help surfaces. */
+.vitechWidgetMark { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; flex: 0 0 auto; background: #fff; padding: 4px; box-shadow: 0 5px 14px rgba(15,39,69,.14); }
+.vitechWidgetMark img { width: 100%; height: 100%; object-fit: contain; }
+.ccjHelpOrbLogo { width: 72px; height: 72px; display: grid; place-items: center; margin: 0 auto 10px; padding: 9px; border-radius: 23px; background: rgba(255,255,255,.96); box-shadow: 0 13px 30px rgba(15,39,69,.15); }
+.ccjHelpOrbLogo img { width: 100%; height: 100%; object-fit: contain; }
+
+/* Install prompt only appears inside LMS/app routes when the browser can install or iOS needs guidance. */
+.pwaInstallToast { position: fixed; z-index: 110; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); max-width: 620px; margin-inline: auto; display: grid; grid-template-columns: 44px minmax(0,1fr) auto auto; align-items: center; gap: 10px; padding: 10px 10px 10px 12px; color: #10233f; background: rgba(255,255,255,.96); border: 1px solid #d8e3ef; border-radius: 19px; box-shadow: 0 20px 48px rgba(15,39,69,.18); backdrop-filter: blur(14px); }
+.pwaInstallLogo { width: 42px; height: 42px; border-radius: 13px; background: #f3f7fb; display: grid; place-items: center; padding: 5px; }
+.pwaInstallLogo img { width: 100%; height: 100%; object-fit: contain; }
+.pwaInstallCopy { min-width: 0; display: grid; gap: 2px; }
+.pwaInstallCopy strong { font-size: 13px; }
+.pwaInstallCopy span { color: #617189; font-size: 11px; line-height: 1.35; }
+.pwaInstallAction { min-height: 38px; border: 0; border-radius: 11px; padding: 0 13px; color: #fff; background: #0f2745; font-weight: 850; cursor: pointer; }
+.pwaInstallClose { width: 34px; height: 34px; border: 0; border-radius: 10px; background: #eef3f8; color: #52647e; font-size: 20px; cursor: pointer; }
+
+/* Mobile app ergonomics: 44px tap targets, no iOS input zoom, single-column operational flows. */
+@media (max-width: 760px) {
+  html { -webkit-text-size-adjust: 100%; }
+  .topbar { padding: 11px 13px; gap: 10px; min-height: 68px; flex-wrap: wrap; }
+  .topbar .brand { min-width: 0; font-size: 14px; }
+  .topbar .brandMark { width: 38px; height: 38px; border-radius: 12px; }
+  .topbar > div { min-width: 0; }
+  .topbar > div strong { font-size: 13px; }
+  .topbar .pill { min-height: 40px; padding-inline: 11px; }
+  .portalShell, .workspaceContent { padding-left: 13px; padding-right: 13px; padding-bottom: calc(82px + env(safe-area-inset-bottom)); }
+  .portalHero, .workspaceGrid { grid-template-columns: 1fr !important; }
+  .metricGrid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+  .metric { padding: 14px; min-width: 0; }
+  .metric strong { font-size: 24px; }
+  .panel, .portalIntro, .focusPanel { border-radius: 20px; padding: 18px; }
+  .workspaceIdentity { border-radius: 21px; }
+  .workspaceRow { width: 100%; }
+  .workspaceForm input, .workspaceForm select, .workspaceForm textarea, .authForm input, .authForm select, .feedbackCard textarea, .feedbackCard input { font-size: 16px; min-height: 46px; }
+  .button, button, .actionItem, .nav a { min-height: 44px; }
+  .lessonShell { grid-template-columns: 1fr !important; padding-left: 12px !important; padding-right: 12px !important; }
+  .lessonSidebar { position: relative !important; top: 0 !important; max-height: none !important; }
+  .lessonGrid.twoCol { grid-template-columns: 1fr !important; }
+  .lessonHeroCard { border-radius: 22px !important; }
+  .pwaInstallToast { grid-template-columns: 40px minmax(0,1fr) auto; }
+  .pwaInstallLogo { width: 38px; height: 38px; }
+  .pwaInstallClose { grid-column: 3; grid-row: 1; }
+  .pwaInstallAction { grid-column: 1 / -1; width: 100%; }
+  .ccjFaq { padding: 58px 17px; }
+  .ccjFaqList { grid-template-columns: 1fr; }
+
+  .ccjHeroVisual { height: 390px !important; max-width: 420px; }
+  .ccjHeroBook1 { width: 178px !important; height: 247px !important; left: calc(50% - 89px) !important; top: 80px !important; }
+  .ccjHeroBook2 { width: 128px !important; height: 178px !important; left: 8px !important; top: 139px !important; }
+  .ccjHeroBook3 { width: 119px !important; height: 165px !important; right: 13px !important; top: 58px !important; }
+  .ccjHeroBook4 { width: 106px !important; height: 147px !important; right: 10px !important; top: 201px !important; }
+  .ccjHeroVisual:hover .ccjHeroBook1 { transform: rotate(-1deg) !important; }
+  .ccjHeroVisual:hover .ccjHeroBook2 { transform: rotate(-5deg) !important; }
+  .ccjHeroVisual:hover .ccjHeroBook3 { transform: rotate(4deg) !important; }
+  .ccjHeroVisual:hover .ccjHeroBook4 { transform: rotate(5deg) !important; }
+  @keyframes ccjFloatMain { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-4px) rotate(-.7deg)} }
+  @keyframes ccjFloatLeft { 0%,100%{transform:translateY(0) rotate(-5deg)} 50%{transform:translateY(-3px) rotate(-4.7deg)} }
+  @keyframes ccjFloatRight { 0%,100%{transform:translateY(0) rotate(4deg)} 50%{transform:translateY(-3px) rotate(3.8deg)} }
+  @keyframes ccjFloatBack { 0%,100%{transform:translateY(0) rotate(5deg)} 50%{transform:translateY(-2px) rotate(5.2deg)} }
+}
+
+@media (max-width: 420px) {
+  .metricGrid { grid-template-columns: 1fr; }
+  .ccjHeroVisual { height: 365px !important; }
+  .ccjHeroBook1 { width: 166px !important; height: 230px !important; left: calc(50% - 83px) !important; top: 76px !important; }
+  .ccjHeroBook2 { width: 116px !important; height: 161px !important; left: 3px !important; top: 135px !important; }
+  .ccjHeroBook3 { width: 108px !important; height: 150px !important; right: 6px !important; top: 61px !important; }
+  .ccjHeroBook4 { width: 96px !important; height: 133px !important; right: 5px !important; top: 198px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ccjHeroBook1,.ccjHeroBook2,.ccjHeroBook3,.ccjHeroBook4 { animation: none !important; transition: none !important; }
+  .pwaInstallToast { backdrop-filter: none; }
+}
