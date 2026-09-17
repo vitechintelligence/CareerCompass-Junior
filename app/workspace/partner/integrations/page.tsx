@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { integrationStandards, listIntegrationProviders, listOrganizationIntegrations } from "@/lib/integrations";
+import IntegrationActions from "./IntegrationActions";
 
 export const dynamic = "force-dynamic";
 
@@ -80,7 +81,7 @@ export default async function PartnerIntegrationsPage() {
 
           <article className="panel">
             <div className="eyebrow">Current organization</div><h2 className="workspaceTitle">Installed connections</h2>
-            {installations.length === 0 ? <div className="emptyState"><span>◎</span><p className="muted">No live connector has been installed yet. The catalog below is ready for controlled setup.</p></div> : <div className="workspaceList">{installations.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.display_label || item.provider_name)}</strong><div className="muted">{String(item.provider_name)} · {String(item.protocol)}</div></div><span className="pill">{String(item.health_state)} · {String(item.status)}</span></div>)}</div>}
+            {installations.length === 0 ? <div className="emptyState"><span>◎</span><p className="muted">No connector slot has been prepared yet. Choose a provider below to create one safely.</p></div> : <div className="workspaceList">{installations.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.display_label || item.provider_name)}</strong><div className="muted">{String(item.provider_name)} · {String(item.protocol)}</div></div><span className="pill">{String(item.health_state)} · {String(item.status)}</span></div>)}</div>}
           </article>
         </section>
 
@@ -94,7 +95,8 @@ export default async function PartnerIntegrationsPage() {
                   <h3>{provider.displayName}</h3>
                   <p className="muted">{provider.descriptionEn || "Standards-based integration profile."}</p>
                   <div className="tagRow">{provider.capabilities.map((capability) => <span className="tag" key={capability}>{capability.replaceAll("_", " ")}</span>)}</div>
-                  <p className="muted" style={{ fontSize: 12 }}>Configuration is intentionally controlled: credentials are not collected in the browser and elevated installation is organization-scoped.</p>
+                  <IntegrationActions organizationId={organizationId} providerSlug={provider.slug} providerName={provider.displayName} capabilities={provider.capabilities} />
+                  <p className="muted" style={{ fontSize: 12 }}>Secrets are never collected by this browser action. OAuth, LTI keys and API credentials remain part of provider-specific server authorization.</p>
                 </article>
               ))}
             </div>
