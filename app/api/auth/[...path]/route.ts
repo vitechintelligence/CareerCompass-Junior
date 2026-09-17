@@ -11,8 +11,9 @@ function unavailable() {
 
   return Response.json(
     {
-      error: "Authentication is not configured for this deployment.",
+      error: "Authentication is not configured correctly for this deployment.",
       missing: configuration.missing,
+      invalid: configuration.invalid,
     },
     { status: 503 },
   );
