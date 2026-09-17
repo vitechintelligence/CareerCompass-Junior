@@ -64,7 +64,7 @@ export default async function DatabaseUnitPage({
             <article className="lessonCard missionCard"><div className="lessonSectionLabel">Career Compass × Mastery English</div><p><strong>{unit.careerCompassFocus}</strong></p><p className="muted">{unit.masteryEnglishFocus}</p></article>
           </div>
 
-          {unit.activities.length === 0 ? <article className="lessonCard"><p className="muted">{locale === "vi" ? "Nội dung tương tác của bài này đang được chuẩn bị." : "Interactive content for this unit is being prepared."}</p></article> : unit.activities.map((activity) => <GenericActivity activity={activity} locale={locale} key={activity.id} />)}
+          {unit.activities.length === 0 ? <article className="lessonCard"><p className="muted">{locale === "vi" ? "Nội dung tương tác của bài này đang được chuẩn bị." : "Interactive content for this unit is being prepared."}</p></article> : unit.activities.map((activity) => <GenericActivity activity={activity} locale={locale} bookCode={unit.bookCode} unitCode={unit.unitCode} key={activity.id} />)}
         </section>
       </div>
     </main>
