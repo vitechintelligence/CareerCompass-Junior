@@ -1,5 +1,7 @@
 import type { CurriculumUnit } from "@/lib/curriculum";
 
+export const MY_COMPASS_INTERACTIVE_URL = "https://claude.ai/code/artifact/8cf53fd2-4a4e-4869-8c5d-e34dbb448be4?org=ab08bb84-ed17-489c-a2fd-8a2dcc1428fc";
+
 export type BookCatalogItem = {
   code: string;
   title: string;
@@ -9,6 +11,8 @@ export type BookCatalogItem = {
   bilingual: boolean;
   description: string;
   accent: string;
+  interactiveUrl?: string;
+  interactiveStatus?: "preview" | "complete";
   units: Array<{
     code: string;
     unitNumber: number;
@@ -59,6 +63,8 @@ export const interactiveBooks: BookCatalogItem[] = [
     bilingual: true,
     description: "Teen learning journey for English, life skills, self-awareness and early career discovery.",
     accent: "🗺️",
+    interactiveUrl: MY_COMPASS_INTERACTIVE_URL,
+    interactiveStatus: "complete",
     units: [
       { code: "U01", unitNumber: 1, titleEn: "My Direction", titleVi: "Hướng đi của tôi", objectiveEn: "Express one interest, one strength and one goal.", objectiveVi: "Diễn đạt một sở thích, một điểm mạnh và một mục tiêu.", careerCompassFocus: "Identity, agency and direction", masteryEnglishFocus: "I am interested in… / I am good at… / I want to…" },
       { code: "U02", unitNumber: 2, titleEn: "Choices & Reasons", titleVi: "Lựa chọn & Lý do", objectiveEn: "Compare choices and explain a reason.", objectiveVi: "So sánh lựa chọn và giải thích một lý do.", careerCompassFocus: "Decision-making and reflection", masteryEnglishFocus: "I prefer… because… / Another choice is…" },
