@@ -37,7 +37,7 @@ export default async function DatabaseUnitPage({
   return (
     <main className="lessonApp">
       <header className="topbar lessonTopbar">
-        <Link className="brand" href={`/learn/${encodeURIComponent(bookCode)}?${enrollmentId ? `enrollmentId=${encodeURIComponent(enrollmentId)}` : ""}`}><VitechMark /><span>Career Compass Junior</span></Link>
+        <Link className="brand" href={`/learn/${encodeURIComponent(bookCode)}?lang=${locale}${enrollmentId ? `&enrollmentId=${encodeURIComponent(enrollmentId)}` : ""}`}><VitechMark /><span>Career Compass Junior</span></Link>
         <div className="lessonHeaderActions">
           {bookCode === "CCJ-MASTERY-BEGINNER" && unitCode === "U01" && <Link className="pill" href={`/learn/unit-1?lang=${locale}${enrollmentId ? `&enrollmentId=${encodeURIComponent(enrollmentId)}` : ""}`}>{locale === "vi" ? "Mở trải nghiệm nâng cao" : "Open enhanced experience"}</Link>}
           <Link className="pill" href={`/learn/${encodeURIComponent(bookCode)}/${encodeURIComponent(unitCode)}?lang=${locale === "vi" ? "en" : "vi"}${enrollmentId ? `&enrollmentId=${encodeURIComponent(enrollmentId)}` : ""}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link>
