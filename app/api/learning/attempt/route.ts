@@ -165,7 +165,7 @@ export async function POST(request: Request) {
       const integrityHash = createHash("sha256")
         .update(`${profile.semantic_id}:${bookCode}:${unitCode}:${activityCode}:${attemptId}:completed`)
         .digest("hex");
-      const capsuleSemanticId = `${profile.semantic_id}-${bookCode}-${unitCode}-${activityCode}`.toLowerCase();
+      const capsuleSemanticId = `${profile.semantic_id}-${enrollmentId}-${bookCode}-${unitCode}-${activityCode}`.toLowerCase();
       const organizationId = enrollment.organizationId;
       const classId = enrollment.classId;
 
