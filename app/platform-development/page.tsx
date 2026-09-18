@@ -338,11 +338,68 @@ export default function PlatformDevelopmentPage() {
           <p>We can begin with a focused pilot, build a platform from the ground up, or take over an existing prototype and harden it into a real product.</p>
         </div>
         <div className={styles.engagementGrid}>
-          {engagement.map((item) => (
-            <article key={item.name}>
-              <span>{item.name}</span>
-              <p>{item.best}</p>
-              <ul>{item.items.map((point) => <li key={point}>{point}</li>)}</ul>
+          {engagement.map((item, index) => (
+            <article className={styles.engagementCard} key={item.name}>
+              <div className={styles.engagementPreview} aria-hidden="true">
+                {index === 0 && (
+                  <div className={styles.mvpPreview}>
+                    <div className={styles.miniPhone}>
+                      <div className={styles.miniPhoneTop}><span /><b>FieldFlow</b><i /></div>
+                      <div className={styles.miniProgress}><i /><i /><i /></div>
+                      <div className={styles.miniTask}><span>01</span><div><b>New request</b><small>Captured from mobile</small></div><em>NEW</em></div>
+                      <div className={styles.miniTask}><span>02</span><div><b>Owner review</b><small>Rules + assignment</small></div><em>LIVE</em></div>
+                      <div className={styles.miniTask}><span>03</span><div><b>Ready to act</b><small>One focused workflow</small></div><em>✓</em></div>
+                    </div>
+                    <span className={styles.previewCaption}>PROVE ONE WORKFLOW</span>
+                  </div>
+                )}
+
+                {index === 1 && (
+                  <div className={styles.fullBuildPreview}>
+                    <div className={styles.fullPreviewHead}><b>Operations Hub</b><span>3 ROLES</span></div>
+                    <div className={styles.roleTabs}><span>Operator</span><span>Manager</span><span>Partner</span></div>
+                    <div className={styles.fullPreviewStats}><b>42<small>active cases</small></b><b>96%<small>on track</small></b><b>7<small>automations</small></b></div>
+                    <div className={styles.fullPreviewBody}>
+                      <div className={styles.queuePanel}>
+                        <span><i /> Intake <b>12</b></span>
+                        <span><i /> In progress <b>23</b></span>
+                        <span><i /> Review <b>7</b></span>
+                      </div>
+                      <div className={styles.livePanel}>
+                        <small>LIVE OPERATIONS</small>
+                        <div><i /><i /><i /><i /><i /></div>
+                        <em>API · SSO · CRM · PAY</em>
+                      </div>
+                    </div>
+                    <span className={styles.previewCaption}>RUN THE BUSINESS</span>
+                  </div>
+                )}
+
+                {index === 2 && (
+                  <div className={styles.modernizePreview}>
+                    <div className={styles.legacyPane}>
+                      <small>BEFORE</small>
+                      <span className={styles.legacySheet}><i /><i /><i /><i /></span>
+                      <span className={styles.legacyBox}>manual handoff</span>
+                      <span className={styles.legacyBox}>duplicate data</span>
+                    </div>
+                    <div className={styles.transformRail}><i>→</i><span /></div>
+                    <div className={styles.modernPane}>
+                      <small>AFTER</small>
+                      <div className={styles.modernHeader}><i /><b>Unified workspace</b></div>
+                      <div className={styles.modernCards}><span /><span /><span /></div>
+                      <div className={styles.modernFooter}><b>SECURE</b><b>MOBILE</b><b>VISIBLE</b></div>
+                    </div>
+                    <span className={styles.previewCaption}>MODERNIZE WITHOUT LOSING THE WORKFLOW</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.engagementCopy}>
+                <span>{item.name}</span>
+                <p>{item.best}</p>
+                <ul>{item.items.map((point) => <li key={point}>{point}</li>)}</ul>
+              </div>
             </article>
           ))}
         </div>
