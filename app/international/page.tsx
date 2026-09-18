@@ -175,6 +175,7 @@ export default function InternationalLanding() {
           <a href="#journey">Journey</a>
           <a href="#portals">Portals</a>
           <a href="#centers">For partners</a>
+          <Link href="/platform-development">Platform development</Link>
           <a href="#faq">FAQs</a>
         </nav>
         <div className={styles.headerActions}>
@@ -308,6 +309,11 @@ export default function InternationalLanding() {
       <section id="centers" className={`${styles.section} ${styles.partner}`}>
         <div className={styles.partnerIntro}><span>For schools & learning centers</span><h2>More than another English course.</h2><p>Give families a clearer story: useful English communication, visible human-skill growth, connected learning spaces and a longer learner journey.</p><Link className={styles.primary} href="/workspace/partner">Explore partnership →</Link></div>
         <div className={styles.partnerPoints}>{partnerBenefits.map(([title, copy], index) => <article key={title}><span>{String(index + 1).padStart(2, "0")}</span><b>{title}</b><p>{copy}</p></article>)}</div>
+      </section>
+
+      <section className={styles.helpdesk}>
+        <div className={styles.helpCopy}><span>Built by ViTech</span><h2>Need a custom platform for your own organization?</h2><p>Career Compass Junior is also a live example of how ViTech connects mobile-first design, role-based workspaces, data, security and production deployment into one platform.</p><div className={styles.actions}><Link className={styles.primary} href="/platform-development">Explore platform development →</Link><a className={styles.secondary} href="mailto:business@vitechintelligence.com?subject=Platform%20Development%20Inquiry">Discuss a project</a></div></div>
+        <div className={styles.helpOrb}><span className="ccjHelpOrbLogo"><img src="/vitech-logo.svg" alt="" /></span><b>Platform Studio</b><small>Design · build · launch</small></div>
       </section>
 
       <section className={styles.helpdesk}>
