@@ -23,14 +23,15 @@ export async function POST(request: Request) {
   }
 
   const providerSlug = typeof payload.providerSlug === "string" ? payload.providerSlug.trim().toLowerCase() : "";
-  const objectType = typeof payload.objectType === "string" ? payload.objectType as CanonicalObjectType : "";
+  const rawObjectType = typeof payload.objectType === "string" ? payload.objectType : "";
 
   if (!PROVIDER_RE.test(providerSlug)) {
     return NextResponse.json({ error: "A valid providerSlug is required." }, { status: 400 });
   }
-  if (!OBJECT_TYPES.has(objectType) || !payload.data || typeof payload.data !== "object" || Array.isArray(payload.data)) {
+  if (!OBJECT_TYPES.has(rawObjectType as CanonicalObjectType) || !payload.data || typeof payload.data !== "object" || Array.isArray(payload.data)) {
     return NextResponse.json({ error: "objectType and object data are required." }, { status: 400 });
   }
+  const objectType = rawObjectType as CanonicalObjectType;
 
   const sql = getDb();
   const providers = await sql`
