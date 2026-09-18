@@ -10,7 +10,7 @@ export default async function StudentWorkspacePage() {
   if (!user) return <StudentGate signedIn={false} />;
 
   const profile = await getCurrentProfile();
-  if (!profile || profile.account_type !== "student") return <StudentGate signedIn />;
+  if (!profile || profile.account_type !== "student" || profile.status !== "active") return <StudentGate signedIn />;
 
   const sql = getDb();
   const enrollments = await sql`
