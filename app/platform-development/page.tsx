@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { SITE_URL } from "@/lib/site";
+export const dynamic = "force-static";
+
 import PlatformDevelopmentExperience from "./PlatformDevelopmentExperience";
 
 export const metadata: Metadata = {
