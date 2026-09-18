@@ -9,6 +9,12 @@ Career Compass Junior is a ViTech Intelligence Solutions learning ecosystem for 
 - EERS Action City — My First Sound Adventures: ages 4–6, early English sounds and action-based learning.
 - Public author / pen name on the current editions: Zxynn Khang.
 
+## ViTech platform development
+- ViTech designs and builds mobile-first custom platforms, LMS products, operational systems, partner/client portals and AI-ready workflow applications.
+- Public capability page: /platform-development
+- Career Compass Junior is the current live full-stack case study demonstrating public discovery, role-based workspaces, interactive content, production data, PWA installation, security controls and crawler/AI discovery.
+- Business inquiries: business@vitechintelligence.com
+
 ## Platform roles
 - Student: interactive books, learning activities, progress, feedback and learner evidence.
 - Teacher: assigned classes, attendance, assignments, submissions and structured feedback.
@@ -16,6 +22,7 @@ Career Compass Junior is a ViTech Intelligence Solutions learning ecosystem for 
 
 ## Public pages
 - /international — main program landing page
+- /platform-development — ViTech custom platform development capability and case-study page
 - /books — public book catalog
 - /portal/student — public student portal preview
 - /portal/teacher — public teacher portal preview
