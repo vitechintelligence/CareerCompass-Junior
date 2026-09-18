@@ -113,7 +113,7 @@ export default async function StudentWorkspacePage() {
                       <div className="muted" style={{ margin: "4px 0 8px" }}>{String(item.class_name || item.level_label || item.age_band || "Independent learning")}</div>
                       <div className="progressTrack"><div className="progressFill" style={{ width: `${Math.min(100, Math.max(0, Number(item.progress_percent || 0)))}%` }} /></div>
                     </div>
-                    <Link className="button primary" href={`/learn/${encodeURIComponent(String(item.code))}`}>Open</Link>
+                    <Link className="button primary" href={`/learn/${encodeURIComponent(String(item.code))}?enrollmentId=${encodeURIComponent(String(item.id))}`}>Open</Link>
                   </div>
                 ))}
               </div>
