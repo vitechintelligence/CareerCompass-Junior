@@ -62,7 +62,7 @@ export default function PlatformDevelopmentExperience({ locale }: { locale: Plat
   const proof = vi
     ? [
         ["3 trải nghiệm theo vai trò", "Không gian cho học sinh, giáo viên và đối tác với quyền truy cập và nhu cầu vận hành khác nhau."],
-        ["4 đầu sách tương tác", "Mở rộng nội dung sách in sang hoạt động số và hành trình học tập kết nối."],
+        ["4 lộ trình sách tương tác", "Mở rộng nội dung sách in sang hoạt động số và hành trình học tập kết nối trong khi quá trình chuyển đổi toàn bộ sách vẫn tiếp tục."],
         ["Trải nghiệm cài được trên điện thoại", "PWA ưu tiên di động để người dùng truy cập như ứng dụng mà không cần duy trì mã nguồn native riêng."],
         ["Lớp dữ liệu sản xuất", "Neon/PostgreSQL cho tiến độ, lớp học, bài tập, điểm danh, tài nguyên và minh chứng."],
         ["Ranh giới bảo mật", "Kiểm tra vai trò, callback nội bộ, giới hạn đầu vào phía server và kiểm soát cache dữ liệu riêng tư."],
@@ -70,7 +70,7 @@ export default function PlatformDevelopmentExperience({ locale }: { locale: Plat
       ] as const
     : [
         ["3 role experiences", "Student, teacher and partner workspaces with controlled access and different operational needs."],
-        ["4 interactive books", "Printed curriculum extended into digital activities and connected learner journeys."],
+        ["4 interactive book pathways", "Printed curriculum extended into digital activities and connected learner journeys while full-book conversion continues."],
         ["Installable mobile experience", "Progressive web app behavior for phone-first access without requiring a separate native codebase."],
         ["Production data layer", "Neon/PostgreSQL-backed progress, classes, assignments, attendance, resources and evidence."],
         ["Security boundaries", "Role checks, internal callback validation, bounded server inputs and private-data cache controls."],
