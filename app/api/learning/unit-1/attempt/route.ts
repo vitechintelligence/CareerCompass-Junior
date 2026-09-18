@@ -160,7 +160,7 @@ export async function POST(request: Request) {
       const integrityHash = createHash("sha256")
         .update(`${profile.semantic_id}:${activityCode}:${attemptId}:completed`)
         .digest("hex");
-      const capsuleSemanticId = `${profile.semantic_id}-${activityCode.toLowerCase()}`;
+      const capsuleSemanticId = `${profile.semantic_id}-${enrollmentId}-${activityCode.toLowerCase()}`;
 
       await sql`
         insert into learning_capsules (
