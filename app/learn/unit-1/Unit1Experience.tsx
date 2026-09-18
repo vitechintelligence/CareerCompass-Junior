@@ -6,16 +6,18 @@ import { unit1Lessons, unit1Meta, type LessonActivity, type UnitLocale } from "@
 
 type Props = {
   locale: UnitLocale;
+  profileScope: string | null;
+  enrollmentId: string | null;
 };
 
-const completedStorageKey = "ccj-unit1-completed";
-const reflectionStorageKey = (lessonId: number) => `ccj-unit1-reflection-${lessonId}`;
+const completedStorageKey = (profileScope: string) => `ccj:${profileScope}:unit1:completed`;
+const reflectionStorageKey = (profileScope: string, lessonId: number) => `ccj:${profileScope}:unit1:reflection:${lessonId}`;
 
 function sameOrder(left: string[], right: string[]) {
   return left.length === right.length && left.every((item, index) => item === right[index]);
 }
 
-export default function Unit1Experience({ locale }: Props) {
+export default function Unit1Experience({ locale, profileScope, enrollmentId }: Props) {
   const [activeId, setActiveId] = useState(1);
   const [completedIds, setCompletedIds] = useState<number[]>([]);
   const [reflection, setReflection] = useState("");
@@ -45,16 +47,20 @@ export default function Unit1Experience({ locale }: Props) {
   const otherLocale: UnitLocale = locale === "en" ? "vi" : "en";
 
   useEffect(() => {
+    setCompletedIds([]);
+    if (!profileScope) return;
     try {
-      const stored = window.localStorage.getItem(completedStorageKey);
+      const stored = window.localStorage.getItem(completedStorageKey(profileScope));
       if (stored) {
         const parsed = JSON.parse(stored) as number[];
-        if (Array.isArray(parsed)) setCompletedIds(parsed.filter((value) => Number.isInteger(value)));
+        if (Array.isArray(parsed)) {
+          setCompletedIds(parsed.filter((value) => Number.isInteger(value) && value >= 1 && value <= unit1Lessons.length));
+        }
       }
     } catch {
-      // Local progress is optional. A blocked localStorage should never block the lesson.
+      // Profile-scoped local progress is optional. Blocked storage never blocks the lesson.
     }
-  }, []);
+  }, [profileScope]);
 
   useEffect(() => {
     setMessage(null);
@@ -66,12 +72,16 @@ export default function Unit1Experience({ locale }: Props) {
     setCheckpointAnswers({});
     setRecorderError(null);
 
+    if (!profileScope) {
+      setReflection("");
+      return;
+    }
     try {
-      setReflection(window.localStorage.getItem(reflectionStorageKey(activeId)) ?? "");
+      setReflection(window.localStorage.getItem(reflectionStorageKey(profileScope, activeId)) ?? "");
     } catch {
       setReflection("");
     }
-  }, [activeId]);
+  }, [activeId, profileScope]);
 
   useEffect(() => {
     return () => {
@@ -91,8 +101,9 @@ export default function Unit1Experience({ locale }: Props) {
 
   function persistCompleted(next: number[]) {
     setCompletedIds(next);
+    if (!profileScope) return;
     try {
-      window.localStorage.setItem(completedStorageKey, JSON.stringify(next));
+      window.localStorage.setItem(completedStorageKey(profileScope), JSON.stringify(next));
     } catch {
       // Completion remains usable in this session even if storage is blocked.
     }
@@ -103,16 +114,17 @@ export default function Unit1Experience({ locale }: Props) {
       persistCompleted([...completedIds, lesson.id].sort((a, b) => a - b));
     }
     setMessage(
-      locale === "vi"
-        ? "Hoàn thành! Tiến độ này chỉ được lưu trên thiết bị trong bản thử nghiệm."
-        : "Completed! In this preview, progress is stored only on this device.",
+      profileScope
+        ? (locale === "vi" ? "Hoàn thành! Tiến độ được tách riêng cho hồ sơ học sinh của em." : "Completed! Progress is isolated to your student profile.")
+        : (locale === "vi" ? "Hoàn thành trong phiên này. Đăng nhập học sinh để lưu tiến độ riêng." : "Completed for this session. Sign in as a student to save private progress."),
     );
   }
 
   function saveReflection(value: string) {
     setReflection(value);
+    if (!profileScope) return;
     try {
-      window.localStorage.setItem(reflectionStorageKey(lesson.id), value);
+      window.localStorage.setItem(reflectionStorageKey(profileScope, lesson.id), value);
     } catch {
       // Reflection remains visible for the current session.
     }
@@ -227,7 +239,7 @@ export default function Unit1Experience({ locale }: Props) {
           <Link className="pill" href={`/portal/student?lang=${locale}`}>
             {locale === "vi" ? "Cổng học sinh" : "Student Portal"}
           </Link>
-          <Link className="pill" href={`/learn/unit-1?lang=${otherLocale}`}>
+          <Link className="pill" href={`/learn/unit-1?lang=${otherLocale}${enrollmentId ? `&enrollmentId=${encodeURIComponent(enrollmentId)}` : ""}`}>
             {locale === "en" ? "Tiếng Việt" : "English"}
           </Link>
         </div>
@@ -241,8 +253,8 @@ export default function Unit1Experience({ locale }: Props) {
           </h2>
           <p className="muted lessonSmallCopy">
             {locale === "vi"
-              ? "4 tuần · 8 bài học tương tác · tiến độ bản thử nghiệm lưu trên thiết bị"
-              : "4 weeks · 8 interactive lessons · preview progress stored on-device"}
+              ? (profileScope ? "4 tuần · 8 bài học tương tác · tiến độ riêng theo hồ sơ" : "4 tuần · 8 bài học tương tác · chế độ xem trước không lưu giữa các phiên")
+              : (profileScope ? "4 weeks · 8 interactive lessons · progress isolated to your profile" : "4 weeks · 8 interactive lessons · preview does not persist across sessions")}
           </p>
           <div className="lessonProgressLabel">
             <strong>{progressPercent}%</strong>
@@ -407,7 +419,9 @@ export default function Unit1Experience({ locale }: Props) {
                 value={reflection}
               />
               <p className="muted lessonSmallCopy">
-                {locale === "vi" ? "Lưu cục bộ trên thiết bị trong bản thử nghiệm." : "Stored locally on this device in the preview."}
+                {profileScope
+                  ? (locale === "vi" ? "Ghi chú này chỉ được lưu cục bộ dưới hồ sơ của em trên thiết bị này." : "This note is stored locally under your profile on this device.")
+                  : (locale === "vi" ? "Không lưu giữa các phiên khi chưa đăng nhập học sinh." : "Not persisted across sessions until you sign in as a student.")}
               </p>
             </article>
           </div>
