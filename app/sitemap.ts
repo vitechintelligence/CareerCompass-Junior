@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: absoluteUrl("/international"), lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: absoluteUrl("/books"), lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/platform-development"), lastModified: now, changeFrequency: "weekly", priority: 0.9 },
+    { url: absoluteUrl("/vn/platform-development"), lastModified: now, changeFrequency: "weekly", priority: 0.9 },
     { url: absoluteUrl("/vn"), lastModified: now, changeFrequency: "weekly", priority: 0.8 },
     { url: absoluteUrl("/portal/student"), lastModified: now, changeFrequency: "weekly", priority: 0.7 },
     { url: absoluteUrl("/portal/teacher"), lastModified: now, changeFrequency: "weekly", priority: 0.7 },
