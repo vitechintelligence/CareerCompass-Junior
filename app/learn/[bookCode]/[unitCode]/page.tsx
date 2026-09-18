@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getPublishedUnit, listPublishedUnits } from "@/lib/curriculum";
 import { getBookCatalogItem, getCatalogUnit } from "@/lib/book-catalog";
@@ -17,6 +17,8 @@ export default async function DatabaseUnitPage({
   const { bookCode, unitCode } = await params;
   const { lang } = await searchParams;
   const locale: "en" | "vi" = lang === "vi" ? "vi" : "en";
+  const linkedBook = getBookCatalogItem(bookCode);
+  if (linkedBook?.interactiveUrl) redirect(linkedBook.interactiveUrl);
 
   const databaseUnit = await getPublishedUnit(bookCode, unitCode);
   const unit = databaseUnit ?? getCatalogUnit(bookCode, unitCode);
