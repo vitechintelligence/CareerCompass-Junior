@@ -13,6 +13,7 @@ Career Compass Junior is a ViTech Intelligence Solutions learning ecosystem for 
 - ViTech designs and builds mobile-first custom platforms, LMS products, operational systems, partner/client portals and AI-ready workflow applications.
 - Public capability page: /platform-development
 - Career Compass Junior is the current live full-stack case study demonstrating public discovery, role-based workspaces, interactive content, production data, PWA installation, security controls and crawler/AI discovery.
+- Core platform capabilities include training and operations workflows, integration-ready architecture, workflow automation, localization, role-based security, operational visibility, continuity patterns and AI-assisted intelligence.
 - Business inquiries: business@vitechintelligence.com
 
 ## Platform roles

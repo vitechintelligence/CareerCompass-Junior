@@ -33,6 +33,16 @@ const capabilities = [
   ["04", "AI-ready workflow apps", "Build deterministic workflows first, then add AI where it can accelerate drafting, classification, search or decision support."],
 ] as const;
 
+const platformSignals = [
+  ["INTELLIGENCE", "Search, classification, assisted decisions and context-aware recommendations."],
+  ["SECURITY", "Role-based access, validation, privacy boundaries and audit-friendly operations."],
+  ["VISIBILITY", "Dashboards, progress, exceptions, status and actionable operational views."],
+  ["CONTINUITY", "Health checks, controlled releases, resilient mobile access and safer recovery patterns."],
+  ["INTEGRATION", "API-ready architecture for identity, payments, CRM, HR, messaging and external services."],
+  ["WORKFLOW AUTOMATION", "Triggers, approvals, assignments, escalations and repeatable handoffs."],
+  ["LOCALIZATION", "Language-aware interfaces and configurable regional or organizational rules."],
+] as const;
+
 const delivery = [
   ["Discover", "Clarify users, workflow, data, constraints and what success should look like."],
   ["Architect", "Design roles, journeys, data model, permissions, interfaces and integration boundaries."],
@@ -153,21 +163,90 @@ export default function PlatformDevelopmentPage() {
           </div>
         </div>
 
-        <div className={styles.systemVisual} aria-label="Platform architecture illustration">
-          <div className={styles.visualGlow} />
-          <div className={styles.node + " " + styles.nodeA}><span>01</span><b>Experience</b><small>mobile · web · PWA</small></div>
-          <div className={styles.node + " " + styles.nodeB}><span>02</span><b>Workflow</b><small>roles · actions · rules</small></div>
-          <div className={styles.node + " " + styles.nodeC}><span>03</span><b>Data</b><small>Postgres · evidence · records</small></div>
-          <div className={styles.node + " " + styles.nodeD}><span>04</span><b>Intelligence</b><small>search · AI · automation</small></div>
-          <div className={styles.core}>
-            <VitechMark className={styles.coreLogo} size={62} />
-            <b>ViTech Platform Core</b>
-            <small>front end ↔ application ↔ data</small>
+        <div className={styles.productPreview} aria-label="Animated preview of a ViTech training and operations platform">
+          <div className={styles.previewAura} />
+          <div className={styles.previewWindow}>
+            <div className={styles.previewTopbar}>
+              <span className={styles.windowDots}><i /><i /><i /></span>
+              <b>ViTech Training + Operations</b>
+              <span className={styles.liveBadge}>LIVE PREVIEW</span>
+            </div>
+
+            <div className={styles.previewBody}>
+              <aside className={styles.previewSidebar}>
+                <VitechMark className={styles.previewLogo} size={34} />
+                <span className={styles.sideActive}>⌂</span>
+                <span>◎</span>
+                <span>↻</span>
+                <span>◫</span>
+                <span>⚙</span>
+              </aside>
+
+              <div className={styles.previewCanvas}>
+                <div className={styles.previewHeading}>
+                  <div><small>Operations Command Center</small><b>Training, delivery & workflow in one view</b></div>
+                  <span>EN <i /> VI</span>
+                </div>
+
+                <div className={styles.previewMetrics}>
+                  <article><small>Training</small><b>24</b><span>active journeys</span></article>
+                  <article><small>Operations</small><b>8</b><span>work queues</span></article>
+                  <article><small>Automation</small><b>12</b><span>workflow rules</span></article>
+                </div>
+
+                <div className={styles.previewGrid}>
+                  <section className={styles.workflowCard}>
+                    <div className={styles.cardTitle}><b>Workflow automation</b><span>RUNNING</span></div>
+                    <div className={styles.flowLine}>
+                      <div><i>1</i><span>Onboard</span></div>
+                      <em />
+                      <div><i>2</i><span>Train</span></div>
+                      <em />
+                      <div><i>3</i><span>Validate</span></div>
+                      <em />
+                      <div><i>4</i><span>Deploy</span></div>
+                    </div>
+                    <div className={styles.automationRows}>
+                      <span><i /> New learner → assign journey <b>AUTO</b></span>
+                      <span><i /> Missed checkpoint → notify owner <b>RULE</b></span>
+                      <span><i /> Completion → create evidence <b>SYNC</b></span>
+                    </div>
+                  </section>
+
+                  <section className={styles.intelligenceCard}>
+                    <div className={styles.cardTitle}><b>Intelligence layer</b><span className={styles.aiPulse}>AI</span></div>
+                    <div className={styles.insightHero}><strong>3 signals need attention</strong><small>Summarized across training + operations</small></div>
+                    <div className={styles.insightBars}><i /><i /><i /><i /></div>
+                    <p>Search · classify · summarize · recommend</p>
+                  </section>
+
+                  <section className={styles.visibilityCard}>
+                    <div className={styles.cardTitle}><b>Visibility</b><span>REAL-TIME VIEW</span></div>
+                    <div className={styles.miniChart}><i /><i /><i /><i /><i /><i /></div>
+                    <div className={styles.statusRow}><span>Delivery</span><b>Healthy</b></div>
+                    <div className={styles.statusRow}><span>Exceptions</span><b>2 open</b></div>
+                  </section>
+
+                  <section className={styles.securityCard}>
+                    <div className={styles.cardTitle}><b>Security + continuity</b><span>PROTECTED</span></div>
+                    <div className={styles.securityRing}><span>✓</span></div>
+                    <ul><li>Role-based access</li><li>Private data boundaries</li><li>Health checks + controlled releases</li></ul>
+                  </section>
+                </div>
+
+                <div className={styles.integrationBar}>
+                  <b>Integration-ready</b>
+                  <span>API</span><span>SSO</span><span>CRM</span><span>HR</span><span>PAY</span><span>MSG</span>
+                  <em>Localized · EN / VI / regional rules</em>
+                </div>
+              </div>
+            </div>
           </div>
-          <i className={styles.linkLine + " " + styles.line1} />
-          <i className={styles.linkLine + " " + styles.line2} />
-          <i className={styles.linkLine + " " + styles.line3} />
-          <i className={styles.linkLine + " " + styles.line4} />
+
+          <span className={styles.floatChip + " " + styles.floatA}>Workflow automation</span>
+          <span className={styles.floatChip + " " + styles.floatB}>Security</span>
+          <span className={styles.floatChip + " " + styles.floatC}>Integrations</span>
+          <span className={styles.floatChip + " " + styles.floatD}>Localization</span>
         </div>
       </section>
 
@@ -185,6 +264,22 @@ export default function PlatformDevelopmentPage() {
               <p>{copy}</p>
             </article>
           ))}
+        </div>
+
+        <div className={styles.signalShowcase}>
+          <div className={styles.signalIntro}>
+            <span>Platform proof patterns</span>
+            <h3>Build the capability into the product — not into a slide deck.</h3>
+            <p>These are the platform patterns we design around so training and operations stay connected, observable and adaptable as the organization grows.</p>
+          </div>
+          <div className={styles.signalGrid}>
+            {platformSignals.map(([title, copy], index) => (
+              <article key={title}>
+                <b>{String(index + 1).padStart(2, "0")}</b>
+                <div><span>{title}</span><p>{copy}</p></div>
+              </article>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -243,11 +338,68 @@ export default function PlatformDevelopmentPage() {
           <p>We can begin with a focused pilot, build a platform from the ground up, or take over an existing prototype and harden it into a real product.</p>
         </div>
         <div className={styles.engagementGrid}>
-          {engagement.map((item) => (
-            <article key={item.name}>
-              <span>{item.name}</span>
-              <p>{item.best}</p>
-              <ul>{item.items.map((point) => <li key={point}>{point}</li>)}</ul>
+          {engagement.map((item, index) => (
+            <article className={styles.engagementCard} key={item.name}>
+              <div className={styles.engagementPreview} aria-hidden="true">
+                {index === 0 && (
+                  <div className={styles.mvpPreview}>
+                    <div className={styles.miniPhone}>
+                      <div className={styles.miniPhoneTop}><span /><b>FieldFlow</b><i /></div>
+                      <div className={styles.miniProgress}><i /><i /><i /></div>
+                      <div className={styles.miniTask}><span>01</span><div><b>New request</b><small>Captured from mobile</small></div><em>NEW</em></div>
+                      <div className={styles.miniTask}><span>02</span><div><b>Owner review</b><small>Rules + assignment</small></div><em>LIVE</em></div>
+                      <div className={styles.miniTask}><span>03</span><div><b>Ready to act</b><small>One focused workflow</small></div><em>✓</em></div>
+                    </div>
+                    <span className={styles.previewCaption}>PROVE ONE WORKFLOW</span>
+                  </div>
+                )}
+
+                {index === 1 && (
+                  <div className={styles.fullBuildPreview}>
+                    <div className={styles.fullPreviewHead}><b>Operations Hub</b><span>3 ROLES</span></div>
+                    <div className={styles.roleTabs}><span>Operator</span><span>Manager</span><span>Partner</span></div>
+                    <div className={styles.fullPreviewStats}><b>42<small>active cases</small></b><b>96%<small>on track</small></b><b>7<small>automations</small></b></div>
+                    <div className={styles.fullPreviewBody}>
+                      <div className={styles.queuePanel}>
+                        <span><i /> Intake <b>12</b></span>
+                        <span><i /> In progress <b>23</b></span>
+                        <span><i /> Review <b>7</b></span>
+                      </div>
+                      <div className={styles.livePanel}>
+                        <small>LIVE OPERATIONS</small>
+                        <div><i /><i /><i /><i /><i /></div>
+                        <em>API · SSO · CRM · PAY</em>
+                      </div>
+                    </div>
+                    <span className={styles.previewCaption}>RUN THE BUSINESS</span>
+                  </div>
+                )}
+
+                {index === 2 && (
+                  <div className={styles.modernizePreview}>
+                    <div className={styles.legacyPane}>
+                      <small>BEFORE</small>
+                      <span className={styles.legacySheet}><i /><i /><i /><i /></span>
+                      <span className={styles.legacyBox}>manual handoff</span>
+                      <span className={styles.legacyBox}>duplicate data</span>
+                    </div>
+                    <div className={styles.transformRail}><i>→</i><span /></div>
+                    <div className={styles.modernPane}>
+                      <small>AFTER</small>
+                      <div className={styles.modernHeader}><i /><b>Unified workspace</b></div>
+                      <div className={styles.modernCards}><span /><span /><span /></div>
+                      <div className={styles.modernFooter}><b>SECURE</b><b>MOBILE</b><b>VISIBLE</b></div>
+                    </div>
+                    <span className={styles.previewCaption}>MODERNIZE WITHOUT LOSING THE WORKFLOW</span>
+                  </div>
+                )}
+              </div>
+
+              <div className={styles.engagementCopy}>
+                <span>{item.name}</span>
+                <p>{item.best}</p>
+                <ul>{item.items.map((point) => <li key={point}>{point}</li>)}</ul>
+              </div>
             </article>
           ))}
         </div>
