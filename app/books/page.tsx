@@ -12,7 +12,7 @@ export default function BooksPage() {
       </header>
       <div className="workspaceContent">
         <section className="workspaceIdentity">
-          <div><div className="eyebrow">ViTech Educational Book Collection</div><h1 className="workspaceHeroTitle">Four books. One connected learning journey.</h1><p className="muted">Each title now has an interactive pathway with vocabulary, speaking models, checks, reflection and learner evidence. Full-book conversion is continuing against the latest print editions.</p></div>
+          <div><div className="eyebrow">ViTech Educational Book Collection</div><h1 className="workspaceHeroTitle">Four books. One connected learning journey.</h1><p className="muted">MY COMPASS now links to its complete interactive ebook. The other titles keep their in-platform interactive pathways while full-book conversion continues against the latest print editions.</p></div>
         </section>
         <section className="cardGrid">
           {interactiveBooks.map((book) => (
@@ -22,10 +22,22 @@ export default function BooksPage() {
               <h2 style={{ marginBottom: 4 }}>{book.title}</h2>
               <strong>{book.subtitle}</strong>
               <p className="muted">{book.description}</p>
-              <div className="tagRow"><span className="tag">{book.bilingual ? "EN · VI" : "EN"}</span><span className="tag">Interactive preview</span><span className="tag">Evidence-ready</span></div>
+              <div className="tagRow">
+                <span className="tag">{book.bilingual ? "EN · VI" : "EN"}</span>
+                <span className="tag">{book.interactiveStatus === "complete" ? "Complete interactive ebook" : "Interactive preview"}</span>
+                <span className="tag">Evidence-ready</span>
+              </div>
               <div className="actions">
-                <Link className="button primary" href={`/learn/${book.code}`}>Open book</Link>
-                <Link className="button soft" href={`/learn/${book.code}/${book.units[0].code}?lang=en`}>Start Unit 1</Link>
+                {book.interactiveUrl ? (
+                  <a className="button primary" href={book.interactiveUrl} target="_blank" rel="noreferrer">Open complete ebook ↗</a>
+                ) : (
+                  <Link className="button primary" href={`/learn/${book.code}`}>Open book</Link>
+                )}
+                {book.interactiveUrl ? (
+                  <a className="button soft" href={book.interactiveUrl} target="_blank" rel="noreferrer">Launch MY COMPASS</a>
+                ) : (
+                  <Link className="button soft" href={`/learn/${book.code}/${book.units[0].code}?lang=en`}>Start Unit 1</Link>
+                )}
               </div>
             </article>
           ))}

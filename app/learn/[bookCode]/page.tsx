@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getBookCatalogItem } from "@/lib/book-catalog";
 
@@ -9,6 +9,7 @@ export default async function BookOverviewPage({ params, searchParams }: { param
   const locale: "en" | "vi" = lang === "vi" ? "vi" : "en";
   const book = getBookCatalogItem(bookCode);
   if (!book) notFound();
+  if (book.interactiveUrl) redirect(book.interactiveUrl);
 
   return (
     <main className="lessonApp">

@@ -5,7 +5,7 @@ Career Compass Junior is a ViTech Intelligence Solutions learning ecosystem for 
 ## Public learning collection
 - Career Compass Junior — Big Ideas, Bright Futures: ages 7–12, English, CEFR B1+.
 - Career Compass Junior Mastery — Beginner: ages 7–12, bilingual English–Vietnamese, 96 lessons, CEFR A0–A1 progressing toward early A2.
-- MY COMPASS: ages 13–18, bilingual/Vietnamese-first English + life skills + career discovery.
+- MY COMPASS: ages 13–18, bilingual/Vietnamese-first English + life skills + career discovery. A complete interactive edition is linked from the Career Compass book catalog and MY COMPASS learning route.
 - EERS Action City — My First Sound Adventures: ages 4–6, early English sounds and action-based learning.
 - Public author / pen name on the current editions: Zxynn Khang.
 
@@ -18,7 +18,7 @@ Career Compass Junior is a ViTech Intelligence Solutions learning ecosystem for 
 - Business inquiries: business@vitechintelligence.com
 
 ## Platform roles
-- Student: interactive book pathways, learning activities, progress, feedback and learner evidence. Full source-book conversion is still in progress.
+- Student: interactive book pathways, learning activities, progress, feedback and learner evidence. MY COMPASS has a complete externally hosted interactive edition; the remaining source-book conversions are still in progress.
 - Teacher: assigned classes, attendance, assignments, submissions and structured feedback.
 - Partner administrator: controlled school/training-center onboarding, classes, teacher assignment, learner enrollment and program operations.
 

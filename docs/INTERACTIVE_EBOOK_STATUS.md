@@ -4,7 +4,7 @@ Last reviewed: 2026-09-18
 
 ## Executive status
 
-The interactive-book engine is working, all four book codes are published, and every title can open an interactive route. However, **the full source books have not yet been converted end-to-end into interactive ebooks**.
+The interactive-book engine is working and all four book codes are published. **MY COMPASS now has a complete interactive edition hosted externally and linked from the Career Compass app.** The other three source books have not yet been converted end-to-end into complete interactive ebooks inside the platform.
 
 Current production curriculum coverage in Neon:
 
@@ -12,7 +12,7 @@ Current production curriculum coverage in Neon:
 | --- | ---: | ---: | --- | --- |
 | Career Compass Junior — Big Ideas, Bright Futures | 2 | 6 | 40-page final edition | Partial |
 | Career Compass Junior Mastery — Beginner | 1 | 10 | 12 units / 96 lessons / 244-page final edition | Partial |
-| MY COMPASS | 2 | 6 | 12 units / 70-page final edition | Partial |
+| MY COMPASS | 2 internal Neon units / complete external edition | 6 internal activities | 12 units / 70-page final edition | Complete interactive edition linked externally; internal LMS mapping remains partial |
 | EERS Action City — My First Sound Adventures | 2 | 6 | 24-page final edition | Partial |
 
 Total currently published in Neon: **7 units and 28 activities**.
@@ -52,7 +52,7 @@ The final source book contains 12 units and 96 lessons. Neon currently contains 
 
 ### MY COMPASS
 
-The final source book contains 12 units, including Career Exploration and University Readiness. Neon currently exposes only Units 1–2. Units 3–12 and the capstone still need full digital conversion.
+The final source book contains 12 units, including Career Exploration and University Readiness. A complete interactive edition is now linked from the Career Compass app to the approved external artifact. Neon still exposes only Units 1–2 internally, so LMS-native progress/evidence integration for the complete edition is a separate follow-up from the ebook conversion itself.
 
 ### EERS Action City
 
@@ -75,8 +75,8 @@ A book should be called **fully interactive** only when:
 
 1. **Career Compass Junior Mastery — Beginner**
    - Convert Units 2–12 and all 96 lessons using the enhanced Unit 1 pattern as the quality bar.
-2. **MY COMPASS**
-   - Convert Units 3–12 plus capstone, emphasizing reflection, scenario choices, projects and career exploration.
+2. **MY COMPASS LMS integration**
+   - Keep the complete interactive edition as the learner-facing ebook and, if required, later connect completion/progress signals back to the Career Compass LMS.
 3. **EERS Action City**
    - Map the full 24-page experience with sound, movement, tracing substitutes, simple parent/teacher prompts and child-safe interactions.
 4. **Big Ideas, Bright Futures**
@@ -90,4 +90,4 @@ Use phrases such as:
 - "interactive previews"
 - "book-to-app learning experiences"
 
-Avoid implying that every page of all four source books has already been digitized until the completion standard above is met.
+MY COMPASS may be described as a complete interactive ebook. Avoid implying that the other three source books are fully digitized until the completion standard above is met.

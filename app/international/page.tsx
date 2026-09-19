@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { VitechMark } from "@/app/VitechMark";
 import { SITE_URL } from "@/lib/site";
+import { MY_COMPASS_INTERACTIVE_URL } from "@/lib/book-catalog";
 import styles from "./international.module.css";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ const books = [
     copy: "An English + skills adventure for curious minds, with communication, reasoning, creation and reflection at the center.",
     detail: "English · CEFR B1+ · 40-page student journey",
     cover: covers[0],
+    interactiveUrl: "",
   },
   {
     tag: "BILINGUAL · 96 LESSONS",
@@ -58,6 +60,7 @@ const books = [
     copy: "Bilingual English–Vietnamese support for ages 7–12, designed to help beginners start with confidence and grow into useful communication.",
     detail: "Ages 7–12 · CEFR A0–A1 → early A2",
     cover: covers[1],
+    interactiveUrl: "",
   },
   {
     tag: "TEENS 13–18",
@@ -66,6 +69,7 @@ const books = [
     copy: "A Vietnamese-first teen pathway that grows English alongside self-awareness, life skills and future exploration.",
     detail: "Ages 13–18 · CEFR A0–A1",
     cover: covers[2],
+    interactiveUrl: MY_COMPASS_INTERACTIVE_URL,
   },
   {
     tag: "AGES 4–6",
@@ -74,6 +78,7 @@ const books = [
     copy: "Listen, move, trace and play through early English sounds, pencil play and action-based language discovery.",
     detail: "Early English Reflex System · ages 4–6",
     cover: covers[3],
+    interactiveUrl: "",
   },
 ] as const;
 
@@ -236,6 +241,11 @@ export default function InternationalLanding() {
               <p>{book.copy}</p>
               <small>{book.detail}</small>
               <b className={styles.author}>By Zxynn Khang</b>
+              {book.interactiveUrl && (
+                <a className={styles.bookInteractiveLink} href={book.interactiveUrl} target="_blank" rel="noreferrer">
+                  Open complete interactive ebook ↗
+                </a>
+              )}
             </article>
           ))}
         </div>
