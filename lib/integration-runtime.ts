@@ -1,6 +1,6 @@
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-import { genericEducationAdapter, type CanonicalLearningEvent } from "@/lib/integrations";
+import { safeIntegrationConfig } from "@/lib/integration-adapter-core";
 
 export type ManagedOrganization = { id: string; name: string };
 
@@ -14,7 +14,10 @@ export async function getManagedOrganization(requestedOrganizationId?: string | 
       ? await sql`select id, name from organizations where id=${requestedOrganizationId} and status='active' limit 1`
       : await sql`select id, name from organizations where status='active' order by name limit 1`;
     if (!rows[0]) return null;
-    return { profile, organization: { id: String(rows[0].id), name: String(rows[0].name) } as ManagedOrganization };
+    return {
+      profile,
+      organization: { id: String(rows[0].id), name: String(rows[0].name) } as ManagedOrganization,
+    };
   }
 
   const rows = requestedOrganizationId
@@ -36,16 +39,12 @@ export async function getManagedOrganization(requestedOrganizationId?: string | 
         limit 1
       `;
   if (!rows[0]) return null;
-  return { profile, organization: { id: String(rows[0].id), name: String(rows[0].name) } as ManagedOrganization };
-}
-
-export function normalizeInboundLearningEvent(payload: Record<string, unknown>): CanonicalLearningEvent {
-  return genericEducationAdapter.normalizeLearningEvent(payload);
+  return {
+    profile,
+    organization: { id: String(rows[0].id), name: String(rows[0].name) } as ManagedOrganization,
+  };
 }
 
 export function safeConfig(input: unknown) {
-  if (!input || typeof input !== "object" || Array.isArray(input)) return {};
-  const source = input as Record<string, unknown>;
-  const blocked = new Set(["password", "secret", "token", "apiKey", "api_key", "clientSecret", "client_secret", "privateKey", "private_key"]);
-  return Object.fromEntries(Object.entries(source).filter(([key]) => !blocked.has(key)));
+  return safeIntegrationConfig(input);
 }
