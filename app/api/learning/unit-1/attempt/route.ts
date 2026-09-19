@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ensureStudentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
+import { resolveLearnerEnrollment } from "@/lib/learning-access";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export async function POST(request: Request) {
     completed?: boolean;
     locale?: "en" | "vi";
     response?: unknown;
+    enrollmentId?: string;
   };
 
   try {
@@ -57,42 +59,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Curriculum activity is not published." }, { status: 409 });
   }
 
-  // Prefer a partner-managed class enrollment when one exists. Only learners who
-  // are not attached to a class use the personal/unclassed enrollment fallback.
-  let enrollments = await sql`
-    select se.id, se.class_id, c.organization_id
-    from student_enrollments se
-    left join classes c on c.id = se.class_id
-    where se.student_id = ${profile.id}
-      and se.book_id = ${String(ref.book_id)}
-      and se.status in ('active','completed')
-    order by (se.class_id is null) asc, se.enrolled_at desc
-    limit 1
-  `;
-
-  if (!enrollments[0]) {
-    await sql`
-      insert into student_enrollments (student_id, book_id, status)
-      values (${profile.id}, ${String(ref.book_id)}, 'active')
-      on conflict do nothing
-    `;
-    enrollments = await sql`
-      select se.id, se.class_id, c.organization_id
-      from student_enrollments se
-      left join classes c on c.id = se.class_id
-      where se.student_id = ${profile.id}
-        and se.book_id = ${String(ref.book_id)}
-      order by (se.class_id is null) asc, se.enrolled_at desc
-      limit 1
-    `;
+  const requestedEnrollmentId = typeof payload.enrollmentId === "string" ? payload.enrollmentId : null;
+  const enrollment = await resolveLearnerEnrollment({
+    profileId: profile.id,
+    bookId: String(ref.book_id),
+    requestedEnrollmentId,
+  });
+  if (!enrollment) {
+    return NextResponse.json(
+      { error: requestedEnrollmentId ? "This book enrollment does not belong to the signed-in learner." : "Unable to create learner enrollment." },
+      { status: requestedEnrollmentId ? 403 : 500, headers: { "Cache-Control": "no-store" } },
+    );
   }
 
-  const enrollmentId = String(enrollments[0]?.id ?? "");
-  const classId = enrollments[0]?.class_id ? String(enrollments[0].class_id) : null;
-  const organizationId = enrollments[0]?.organization_id ? String(enrollments[0].organization_id) : null;
-  if (!enrollmentId) {
-    return NextResponse.json({ error: "Unable to create learner enrollment." }, { status: 500 });
-  }
+  const enrollmentId = enrollment.id;
+  const classId = enrollment.classId;
+  const organizationId = enrollment.organizationId;
 
   const attemptRows = await sql`
     select coalesce(max(attempt_number), 0)::int + 1 as next_attempt
@@ -178,7 +160,7 @@ export async function POST(request: Request) {
       const integrityHash = createHash("sha256")
         .update(`${profile.semantic_id}:${activityCode}:${attemptId}:completed`)
         .digest("hex");
-      const capsuleSemanticId = `${profile.semantic_id}-${activityCode.toLowerCase()}`;
+      const capsuleSemanticId = `${profile.semantic_id}-${enrollmentId}-${activityCode.toLowerCase()}`;
 
       await sql`
         insert into learning_capsules (

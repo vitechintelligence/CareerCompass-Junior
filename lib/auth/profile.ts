@@ -53,7 +53,9 @@ export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
     returning id, semantic_id, auth_subject, display_name, account_type, preferred_locale, status
   `;
 
-  return (rows[0] ?? null) as LmsProfile | null;
+  const profile = (rows[0] ?? null) as LmsProfile | null;
+  if (!profile || profile.account_type !== "student" || profile.status !== "active") return null;
+  return profile;
 }
 
 export async function getCurrentProfile() {
