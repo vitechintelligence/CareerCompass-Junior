@@ -1,6 +1,6 @@
 -- Partner-controlled learner community, age-level access, quarterly challenges,
 -- localized agreement records, institution data-mode preferences and showcase governance.
--- This migration is prepared only; do not apply to production without explicit approval.
+-- This migration is prepared only. Do not apply to production without explicit approval.
 
 create table organization_data_policies (
   organization_id uuid primary key references organizations(id) on delete cascade,
