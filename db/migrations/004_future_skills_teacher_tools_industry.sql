@@ -2,20 +2,10 @@
 -- professional learning, company-school connector and custom integration requests.
 
 alter table classes
-  add column if not exists class_scope text not null default 'program',
+  add column if not exists class_scope text not null default 'program'
+    check (class_scope in ('program','teacher_custom')),
   add column if not exists subject_label text,
   add column if not exists owner_teacher_id uuid references profiles(id) on delete set null;
-
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint where conname = 'classes_class_scope_check'
-  ) then
-    alter table classes
-      add constraint classes_class_scope_check
-      check (class_scope in ('program','teacher_custom'));
-  end if;
-end $$;
 
 create index if not exists idx_classes_scope
   on classes(organization_id, class_scope, status);
@@ -190,24 +180,26 @@ create index if not exists idx_school_company_connections_org
 create index if not exists idx_industry_connection_requests_org
   on industry_connection_requests(organization_id, status, created_at desc);
 
-do $$
-begin
-  if not exists (select 1 from pg_trigger where tgname = 'assessments_set_updated_at') then
-    create trigger assessments_set_updated_at before update on assessments for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname = 'industry_partners_set_updated_at') then
-    create trigger industry_partners_set_updated_at before update on industry_partners for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname = 'industry_roles_set_updated_at') then
-    create trigger industry_roles_set_updated_at before update on industry_roles for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname = 'school_company_connections_set_updated_at') then
-    create trigger school_company_connections_set_updated_at before update on school_company_connections for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname = 'industry_connection_requests_set_updated_at') then
-    create trigger industry_connection_requests_set_updated_at before update on industry_connection_requests for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname = 'integration_provider_requests_set_updated_at') then
-    create trigger integration_provider_requests_set_updated_at before update on integration_provider_requests for each row execute function set_updated_at();
-  end if;
-end $$;
+create trigger assessments_set_updated_at
+  before update on assessments
+  for each row execute function set_updated_at();
+
+create trigger industry_partners_set_updated_at
+  before update on industry_partners
+  for each row execute function set_updated_at();
+
+create trigger industry_roles_set_updated_at
+  before update on industry_roles
+  for each row execute function set_updated_at();
+
+create trigger school_company_connections_set_updated_at
+  before update on school_company_connections
+  for each row execute function set_updated_at();
+
+create trigger industry_connection_requests_set_updated_at
+  before update on industry_connection_requests
+  for each row execute function set_updated_at();
+
+create trigger integration_provider_requests_set_updated_at
+  before update on integration_provider_requests
+  for each row execute function set_updated_at();
