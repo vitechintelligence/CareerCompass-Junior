@@ -38,25 +38,26 @@ async function requireStudent() {
 async function requireStudentInOrganization(studentId: string, organizationId: string) {
   const sql = getDb();
   const rows = await sql`
-    select 1
-    from (
-      select c.organization_id
-      from class_memberships cm
-      join classes c on c.id=cm.class_id
-      where cm.student_id=${studentId}
-        and cm.status='active'
-        and c.status='active'
-      union
-      select om.organization_id
-      from organization_memberships om
-      where om.profile_id=${studentId}
-        and om.role='student'
-        and om.status='active'
-    ) membership
-    where membership.organization_id=${organizationId}
+    select csa.age_band
+    from community_student_access csa
+    where csa.organization_id=${organizationId}
+      and csa.student_id=${studentId}
+      and csa.status='enabled'
+      and csa.guardian_consent_confirmed=true
+      and csa.learner_acknowledged=true
+      and exists (
+        select 1
+        from class_memberships cm
+        join classes c on c.id=cm.class_id
+        where cm.student_id=${studentId}
+          and cm.status='active'
+          and c.status='active'
+          and c.organization_id=${organizationId}
+      )
     limit 1
   `;
-  if (!rows[0]) throw new Error("This challenge is not assigned to your institution.");
+  if (!rows[0]) throw new Error("Your school or teacher has not enabled community access for this account.");
+  return String(rows[0].age_band);
 }
 
 async function getOpenChallenge(challengeId: string, studentId: string) {
@@ -74,7 +75,10 @@ async function getOpenChallenge(challengeId: string, studentId: string) {
     limit 1
   `;
   if (!rows[0]) throw new Error("This challenge is not currently open.");
-  await requireStudentInOrganization(studentId, String(rows[0].organization_id));
+  const learnerAgeBand = await requireStudentInOrganization(studentId, String(rows[0].organization_id));
+  if (String(rows[0].age_band) !== learnerAgeBand) {
+    throw new Error("This challenge is for a different learner age level.");
+  }
   return rows[0];
 }
 
@@ -151,7 +155,11 @@ export async function joinCommunityTeam(formData: FormData) {
   const team = rows[0];
   if (!team) throw new Error("Open team not found for that code.");
   if (String(team.participation_mode) === "individual") throw new Error("Individual challenges do not accept teammates.");
-  await requireStudentInOrganization(profile.id, String(team.organization_id));
+  const learnerAgeBand = await requireStudentInOrganization(profile.id, String(team.organization_id));
+  const challengeRows = await sql`select age_band from community_challenges where id=${String(team.challenge_id)} limit 1`;
+  if (String(challengeRows[0]?.age_band || "") !== learnerAgeBand) {
+    throw new Error("This team belongs to a different learner age level.");
+  }
 
   const already = await sql`
     select 1
