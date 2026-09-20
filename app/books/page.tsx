@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
 import { interactiveBooks } from "@/lib/book-catalog";
+import { getFullInteractiveBook } from "@/lib/full-interactive-books";
 
 export default function BooksPage() {
   return (
@@ -12,23 +13,34 @@ export default function BooksPage() {
       </header>
       <div className="workspaceContent">
         <section className="workspaceIdentity">
-          <div><div className="eyebrow">ViTech Educational Book Collection</div><h1 className="workspaceHeroTitle">Four books. One connected learning journey.</h1><p className="muted">Each title now has an interactive pathway with vocabulary, speaking models, checks, reflection and learner evidence. Full-book conversion is continuing against the latest print editions.</p></div>
+          <div>
+            <div className="eyebrow">ViTech Educational Book Collection</div>
+            <h1 className="workspaceHeroTitle">Four books. One connected learning journey.</h1>
+            <p className="muted">MY COMPASS and Career Compass Junior Mastery now open as complete interactive editions. The remaining titles continue full source-to-app conversion.</p>
+          </div>
         </section>
         <section className="cardGrid">
-          {interactiveBooks.map((book) => (
-            <article className="card" key={book.code}>
-              <div className="cardIcon">{book.accent}</div>
-              <span className="pill">Ages {book.ageBand} · {book.level}</span>
-              <h2 style={{ marginBottom: 4 }}>{book.title}</h2>
-              <strong>{book.subtitle}</strong>
-              <p className="muted">{book.description}</p>
-              <div className="tagRow"><span className="tag">{book.bilingual ? "EN · VI" : "EN"}</span><span className="tag">Interactive preview</span><span className="tag">Evidence-ready</span></div>
-              <div className="actions">
-                <Link className="button primary" href={`/learn/${book.code}`}>Open book</Link>
-                <Link className="button soft" href={`/learn/${book.code}/${book.units[0].code}?lang=en`}>Start Unit 1</Link>
-              </div>
-            </article>
-          ))}
+          {interactiveBooks.map((book) => {
+            const full = getFullInteractiveBook(book.code);
+            return (
+              <article className="card" key={book.code}>
+                <div className="cardIcon">{book.accent}</div>
+                <span className="pill">Ages {book.ageBand} · {book.level}</span>
+                <h2 style={{ marginBottom: 4 }}>{book.title}</h2>
+                <strong>{book.subtitle}</strong>
+                <p className="muted">{book.description}</p>
+                <div className="tagRow">
+                  <span className="tag">{book.bilingual ? "EN · VI" : "EN"}</span>
+                  <span className="tag">{full ? "Complete interactive edition" : "Interactive preview"}</span>
+                  <span className="tag">Evidence-ready</span>
+                </div>
+                <div className="actions">
+                  <Link className="button primary" href={`/learn/${book.code}`}>Open book</Link>
+                  <Link className="button soft" href={full ? `/learn/${book.code}?start=U01` : `/learn/${book.code}/${book.units[0].code}?lang=en`}>Start Unit 1</Link>
+                </div>
+              </article>
+            );
+          })}
         </section>
       </div>
     </main>
