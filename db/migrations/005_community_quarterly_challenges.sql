@@ -2,7 +2,7 @@
 -- localized agreement records, institution data-mode preferences and showcase governance.
 -- This migration is prepared only; do not apply to production without explicit approval.
 
-create table if not exists organization_data_policies (
+create table organization_data_policies (
   organization_id uuid primary key references organizations(id) on delete cascade,
   evidence_storage_mode text not null default 'platform_metadata'
     check (evidence_storage_mode in ('platform_metadata','school_capsule','vng_cloud','local_browser','manual')),
@@ -21,7 +21,7 @@ create table if not exists organization_data_policies (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists community_agreement_acceptances (
+create table community_agreement_acceptances (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   profile_id uuid not null references profiles(id) on delete cascade,
@@ -35,10 +35,10 @@ create table if not exists community_agreement_acceptances (
   unique (organization_id, profile_id, terms_version, privacy_version)
 );
 
-create index if not exists idx_community_agreement_profile
+create index idx_community_agreement_profile
   on community_agreement_acceptances(profile_id, accepted, accepted_at desc);
 
-create table if not exists community_staff_permissions (
+create table community_staff_permissions (
   organization_id uuid not null references organizations(id) on delete cascade,
   teacher_id uuid not null references profiles(id) on delete cascade,
   can_initiate_seasons boolean not null default false,
@@ -51,10 +51,10 @@ create table if not exists community_staff_permissions (
   primary key (organization_id, teacher_id)
 );
 
-create index if not exists idx_community_staff_teacher
+create index idx_community_staff_teacher
   on community_staff_permissions(teacher_id, organization_id);
 
-create table if not exists community_student_access (
+create table community_student_access (
   organization_id uuid not null references organizations(id) on delete cascade,
   student_id uuid not null references profiles(id) on delete cascade,
   age_band text not null check (age_band in ('7-9','10-13','14-16','17-18')),
@@ -68,10 +68,10 @@ create table if not exists community_student_access (
   primary key (organization_id, student_id)
 );
 
-create index if not exists idx_community_student_access_status
+create index idx_community_student_access_status
   on community_student_access(organization_id, status, age_band);
 
-create table if not exists community_seasons (
+create table community_seasons (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid not null references organizations(id) on delete cascade,
   semantic_id text not null unique,
@@ -101,13 +101,13 @@ create table if not exists community_seasons (
   check (age_bands <@ array['7-9','10-13','14-16','17-18']::text[])
 );
 
-create unique index if not exists uq_community_season_org_quarter
+create unique index uq_community_season_org_quarter
   on community_seasons(organization_id, year, quarter);
 
-create index if not exists idx_community_seasons_org_status
+create index idx_community_seasons_org_status
   on community_seasons(organization_id, status, year desc, quarter desc);
 
-create table if not exists community_challenges (
+create table community_challenges (
   id uuid primary key default gen_random_uuid(),
   season_id uuid not null references community_seasons(id) on delete cascade,
   semantic_id text not null unique,
@@ -136,10 +136,10 @@ create table if not exists community_challenges (
   check (max_team_size >= min_team_size)
 );
 
-create index if not exists idx_community_challenges_season
+create index idx_community_challenges_season
   on community_challenges(season_id, status, age_band, participation_mode, studio_key);
 
-create table if not exists community_advisors (
+create table community_advisors (
   season_id uuid not null references community_seasons(id) on delete cascade,
   advisor_profile_id uuid not null references profiles(id) on delete cascade,
   advisor_role text not null default 'mentor' check (advisor_role in ('mentor','judge','mentor_judge')),
@@ -149,10 +149,10 @@ create table if not exists community_advisors (
   primary key (season_id, advisor_profile_id)
 );
 
-create index if not exists idx_community_advisors_profile
+create index idx_community_advisors_profile
   on community_advisors(advisor_profile_id, status);
 
-create table if not exists community_teams (
+create table community_teams (
   id uuid primary key default gen_random_uuid(),
   challenge_id uuid not null references community_challenges(id) on delete cascade,
   organization_id uuid not null references organizations(id) on delete cascade,
@@ -173,16 +173,16 @@ create table if not exists community_teams (
   updated_at timestamptz not null default now()
 );
 
-create unique index if not exists uq_community_team_name_challenge
+create unique index uq_community_team_name_challenge
   on community_teams(challenge_id, lower(team_name));
 
-create index if not exists idx_community_teams_org
+create index idx_community_teams_org
   on community_teams(organization_id, status, updated_at desc);
 
-create index if not exists idx_community_teams_challenge
+create index idx_community_teams_challenge
   on community_teams(challenge_id, status, updated_at desc);
 
-create table if not exists community_team_members (
+create table community_team_members (
   team_id uuid not null references community_teams(id) on delete cascade,
   student_id uuid not null references profiles(id) on delete cascade,
   member_role text not null default 'member' check (member_role in ('creator','member')),
@@ -191,10 +191,10 @@ create table if not exists community_team_members (
   primary key (team_id, student_id)
 );
 
-create index if not exists idx_community_team_members_student
+create index idx_community_team_members_student
   on community_team_members(student_id, status);
 
-create table if not exists community_submissions (
+create table community_submissions (
   id uuid primary key default gen_random_uuid(),
   team_id uuid not null references community_teams(id) on delete cascade,
   version_number integer not null default 1 check (version_number between 1 and 100),
@@ -213,10 +213,10 @@ create table if not exists community_submissions (
   unique (team_id, version_number)
 );
 
-create index if not exists idx_community_submissions_team
+create index idx_community_submissions_team
   on community_submissions(team_id, status, submitted_at desc);
 
-create table if not exists community_feedback (
+create table community_feedback (
   id uuid primary key default gen_random_uuid(),
   submission_id uuid not null references community_submissions(id) on delete cascade,
   advisor_profile_id uuid not null references profiles(id) on delete cascade,
@@ -232,10 +232,10 @@ create table if not exists community_feedback (
   unique (submission_id, advisor_profile_id, feedback_type)
 );
 
-create index if not exists idx_community_feedback_submission
+create index idx_community_feedback_submission
   on community_feedback(submission_id, feedback_type, created_at desc);
 
-create table if not exists community_kudos (
+create table community_kudos (
   id uuid primary key default gen_random_uuid(),
   season_id uuid not null references community_seasons(id) on delete cascade,
   team_id uuid not null references community_teams(id) on delete cascade,
@@ -245,10 +245,10 @@ create table if not exists community_kudos (
   unique (season_id, team_id, given_by, kind)
 );
 
-create index if not exists idx_community_kudos_team
+create index idx_community_kudos_team
   on community_kudos(team_id, kind);
 
-create table if not exists community_results (
+create table community_results (
   id uuid primary key default gen_random_uuid(),
   season_id uuid not null references community_seasons(id) on delete cascade,
   team_id uuid not null references community_teams(id) on delete cascade,
@@ -262,7 +262,7 @@ create table if not exists community_results (
   unique (season_id, team_id)
 );
 
-create index if not exists idx_community_results_season
+create index idx_community_results_season
   on community_results(season_id, published, placement);
 
 create trigger organization_data_policies_set_updated_at
