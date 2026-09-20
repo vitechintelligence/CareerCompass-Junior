@@ -171,7 +171,11 @@ export default async function PlatformAdminPage() {
                             })}
                           </div>
                         </details>
-                        <button className={`${styles.button} ${styles.buttonGraph}`} type="submit">Run LangGraph institution build</button>
+                        <div className={styles.actions}>
+                          <button className={styles.button} type="submit" name="preset" value="essential">Essential baseline + build</button>
+                          <button className={styles.button} type="submit" name="preset" value="all">Enable all + build</button>
+                          <button className={`${styles.button} ${styles.buttonGraph}`} type="submit">Run selected LangGraph build</button>
+                        </div>
                       </form>
 
                       <div className={styles.intelligenceBox}>
