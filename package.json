@@ -11,6 +11,8 @@
     "test:adapters": "rm -rf .adapter-test && tsc --outDir .adapter-test --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --types node lib/integration-adapter-core.ts lib/provider-adapters.ts lib/integration-diagnostics.ts scripts/integration-adapter-selftest.ts && node .adapter-test/scripts/integration-adapter-selftest.js && rm -rf .adapter-test"
   },
   "dependencies": {
+    "@langchain/core": "1.2.11",
+    "@langchain/langgraph": "1.4.16",
     "@neondatabase/auth": "0.5.0-beta",
     "@neondatabase/serverless": "1.1.0",
     "next": "16.3.5",
