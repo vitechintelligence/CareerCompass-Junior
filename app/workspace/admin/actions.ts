@@ -392,7 +392,7 @@ export async function createIndustryRole(formData: FormData) {
   const educationNotesEn = textValue(formData.get("educationNotesEn"), 3000);
   const educationNotesVi = textValue(formData.get("educationNotesVi"), 3000);
   const skills = textValue(formData.get("skills"), 2000).split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20);
-  const ageRelevance = textValue(formData.get("ageRelevance"), 200).split(",").map((item) => item.trim()).filter((item) => ["7-9","10-12","13-15","16-18"].includes(item));
+  const ageRelevance = textValue(formData.get("ageRelevance"), 200).split(",").map((item) => item.trim()).filter((item) => ["7-9","10-13","14-16","17-18"].includes(item));
   assertUuid(industryPartnerId, "industry partner");
   if (!titleEn || !titleVi) throw new Error("Role title is required in both languages.");
 
