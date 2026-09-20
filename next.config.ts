@@ -12,6 +12,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  outputFileTracingIncludes: {
+    "/interactive-books/*": ["./public/interactive-book-data/**/*"],
+  },
   async headers() {
     return [
       {
