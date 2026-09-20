@@ -3,7 +3,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getPlatformAdminContext, platformAdminEmailsForDisplay } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
 import { defaultFeaturesForOrganization, PLATFORM_FEATURES } from "@/lib/platform-feature-catalog";
-import { approvePartnerRequest, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus } from "./actions";
+import { approvePartnerRequest, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus, updateIndustryConnectionRequest, updateIntegrationProviderRequest, updateSchoolCompanyConnection } from "./actions";
 import styles from "./admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export default async function PlatformAdminPage() {
   }
 
   const sql = getDb();
-  const [requestRows, organizationRows, featureRows, siteRows, runRows] = await Promise.all([
+  const [requestRows, organizationRows, featureRows, siteRows, runRows, integrationRequestRows, industryRequestRows, schoolCompanyRows] = await Promise.all([
     sql`
       select r.id, r.organization_name, r.organization_type, r.status, r.created_at,
              p.semantic_id as requester_semantic_id, p.display_name as requester_name
@@ -47,6 +47,31 @@ export default async function PlatformAdminPage() {
     sql`select organization_id, feature_key, enabled from organization_features order by organization_id, feature_key`,
     sql`select organization_id, slug, status, generated_at, updated_at from institution_sites`,
     sql`select id, organization_id, status, started_at, completed_at, error_message from workflow_runs where workflow_key='institution_white_label_builder' order by started_at desc limit 50`,
+    sql`
+      select r.id, r.organization_id, r.provider_name, r.provider_url, r.use_case, r.requested_capabilities, r.status, r.created_at, o.name as organization_name
+      from integration_provider_requests r
+      join organizations o on o.id=r.organization_id
+      where r.status in ('pending','reviewing','approved')
+      order by r.created_at asc
+      limit 30
+    `,
+    sql`
+      select r.id, r.organization_id, r.company_name, r.company_website, r.sector, r.collaboration_types, r.note, r.status, r.created_at, o.name as organization_name
+      from industry_connection_requests r
+      join organizations o on o.id=r.organization_id
+      where r.status in ('pending','reviewing')
+      order by r.created_at asc
+      limit 30
+    `,
+    sql`
+      select c.id, c.organization_id, c.status, c.request_note, o.name as organization_name, p.company_name
+      from school_company_connections c
+      join organizations o on o.id=c.organization_id
+      join industry_partners p on p.id=c.industry_partner_id
+      where c.status='requested'
+      order by c.created_at asc
+      limit 30
+    `,
   ]);
 
   const featuresByOrganization = new Map<string, Map<string, boolean>>();
@@ -199,6 +224,70 @@ export default async function PlatformAdminPage() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </article>
+        </section>
+
+        <section className={styles.grid} style={{ marginTop: 18 }}>
+          <article className={styles.panel}>
+            <div className={styles.eyebrow}>Connector requests</div>
+            <h2>Third-party app review queue</h2>
+            <p className={styles.muted}>Institutions can request any school app or module. Approval here accepts the request for integration work; it does not expose credentials or bypass provider authorization.</p>
+            {integrationRequestRows.length === 0 ? <div className={styles.empty}>No open integration requests.</div> : (
+              <div className={styles.requestList}>
+                {integrationRequestRows.map((request) => (
+                  <div className={styles.requestCard} key={String(request.id)}>
+                    <div className={styles.cardTop}><div><strong>{String(request.provider_name)}</strong><div className={styles.small}>{String(request.organization_name)} · {String(request.status)}</div></div><span className={styles.pill}>{String(request.status)}</span></div>
+                    <p className={styles.muted}>{String(request.use_case)}</p>
+                    <div className={styles.small}>{(Array.isArray(request.requested_capabilities) ? request.requested_capabilities : []).map(String).join(" · ")}</div>
+                    <form className={styles.form}>
+                      <input type="hidden" name="requestId" value={String(request.id)} />
+                      <textarea className={styles.textarea} name="adminNote" maxLength={1000} placeholder="Admin review note" />
+                      <div className={styles.actions}>
+                        <button className={styles.button} formAction={updateIntegrationProviderRequest} name="status" value="reviewing">Reviewing</button>
+                        <button className={`${styles.button} ${styles.buttonPrimary}`} formAction={updateIntegrationProviderRequest} name="status" value="approved">Approve request</button>
+                        <button className={`${styles.button} ${styles.buttonDanger}`} formAction={updateIntegrationProviderRequest} name="status" value="rejected">Reject</button>
+                      </div>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className={styles.panel}>
+            <div className={styles.eyebrow}>School ↔ Company</div>
+            <h2>Industry connection queue</h2>
+            <p className={styles.muted}>Review school requests for company exposure, role profiles, skills briefings, simulations, projects, mentoring or visits.</p>
+            {industryRequestRows.length === 0 && schoolCompanyRows.length === 0 ? <div className={styles.empty}>No open company connection requests.</div> : (
+              <div className={styles.requestList}>
+                {industryRequestRows.map((request) => (
+                  <div className={styles.requestCard} key={String(request.id)}>
+                    <div className={styles.cardTop}><div><strong>{String(request.company_name)}</strong><div className={styles.small}>{String(request.organization_name)} · {String(request.sector || "sector not set")}</div></div><span className={styles.pill}>{String(request.status)}</span></div>
+                    <p className={styles.muted}>{String(request.note || "No additional note.")}</p>
+                    <div className={styles.small}>{(Array.isArray(request.collaboration_types) ? request.collaboration_types : []).map(String).join(" · ")}</div>
+                    <form className={styles.form}>
+                      <input type="hidden" name="requestId" value={String(request.id)} />
+                      <textarea className={styles.textarea} name="adminNote" maxLength={1000} placeholder="Admin coordination note" />
+                      <div className={styles.actions}>
+                        <button className={styles.button} formAction={updateIndustryConnectionRequest} name="status" value="reviewing">Start review</button>
+                        <button className={styles.button} formAction={updateIndustryConnectionRequest} name="status" value="closed">Close request</button>
+                      </div>
+                    </form>
+                  </div>
+                ))}
+                {schoolCompanyRows.map((connection) => (
+                  <div className={styles.requestCard} key={String(connection.id)}>
+                    <div className={styles.cardTop}><div><strong>{String(connection.company_name)}</strong><div className={styles.small}>{String(connection.organization_name)} · verified company request</div></div><span className={`${styles.pill} ${styles.pillPending}`}>requested</span></div>
+                    <p className={styles.muted}>{String(connection.request_note || "No additional note.")}</p>
+                    <form className={styles.actions}>
+                      <input type="hidden" name="connectionId" value={String(connection.id)} />
+                      <button className={`${styles.button} ${styles.buttonPrimary}`} formAction={updateSchoolCompanyConnection} name="status" value="active">Activate connection</button>
+                      <button className={`${styles.button} ${styles.buttonDanger}`} formAction={updateSchoolCompanyConnection} name="status" value="declined">Decline</button>
+                    </form>
+                  </div>
+                ))}
               </div>
             )}
           </article>
