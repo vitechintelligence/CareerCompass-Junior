@@ -3,7 +3,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getPlatformAdminContext, platformAdminEmailsForDisplay } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
 import { defaultFeaturesForOrganization, PLATFORM_FEATURES } from "@/lib/platform-feature-catalog";
-import { approvePartnerRequest, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus, updateIndustryConnectionRequest, updateIntegrationProviderRequest, updateSchoolCompanyConnection } from "./actions";
+import { approvePartnerRequest, createIndustryPartner, createIndustryRole, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus, updateIndustryConnectionRequest, updateIntegrationProviderRequest, updateSchoolCompanyConnection } from "./actions";
 import styles from "./admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +26,7 @@ export default async function PlatformAdminPage() {
   }
 
   const sql = getDb();
-  const [requestRows, organizationRows, featureRows, siteRows, runRows, integrationRequestRows, industryRequestRows, schoolCompanyRows] = await Promise.all([
+  const [requestRows, organizationRows, featureRows, siteRows, runRows, integrationRequestRows, industryRequestRows, schoolCompanyRows, industryPartners] = await Promise.all([
     sql`
       select r.id, r.organization_name, r.organization_type, r.status, r.created_at,
              p.semantic_id as requester_semantic_id, p.display_name as requester_name
@@ -71,6 +71,13 @@ export default async function PlatformAdminPage() {
       where c.status='requested'
       order by c.created_at asc
       limit 30
+    `,
+    sql`
+      select p.id, p.company_name, p.website, p.sector,
+             (select count(*)::int from industry_roles r where r.industry_partner_id=p.id and r.status='published') as role_count
+      from industry_partners p
+      where p.status='verified'
+      order by p.company_name
     `,
   ]);
 
@@ -229,6 +236,41 @@ export default async function PlatformAdminPage() {
           </article>
         </section>
 
+        <section className={styles.grid} style={{ marginTop: 18 }}>
+          <article className={styles.panel}>
+            <div className={styles.eyebrow}>Industry network</div>
+            <h2>Publish a verified company profile</h2>
+            <p className={styles.muted}>Create profiles only after ViTech has verified the company relationship and has appropriate permission to publish its career information.</p>
+            <form action={createIndustryPartner} className={styles.form}>
+              <input className={styles.input} name="companyName" maxLength={180} required placeholder="Company name" />
+              <input className={styles.input} name="website" type="url" maxLength={500} placeholder="https://company.com" />
+              <input className={styles.input} name="sector" maxLength={120} placeholder="Sector / industry" />
+              <textarea className={styles.textarea} name="overviewEn" maxLength={3000} placeholder="English company overview for students" />
+              <textarea className={styles.textarea} name="overviewVi" maxLength={3000} placeholder="Vietnamese company overview for students" />
+              <button className={`${styles.button} ${styles.buttonPrimary}`} type="submit">Create verified company profile</button>
+            </form>
+          </article>
+
+          <article className={styles.panel}>
+            <div className={styles.eyebrow}>Role intelligence</div>
+            <h2>Add a role + skills profile</h2>
+            {industryPartners.length === 0 ? <div className={styles.empty}>Create a verified company profile first.</div> : (
+              <form action={createIndustryRole} className={styles.form}>
+                <select className={styles.input} name="industryPartnerId">{industryPartners.map((partner) => <option key={String(partner.id)} value={String(partner.id)}>{String(partner.company_name)}</option>)}</select>
+                <input className={styles.input} name="titleEn" maxLength={160} required placeholder="Role title in English" />
+                <input className={styles.input} name="titleVi" maxLength={160} required placeholder="Tên vị trí bằng tiếng Việt" />
+                <textarea className={styles.textarea} name="summaryEn" maxLength={3000} placeholder="What this role actually does" />
+                <textarea className={styles.textarea} name="summaryVi" maxLength={3000} placeholder="Vai trò này thực tế làm gì" />
+                <input className={styles.input} name="skills" maxLength={2000} placeholder="Skills, comma separated: communication, Python, data analysis" />
+                <input className={styles.input} name="ageRelevance" maxLength={200} placeholder="Age bands: 13-15, 16-18" />
+                <textarea className={styles.textarea} name="educationNotesEn" maxLength={3000} placeholder="How students can prepare" />
+                <textarea className={styles.textarea} name="educationNotesVi" maxLength={3000} placeholder="Học sinh có thể chuẩn bị như thế nào" />
+                <button className={`${styles.button} ${styles.buttonPrimary}`} type="submit">Publish role profile</button>
+              </form>
+            )}
+            {industryPartners.length > 0 && <div className={styles.requestList} style={{ marginTop: 14 }}>{industryPartners.map((partner) => <div className={styles.requestCard} key={String(partner.id)}><strong>{String(partner.company_name)}</strong><div className={styles.small}>{String(partner.sector || "sector not set")} · {String(partner.role_count)} roles</div></div>)}</div>}
+          </article>
+        </section>
         <section className={styles.grid} style={{ marginTop: 18 }}>
           <article className={styles.panel}>
             <div className={styles.eyebrow}>Connector requests</div>
