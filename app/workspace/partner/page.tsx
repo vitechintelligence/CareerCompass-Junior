@@ -205,7 +205,7 @@ export default async function PartnerWorkspacePage() {
           <section className="workspaceGrid">
             <article className="panel">
               <div className="eyebrow">Privacy controls</div><h2 className="workspaceTitle">Record learner / guardian confirmation</h2>
-              <p className="muted">Use this ledger for the institution's documented consent process. It stores confirmation state and policy version, not guardian identity documents.</p>
+              <p className="muted">Use this ledger for the institution’s documented consent process. It stores confirmation state and policy version, not guardian identity documents.</p>
               <form action={recordLearnerConsent} className="workspaceForm">
                 <input type="hidden" name="organizationId" value={organizationId} />
                 <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
@@ -223,7 +223,7 @@ export default async function PartnerWorkspacePage() {
                 <div className="miniCard light"><strong>RBAC</strong><span>role-bound access</span></div>
                 <div className="miniCard light"><strong>Audit</strong><span>admin provisioning trail</span></div>
               </div>
-              <p className="muted" style={{ marginTop: 14 }}>ViTech's platform controls support compliance operations; the institution remains responsible for its legal basis, notices, approvals and local implementation.</p>
+              <p className="muted" style={{ marginTop: 14 }}>ViTech’s platform controls support compliance operations; the institution remains responsible for its legal basis, notices, approvals and local implementation.</p>
             </article>
           </section>
         )}
