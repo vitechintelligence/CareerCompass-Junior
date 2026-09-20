@@ -45,32 +45,40 @@ export default function Unit1Experience({ locale }: Props) {
   const otherLocale: UnitLocale = locale === "en" ? "vi" : "en";
 
   useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem(completedStorageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored) as number[];
-        if (Array.isArray(parsed)) setCompletedIds(parsed.filter((value) => Number.isInteger(value)));
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const stored = window.localStorage.getItem(completedStorageKey);
+        if (stored) {
+          const parsed = JSON.parse(stored) as number[];
+          if (Array.isArray(parsed)) setCompletedIds(parsed.filter((value) => Number.isInteger(value)));
+        }
+      } catch {
+        // Local progress is optional. A blocked localStorage should never block the lesson.
       }
-    } catch {
-      // Local progress is optional. A blocked localStorage should never block the lesson.
-    }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   useEffect(() => {
-    setMessage(null);
-    setSelected(null);
-    setSequence([]);
-    setPairLeft("");
-    setPairRight("");
-    setColorAnswers({});
-    setCheckpointAnswers({});
-    setRecorderError(null);
+    const frame = window.requestAnimationFrame(() => {
+      setMessage(null);
+      setSelected(null);
+      setSequence([]);
+      setPairLeft("");
+      setPairRight("");
+      setColorAnswers({});
+      setCheckpointAnswers({});
+      setRecorderError(null);
 
-    try {
-      setReflection(window.localStorage.getItem(reflectionStorageKey(activeId)) ?? "");
-    } catch {
-      setReflection("");
-    }
+      try {
+        setReflection(window.localStorage.getItem(reflectionStorageKey(activeId)) ?? "");
+      } catch {
+        setReflection("");
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, [activeId]);
 
   useEffect(() => {
