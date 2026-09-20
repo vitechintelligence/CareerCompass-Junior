@@ -127,5 +127,13 @@ export const institutionBuilderGraph = new StateGraph(InstitutionBuildState)
   .compile();
 
 export async function buildInstitutionPlan(input: InstitutionBuildInput) {
-  return institutionBuilderGraph.invoke(input);
+  return institutionBuilderGraph.invoke(input, {
+    tags: ["institution-builder", "admin-controlled"],
+    metadata: {
+      organizationId: input.organizationId,
+      organizationType: input.organizationType,
+      locale: input.locale,
+      containsStudentContent: false,
+    },
+  });
 }
