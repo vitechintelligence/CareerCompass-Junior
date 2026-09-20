@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:adapters": "rm -rf .adapter-test && tsc --outDir .adapter-test --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --types node lib/integration-adapter-core.ts lib/provider-adapters.ts lib/integration-diagnostics.ts scripts/integration-adapter-selftest.ts && node .adapter-test/scripts/integration-adapter-selftest.js && rm -rf .adapter-test"
   },
