@@ -21,7 +21,7 @@ export default async function TeacherWorkspacePage() {
   const isAdmin = profile.account_type === "platform_admin";
   const classes = isAdmin
     ? await sql`
-        select c.id, c.name, c.level_label, c.academic_cycle, o.name as organization_name,
+        select c.id, c.name, c.level_label, c.academic_cycle, c.class_scope, c.subject_label, o.name as organization_name,
           count(distinct cm.student_id)::int as student_count
         from classes c
         join organizations o on o.id = c.organization_id
@@ -31,7 +31,7 @@ export default async function TeacherWorkspacePage() {
         order by c.name
       `
     : await sql`
-        select c.id, c.name, c.level_label, c.academic_cycle, o.name as organization_name,
+        select c.id, c.name, c.level_label, c.academic_cycle, c.class_scope, c.subject_label, o.name as organization_name,
           count(distinct cm.student_id)::int as student_count
         from teacher_assignments ta
         join classes c on c.id = ta.class_id
@@ -42,6 +42,36 @@ export default async function TeacherWorkspacePage() {
         order by c.name
       `;
 
+
+  const programClasses = classes.filter((item) => String(item.class_scope || "program") !== "teacher_custom");
+  const myClassrooms = classes.filter((item) => String(item.class_scope || "program") === "teacher_custom");
+  const classIds = classes.map((item) => String(item.id));
+
+  const [attendancePulse, assessmentPulse, learningPulse] = await Promise.all([
+    classIds.length === 0 ? [] : sql`
+      select
+        count(*) filter (where a.status='absent')::int as absent_count,
+        count(*) filter (where a.status='late')::int as late_count
+      from attendance a
+      where a.class_id = any(${classIds}::uuid[])
+        and a.session_date >= current_date - interval '7 days'
+    `,
+    classIds.length === 0 ? [] : sql`
+      select
+        count(distinct a.id) filter (where a.status='published')::int as published_count,
+        count(distinct aa.id) filter (where aa.status='submitted')::int as submitted_attempts
+      from assessments a
+      left join assessment_attempts aa on aa.assessment_id=a.id
+      where a.class_id = any(${classIds}::uuid[])
+    `,
+    sql`
+      select
+        count(*) filter (where status='completed')::int as completed_count,
+        count(*) filter (where status='in_progress')::int as in_progress_count
+      from teacher_learning_progress
+      where teacher_id=${profile.id}
+    `,
+  ]);
   const pending = isAdmin
     ? await sql`select count(*)::int as count from submissions where status = 'submitted'`
     : await sql`
@@ -94,9 +124,23 @@ export default async function TeacherWorkspacePage() {
       <WorkspaceHeader title="Teacher Workspace" subtitle="Live class operations · Neon-backed" />
       <div className="workspaceContent">
         <section className="metricGrid">
-          <Metric label="Active classes" value={String(classes.length)} detail="Assigned to this account" />
+          <Metric label="Program classes" value={String(programClasses.length)} detail="ViTech program delivery" />
+          <Metric label="My Classroom" value={String(myClassrooms.length)} detail="Teacher-owned school classes" />
           <Metric label="Learners" value={String(classes.reduce((sum, item) => sum + Number(item.student_count || 0), 0))} detail="Across active classes" />
-          <Metric label="Needs review" value={String(pending[0]?.count || 0)} detail="Submitted work" />
+          <Metric label="Needs review" value={String(pending[0]?.count || 0)} detail="Submitted assignments" />
+          <Metric label="Assessments" value={String(assessmentPulse[0]?.published_count || 0)} detail={`${String(assessmentPulse[0]?.submitted_attempts || 0)} attempts need review`} />
+          <Metric label="Attendance flags" value={String(Number(attendancePulse[0]?.absent_count || 0) + Number(attendancePulse[0]?.late_count || 0))} detail="Absent / late in last 7 days" />
+        </section>
+
+        <section className="panel">
+          <div className="eyebrow">Teacher command dashboard</div>
+          <h2 className="workspaceTitle">Everything you manage, one click away</h2>
+          <div className="actionList">
+            <Link className="actionItem" href="/workspace/teacher/my-classroom"><div><strong>My Classroom</strong><div className="muted">Manage regular school subjects separately from ViTech programs.</div></div><span>→</span></Link>
+            <Link className="actionItem" href="/workspace/teacher/assessments"><div><strong>Quizzes & Exams</strong><div className="muted">Deploy assessments directly to students and track attempts.</div></div><span>→</span></Link>
+            <Link className="actionItem" href="/workspace/teacher/upskill"><div><strong>Professional Growth</strong><div className="muted">{String(learningPulse[0]?.completed_count || 0)} modules completed · {String(learningPulse[0]?.in_progress_count || 0)} in progress.</div></div><span>→</span></Link>
+            <Link className="actionItem" href="/programs/future-skills"><div><strong>K12 Future Skills</strong><div className="muted">STEM · STEAM · AI Foundations · AI Level 2 · Robotics.</div></div><span>→</span></Link>
+          </div>
         </section>
 
         <section className="workspaceGrid">
@@ -109,7 +153,7 @@ export default async function TeacherWorkspacePage() {
               <div className="workspaceList">
                 {classes.map((item) => (
                   <div className="workspaceRow" key={String(item.id)}>
-                    <div><strong>{String(item.name)}</strong><div className="muted">{String(item.organization_name)} · {String(item.level_label || "Level not set")}</div></div>
+                    <div><strong>{String(item.name)}</strong><div className="muted">{String(item.organization_name)} · {String(item.class_scope) === "teacher_custom" ? "My Classroom" : "Program"} · {String(item.subject_label || item.level_label || "Level not set")}</div></div>
                     <span className="pill">{String(item.student_count)} learners</span>
                   </div>
                 ))}
@@ -179,7 +223,7 @@ function WorkspaceGate({ title, copy, signedIn = false }: { title: string; copy:
 }
 
 function WorkspaceHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>{title}</strong><div className="muted" style={{ fontSize: 12 }}>{subtitle}</div></div><Link className="pill" href="/portal/teacher">Portal preview</Link></header>;
+  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>{title}</strong><div className="muted" style={{ fontSize: 12 }}>{subtitle}</div></div><div className="actions"><Link className="pill" href="/workspace/teacher/my-classroom">My Classroom</Link><Link className="pill" href="/workspace/teacher/assessments">Assessments</Link><Link className="pill" href="/workspace/teacher/upskill">Upskill</Link></div></header>;
 }
 
 function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
