@@ -157,7 +157,7 @@ export default async function PartnerDataControlPage() {
         <section className="panel">
           <div className="eyebrow">LangSmith / technical operations</div>
           <h2 className="workspaceTitle">Observability is support tooling — not the tenant isolation boundary.</h2>
-          <p className="muted">Student isolation must be enforced by Career Compass authorization, organization-scoped database queries, role checks and storage boundaries. LangSmith can support traces, evaluations, alerts and model-gateway controls, but it must not be treated as the mechanism that prevents one school's data from appearing in another school's workspace.</p>
+          <p className="muted">Student isolation must be enforced by Career Compass authorization, organization-scoped database queries, role checks and storage boundaries. LangSmith can support traces, evaluations, alerts and model-gateway controls, but it must not be treated as the mechanism that prevents one school’s data from appearing in another school’s workspace.</p>
           <div className="statusBanner"><strong>Default trace policy: metadata only.</strong><span>Raw learner responses, names, emails, recordings, project content and BYOK secrets should not be traced. Use organization-safe identifiers, route/workflow name, error class, latency, model/provider label and a trace ID for support.</span></div>
         </section>
       </div>
