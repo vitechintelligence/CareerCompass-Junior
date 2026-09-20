@@ -9,7 +9,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const AGE_BANDS: FutureSkillsAgeBand[] = ["7-9", "10-12", "13-15", "16-18"];
+const AGE_BANDS: FutureSkillsAgeBand[] = ["7-9", "10-13", "14-16", "17-18"];
 
 export default async function FutureSkillsPage({
   searchParams,
