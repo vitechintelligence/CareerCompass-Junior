@@ -18,10 +18,12 @@ create table if not exists community_seasons (
   showcase_on date,
   status text not null default 'draft' check (status in ('draft','open','review','showcase','closed')),
   visibility text not null default 'organization' check (visibility in ('organization','network_pending','network')),
+  leaderboard_mode text not null default 'podium_only' check (leaderboard_mode in ('hidden','podium_only','full')),
   allow_student_team_creation boolean not null default true,
   allow_peer_kudos boolean not null default false,
-  max_team_size integer not null default 4 check (max_team_size between 1 and 8),
+  max_team_size integer not null default 5 check (max_team_size between 1 and 30),
   advisor_feedback_required boolean not null default true,
+  publish_advisor_feedback boolean not null default false,
   created_by uuid references profiles(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -41,6 +43,10 @@ create table if not exists community_challenges (
   semantic_id text not null unique,
   track text not null check (track in ('stem','steam','ai-foundation','ai-level-2','robotics','open')),
   age_band text check (age_band is null or age_band in ('7-9','10-12','13-15','16-18')),
+  participation_mode text not null default 'small_group'
+    check (participation_mode in ('individual','small_group','large_group')),
+  min_team_size integer not null default 1 check (min_team_size between 1 and 30),
+  max_team_size integer not null default 5 check (max_team_size between 1 and 30),
   future_skills_unit_code text,
   title_en text not null,
   title_vi text not null,
@@ -48,14 +54,17 @@ create table if not exists community_challenges (
   brief_vi text not null,
   deliverables jsonb not null default '[]'::jsonb,
   rubric jsonb not null default '{}'::jsonb,
+  skills_focus text[] not null default '{}',
+  bonus_rules jsonb not null default '{}'::jsonb,
   status text not null default 'draft' check (status in ('draft','open','closed')),
   created_by uuid references profiles(id) on delete set null,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  check (max_team_size >= min_team_size)
 );
 
 create index if not exists idx_community_challenges_season
-  on community_challenges(season_id, status, track, age_band);
+  on community_challenges(season_id, status, track, age_band, participation_mode);
 
 create table if not exists community_advisors (
   season_id uuid not null references community_seasons(id) on delete cascade,
@@ -75,6 +84,7 @@ create table if not exists community_teams (
   challenge_id uuid not null references community_challenges(id) on delete cascade,
   organization_id uuid not null references organizations(id) on delete cascade,
   semantic_id text not null unique,
+  join_code text not null unique,
   team_name text not null,
   project_title text,
   project_summary text,
@@ -150,6 +160,19 @@ create table if not exists community_feedback (
 
 create index if not exists idx_community_feedback_submission
   on community_feedback(submission_id, feedback_type, created_at desc);
+
+create table if not exists community_kudos (
+  id uuid primary key default gen_random_uuid(),
+  season_id uuid not null references community_seasons(id) on delete cascade,
+  team_id uuid not null references community_teams(id) on delete cascade,
+  given_by uuid not null references profiles(id) on delete cascade,
+  kind text not null check (kind in ('inspiring','clever','teamwork','resilience','clear_explanation')),
+  created_at timestamptz not null default now(),
+  unique (season_id, team_id, given_by, kind)
+);
+
+create index if not exists idx_community_kudos_team
+  on community_kudos(team_id, kind);
 
 create table if not exists community_results (
   id uuid primary key default gen_random_uuid(),
