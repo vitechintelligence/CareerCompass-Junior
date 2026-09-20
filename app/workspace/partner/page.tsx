@@ -128,6 +128,31 @@ export default async function PartnerWorkspacePage() {
 
         <section className="workspaceGrid">
           <article className="panel">
+            <div className="eyebrow">Institution capabilities</div>
+            <h2 className="workspaceTitle">What your institution can use</h2>
+            <div className="actionList">
+              {featureSet.has("integrations") && <Link className="actionItem" href="/workspace/partner/integrations"><div><strong>Integration Hub</strong><div className="muted">Connect LMS, SIS, content modules and third-party apps.</div></div><span>→</span></Link>}
+              {featureSet.has("industry_connector") && <Link className="actionItem" href="/workspace/partner/industry-connect"><div><strong>School ↔ Company Connector</strong><div className="muted">Request company links, role profiles, skills briefings and real-work exposure.</div></div><span>→</span></Link>}
+              {(featureSet.has("program_stem") || featureSet.has("program_steam") || featureSet.has("program_ai_foundation") || featureSet.has("program_ai_level_2") || featureSet.has("program_robotics")) && <Link className="actionItem" href="/programs/future-skills"><div><strong>K12 Future Skills</strong><div className="muted">STEM · STEAM · AI Foundations · AI Level 2 · Robotics.</div></div><span>→</span></Link>}
+            </div>
+          </article>
+
+          <article className="panel">
+            <div className="eyebrow">VinaSkillTrust</div>
+            <h2 className="workspaceTitle">Extend learning into verified, real-work capability.</h2>
+            <p className="muted">Explore VinaSkillTrust services for scenario-based learning, capability verification and Studio-style work simulations that can complement Career Compass delivery.</p>
+            <div className="miniGrid partnerPulse">
+              <div className="miniCard light"><strong>Studio</strong><span>Create realistic work simulations and practice scenarios.</span></div>
+              <div className="miniCard light"><strong>Verification</strong><span>Turn completed work into structured capability evidence.</span></div>
+              <div className="miniCard light"><strong>Skills</strong><span>Scenario-based training around workplace tasks and communication.</span></div>
+              <div className="miniCard light"><strong>Partner</strong><span>Explore services that can be connected to your institution.</span></div>
+            </div>
+            <div className="actions" style={{ marginTop: 14 }}><a className="button primary" href="https://vinaskilltrust.com" target="_blank" rel="noreferrer">Explore VinaSkillTrust ↗</a></div>
+          </article>
+        </section>
+
+        <section className="workspaceGrid">
+          <article className="panel">
             <div className="eyebrow">Program delivery</div><h2 className="workspaceTitle">Classes</h2>
             {classes.length === 0 ? <EmptyState text="Create your first class to begin assigning teachers and learners." /> : <div className="workspaceList">{classes.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.name)}</strong><div className="muted">{String(item.level_label || "Level not set")} · {String(item.academic_cycle || "Cycle not set")}</div></div><span className="pill">{String(item.student_count)} students · {String(item.teacher_count)} teachers</span></div>)}</div>}
           </article>
