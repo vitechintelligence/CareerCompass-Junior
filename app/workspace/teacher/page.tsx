@@ -139,7 +139,9 @@ export default async function TeacherWorkspacePage() {
             <Link className="actionItem" href="/workspace/teacher/my-classroom"><div><strong>My Classroom</strong><div className="muted">Manage regular school subjects separately from ViTech programs.</div></div><span>→</span></Link>
             <Link className="actionItem" href="/workspace/teacher/assessments"><div><strong>Quizzes & Exams</strong><div className="muted">Deploy assessments directly to students and track attempts.</div></div><span>→</span></Link>
             <Link className="actionItem" href="/workspace/teacher/upskill"><div><strong>Professional Growth</strong><div className="muted">{String(learningPulse[0]?.completed_count || 0)} modules completed · {String(learningPulse[0]?.in_progress_count || 0)} in progress.</div></div><span>→</span></Link>
-            <Link className="actionItem" href="/programs/future-skills"><div><strong>K12 Future Skills</strong><div className="muted">STEM · STEAM · AI Foundations · AI Level 2 · Robotics.</div></div><span>→</span></Link>
+            <Link className="actionItem" href="/steam-lab"><div><strong>STEAM Lab</strong><div className="muted">Run age-level experiential missions and review learner evidence.</div></div><span>→</span></Link>
+            <Link className="actionItem" href="/workspace/teacher/community"><div><strong>Community Controls</strong><div className="muted">Use only the learner/community permissions delegated by your school administrator.</div></div><span>→</span></Link>
+            <Link className="actionItem" href="/programs/future-skills"><div><strong>AI & Robotics curriculum</strong><div className="muted">Age-progressive technical pathways and upcoming mission content.</div></div><span>→</span></Link>
           </div>
         </section>
 
@@ -223,7 +225,7 @@ function WorkspaceGate({ title, copy, signedIn = false }: { title: string; copy:
 }
 
 function WorkspaceHeader({ title, subtitle }: { title: string; subtitle: string }) {
-  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>{title}</strong><div className="muted" style={{ fontSize: 12 }}>{subtitle}</div></div><div className="actions"><Link className="pill" href="/workspace/teacher/my-classroom">My Classroom</Link><Link className="pill" href="/workspace/teacher/assessments">Assessments</Link><Link className="pill" href="/workspace/teacher/upskill">Upskill</Link></div></header>;
+  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>{title}</strong><div className="muted" style={{ fontSize: 12 }}>{subtitle}</div></div><div className="actions"><Link className="pill" href="/workspace/teacher/my-classroom">My Classroom</Link><Link className="pill" href="/workspace/teacher/assessments">Assessments</Link><Link className="pill" href="/workspace/teacher/community">Community</Link><Link className="pill" href="/workspace/teacher/upskill">Upskill</Link></div></header>;
 }
 
 function Metric({ label, value, detail }: { label: string; value: string; detail: string }) {
