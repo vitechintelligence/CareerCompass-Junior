@@ -2,7 +2,7 @@ import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-import { activateTeacher, assignTeacher, createClass, enrollStudent, requestPartnerAccess } from "./actions";
+import { activateTeacher, assignTeacher, createClass, enrollStudent, recordLearnerConsent, requestPartnerAccess } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -82,13 +82,42 @@ export default async function PartnerWorkspacePage() {
   `;
   const total = totals[0] || {};
 
+  const [allocatedFeatures, siteRows, consentRows] = await Promise.all([
+    sql`
+      select feature_key
+      from organization_features
+      where organization_id = ${organizationId} and enabled = true
+    `,
+    sql`
+      select slug, status
+      from institution_sites
+      where organization_id = ${organizationId}
+      limit 1
+    `,
+    sql`
+      select
+        count(*) filter (where status='active')::int as active_records,
+        count(distinct learner_id) filter (where status='active')::int as learners_covered
+      from learner_consent_records
+      where organization_id = ${organizationId}
+    `,
+  ]);
+  const featureSet = new Set(allocatedFeatures.map((row) => String(row.feature_key)));
+  const privacyControlsEnabled = featureSet.has("data_privacy_controls");
+  const institutionSite = siteRows[0];
+  const consentTotal = consentRows[0] || {};
+
   return (
     <main className="workspacePage">
       <PartnerHeader />
       <div className="workspaceContent">
         <section className="workspaceIdentity">
           <div><div className="eyebrow">Partner organization</div><h1 className="workspaceHeroTitle">{String(organization.name)}</h1><p className="muted">{String(organization.organization_type).replace("_", " ")} · {String(organization.semantic_id)}</p></div>
-          {organizations.length > 1 && <span className="pill">{organizations.length} managed organizations</span>}
+          <div className="actions">
+            {institutionSite?.slug && <Link className="button" href={`/institution/${String(institutionSite.slug)}`}>Institution page · {String(institutionSite.status)}</Link>}
+            {profile.account_type === "platform_admin" && <Link className="button primary" href="/workspace/admin">ViTech Admin</Link>}
+            {organizations.length > 1 && <span className="pill">{organizations.length} managed organizations</span>}
+          </div>
         </section>
 
         <section className="metricGrid">
@@ -143,6 +172,33 @@ export default async function PartnerWorkspacePage() {
             <div className="miniGrid partnerPulse"><div className="miniCard light"><strong>{String(total.assignments || 0)}</strong><span>published assignments</span></div><div className="miniCard light"><strong>{String(total.pending_payments || 0)}</strong><span>pending payment records</span></div><div className="miniCard light"><strong>{String(classes.reduce((sum, item) => sum + Number(item.student_count || 0), 0))}</strong><span>class enrollments</span></div><div className="miniCard light"><strong>{String(classes.reduce((sum, item) => sum + Number(item.teacher_count || 0), 0))}</strong><span>teacher assignments</span></div></div>
           </article>
         </section>
+
+        {privacyControlsEnabled && (
+          <section className="workspaceGrid">
+            <article className="panel">
+              <div className="eyebrow">Privacy controls</div><h2 className="workspaceTitle">Record learner / guardian confirmation</h2>
+              <p className="muted">Use this ledger for the institution's documented consent process. It stores confirmation state and policy version, not guardian identity documents.</p>
+              <form action={recordLearnerConsent} className="workspaceForm">
+                <input type="hidden" name="organizationId" value={organizationId} />
+                <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
+                <label><span>Consent scope</span><select name="consentType" defaultValue="digital_learning"><option value="digital_learning">Digital learning</option><option value="learning_evidence">Learning evidence</option><option value="guardian_reporting">Guardian reporting</option><option value="ai_assistive_features">Assistive AI features</option></select></label>
+                <label><span><input type="checkbox" name="learnerConfirmation" /> Learner confirmation recorded</span></label>
+                <label><span><input type="checkbox" name="guardianConfirmation" /> Parent / guardian confirmation recorded</span></label>
+                <button className="button soft" type="submit">Save consent record</button>
+              </form>
+            </article>
+            <article className="panel">
+              <div className="eyebrow">Compliance operations</div><h2 className="workspaceTitle">Privacy baseline</h2>
+              <div className="miniGrid partnerPulse">
+                <div className="miniCard light"><strong>{String(consentTotal.active_records || 0)}</strong><span>active consent records</span></div>
+                <div className="miniCard light"><strong>{String(consentTotal.learners_covered || 0)}</strong><span>learners covered</span></div>
+                <div className="miniCard light"><strong>RBAC</strong><span>role-bound access</span></div>
+                <div className="miniCard light"><strong>Audit</strong><span>admin provisioning trail</span></div>
+              </div>
+              <p className="muted" style={{ marginTop: 14 }}>ViTech's platform controls support compliance operations; the institution remains responsible for its legal basis, notices, approvals and local implementation.</p>
+            </article>
+          </section>
+        )}
       </div>
     </main>
   );
