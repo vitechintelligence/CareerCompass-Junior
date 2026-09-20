@@ -1,5 +1,5 @@
 export type FutureSkillsTrack = "stem" | "steam" | "ai-foundation" | "ai-level-2" | "robotics";
-export type FutureSkillsAgeBand = "7-9" | "10-12" | "13-15" | "16-18";
+export type FutureSkillsAgeBand = "7-9" | "10-13" | "14-16" | "17-18";
 
 export type FutureSkillsUnit = {
   code: string;
@@ -70,19 +70,19 @@ const AGE_PEDAGOGY: Record<FutureSkillsAgeBand, { stageEn: string; stageVi: stri
     pedagogyEn: "Short challenges, concrete objects, visual models, pair talk and playful building. English is introduced through high-frequency classroom phrases and science/action vocabulary.",
     pedagogyVi: "Thử thách ngắn, vật thật, mô hình trực quan, trao đổi theo cặp và hoạt động chế tạo. Tiếng Anh được đưa vào bằng mẫu câu lớp học quen thuộc và từ vựng khoa học/hành động.",
   },
-  "10-12": {
+  "10-13": {
     stageEn: "Investigate → Design → Test → Improve",
     stageVi: "Khảo sát → Thiết kế → Thử nghiệm → Cải tiến",
     pedagogyEn: "Guided inquiry, measurement, diagrams, collaboration and structured reflection. Learners begin to justify choices with evidence in simple English.",
     pedagogyVi: "Khám phá có hướng dẫn, đo lường, sơ đồ, hợp tác và phản tư có cấu trúc. Học sinh bắt đầu giải thích lựa chọn bằng minh chứng với tiếng Anh đơn giản.",
   },
-  "13-15": {
+  "14-16": {
     stageEn: "Model → Build → Analyze → Iterate",
     stageVi: "Mô hình hóa → Xây dựng → Phân tích → Lặp cải tiến",
     pedagogyEn: "Problem-based learning, data interpretation, systems thinking, documentation and team roles. English shifts toward technical explanation and presentation.",
     pedagogyVi: "Học theo vấn đề, diễn giải dữ liệu, tư duy hệ thống, ghi chép kỹ thuật và vai trò nhóm. Tiếng Anh chuyển dần sang giải thích kỹ thuật và thuyết trình.",
   },
-  "16-18": {
+  "17-18": {
     stageEn: "Research → Engineer → Validate → Present",
     stageVi: "Nghiên cứu → Kỹ thuật hóa → Xác thực → Trình bày",
     pedagogyEn: "Industry-style briefs, constraints, prototyping, evidence, trade-offs, documentation and portfolio-ready outcomes. English is used for technical communication and career readiness.",
@@ -113,7 +113,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("STEM79-05","Coding Patterns","Mẫu lệnh Lập trình","Use sequence and repetition to solve movement tasks.","Dùng trình tự và lặp để giải bài toán di chuyển.","Program a human robot maze.","Lập trình robot người đi qua mê cung.",["first/next/then","repeat","My algorithm…"]),
       U("STEM79-06","Mini Eco Engineering","Kỹ thuật Xanh Nhỏ","Connect science observations to an environmental solution.","Kết nối quan sát khoa học với một giải pháp môi trường.","Build a model that saves water or sorts waste.","Làm mô hình tiết kiệm nước hoặc phân loại rác.",["save/reuse/sort","problem/solution","We designed…"]),
     ],
-    "10-12": [
+    "10-13": [
       U("STEM1012-01","Variables & Fair Tests","Biến số & Thử nghiệm công bằng","Identify variables and plan a fair investigation.","Xác định biến và lập kế hoạch thử nghiệm công bằng.","Run a paper helicopter investigation.","Thử nghiệm trực thăng giấy.",["variable","compare","Our evidence shows…"]),
       U("STEM1012-02","Energy in Systems","Năng lượng trong hệ thống","Trace energy transfers in simple systems.","Theo dõi sự truyền năng lượng trong hệ thống đơn giản.","Build and compare elastic-powered vehicles.","Làm và so sánh xe chạy bằng dây đàn hồi.",["energy","transfer","efficiency"]),
       U("STEM1012-03","Structures & Forces","Kết cấu & Lực","Use compression, tension and geometry in structures.","Dùng nén, kéo và hình học trong kết cấu.","Engineer a tower under material limits.","Thiết kế tháp với giới hạn vật liệu.",["force","load","constraint"]),
@@ -121,7 +121,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("STEM1012-05","Circuits & Control","Mạch điện & Điều khiển","Understand input-output relationships in circuits.","Hiểu quan hệ đầu vào-đầu ra trong mạch.","Build a simple warning circuit or simulator.","Làm mạch cảnh báo đơn giản hoặc mô phỏng.",["input/output","circuit","if…then"]),
       U("STEM1012-06","Sustainable Design Challenge","Thử thách Thiết kế Bền vững","Combine science, maths and engineering in a local problem.","Kết hợp khoa học, toán và kỹ thuật cho vấn đề địa phương.","Prototype a low-waste school solution.","Tạo mẫu giải pháp giảm rác cho trường.",["criteria","trade-off","recommend"]),
     ],
-    "13-15": [
+    "14-16": [
       U("STEM1315-01","Systems & Models","Hệ thống & Mô hình","Represent inputs, processes, outputs and feedback.","Biểu diễn đầu vào, quá trình, đầu ra và phản hồi.","Model a school energy or water system.","Mô hình hóa hệ thống năng lượng hoặc nước ở trường.",["system boundary","feedback","assumption"]),
       U("STEM1315-02","Mechanics & Optimization","Cơ học & Tối ưu hóa","Use force, motion and ratios to optimize a design.","Dùng lực, chuyển động và tỉ lệ để tối ưu thiết kế.","Optimize a launcher or vehicle under constraints.","Tối ưu cơ cấu phóng hoặc xe với ràng buộc.",["optimize","ratio","performance"]),
       U("STEM1315-03","Electronics & Sensors","Điện tử & Cảm biến","Connect sensors, thresholds and outputs.","Kết nối cảm biến, ngưỡng và đầu ra.","Prototype an environmental monitor.","Tạo mẫu thiết bị giám sát môi trường.",["sensor","threshold","calibrate"]),
@@ -129,7 +129,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("STEM1315-05","Environmental Engineering","Kỹ thuật Môi trường","Evaluate materials and processes for sustainability.","Đánh giá vật liệu và quy trình theo tính bền vững.","Design a filtration or resource-saving prototype.","Thiết kế mẫu lọc hoặc tiết kiệm tài nguyên.",["impact","material","evaluate"]),
       U("STEM1315-06","Engineering Capstone","Dự án Kỹ thuật Tổng hợp","Plan, build, test and defend an integrated STEM solution.","Lập kế hoạch, xây, thử và bảo vệ giải pháp STEM tích hợp.","Pitch a tested prototype with evidence.","Thuyết trình mẫu thử có minh chứng.",["specification","iteration","justify"]),
     ],
-    "16-18": [
+    "17-18": [
       U("STEM1618-01","Research Questions & Experimental Design","Câu hỏi Nghiên cứu & Thiết kế Thí nghiệm","Turn a real problem into a testable research question.","Chuyển vấn đề thực thành câu hỏi nghiên cứu có thể kiểm chứng.","Write and peer-review an experimental protocol.","Viết và phản biện quy trình thí nghiệm.",["hypothesis","control","methodology"]),
       U("STEM1618-02","Mathematical Modeling","Mô hình Toán học","Use variables, functions and assumptions to model behavior.","Dùng biến, hàm và giả định để mô hình hóa hành vi.","Build a spreadsheet or code-based model.","Xây mô hình bằng bảng tính hoặc mã.",["model","parameter","sensitivity"]),
       U("STEM1618-03","Engineering Design Under Constraints","Thiết kế Kỹ thuật Có Ràng buộc","Balance cost, safety, performance and usability.","Cân bằng chi phí, an toàn, hiệu năng và tính sử dụng.","Create a design review with trade-off matrix.","Lập đánh giá thiết kế bằng ma trận đánh đổi.",["requirement","constraint","trade-off"]),
@@ -147,7 +147,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("STEAM79-05","Design for a Friend","Thiết kế cho Bạn","Practice empathy and simple human-centered design.","Thực hành thấu cảm và thiết kế lấy con người làm trung tâm.","Make an object that helps a classmate.","Tạo đồ vật giúp một bạn trong lớp.",["need","idea","help"]),
       U("STEAM79-06","Mini Maker Exhibition","Triển lãm Maker Nhỏ","Select, explain and improve a creative build.","Chọn, giải thích và cải tiến sản phẩm sáng tạo.","Curate a bilingual maker showcase.","Tổ chức triển lãm maker song ngữ.",["present","improve","My favorite feature…"]),
     ],
-    "10-12": [
+    "10-13": [
       U("STEAM1012-01","Visualizing Data","Trực quan hóa Dữ liệu","Turn data into clear visual stories.","Biến dữ liệu thành câu chuyện trực quan rõ ràng.","Create an infographic from class data.","Tạo infographic từ dữ liệu lớp.",["data story","compare","audience"]),
       U("STEAM1012-02","Kinetic Art","Nghệ thuật Chuyển động","Combine mechanisms, balance and visual design.","Kết hợp cơ cấu, cân bằng và thiết kế thị giác.","Build a moving sculpture.","Tạo tác phẩm điêu khắc chuyển động.",["motion","balance","mechanism"]),
       U("STEAM1012-03","Science of Sound","Khoa học Âm thanh","Investigate pitch, rhythm and digital sound patterns.","Khảo sát cao độ, nhịp và mẫu âm thanh số.","Design a short soundscape with scientific explanation.","Thiết kế cảnh âm thanh kèm giải thích khoa học.",["frequency","rhythm","explain"]),
@@ -155,7 +155,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("STEAM1012-05","Digital Storytelling","Kể chuyện Số","Combine coding logic, media and narrative.","Kết hợp logic lập trình, truyền thông và kể chuyện.","Build an interactive story prototype.","Tạo mẫu câu chuyện tương tác.",["scene","interaction","choice"]),
       U("STEAM1012-06","Design Showcase","Triển lãm Thiết kế","Document process and communicate design decisions.","Tài liệu hóa quy trình và giao tiếp quyết định thiết kế.","Present a bilingual design portfolio.","Trình bày portfolio thiết kế song ngữ.",["process","feedback","portfolio"]),
     ],
-    "13-15": [
+    "14-16": [
       U("STEAM1315-01","Human-Centered Design","Thiết kế Lấy Con người Làm Trung tâm","Use interviews, needs and constraints to frame design problems.","Dùng phỏng vấn, nhu cầu và ràng buộc để xác định vấn đề thiết kế.","Create a user-needs design brief.","Tạo đề bài thiết kế theo nhu cầu người dùng.",["empathy","insight","design brief"]),
       U("STEAM1315-02","Generative Patterns","Mẫu Sinh Tạo","Explore algorithms, geometry and creative variation.","Khám phá thuật toán, hình học và biến thể sáng tạo.","Produce algorithmic art using blocks or code.","Tạo nghệ thuật thuật toán bằng khối lệnh hoặc mã.",["algorithm","parameter","variation"]),
       U("STEAM1315-03","Media, Data & Meaning","Truyền thông, Dữ liệu & Ý nghĩa","Critique how visual choices influence interpretation.","Phân tích cách lựa chọn hình ảnh ảnh hưởng diễn giải.","Redesign a misleading chart or media piece.","Thiết kế lại biểu đồ hoặc nội dung gây hiểu nhầm.",["interpret","bias","visual hierarchy"]),
@@ -163,7 +163,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("STEAM1315-05","Sustainable Spaces","Không gian Bền vững","Integrate geometry, environment and human use.","Tích hợp hình học, môi trường và nhu cầu sử dụng.","Redesign a school space for comfort and sustainability.","Thiết kế lại không gian trường học bền vững.",["space","constraint","accessibility"]),
       U("STEAM1315-06","Creative Systems Portfolio","Portfolio Hệ thống Sáng tạo","Document iterations and defend a multidisciplinary solution.","Tài liệu hóa vòng lặp và bảo vệ giải pháp đa lĩnh vực.","Publish a process portfolio and exhibition pitch.","Công bố portfolio quá trình và thuyết trình triển lãm.",["iteration","critique","rationale"]),
     ],
-    "16-18": [
+    "17-18": [
       U("STEAM1618-01","Design Research","Nghiên cứu Thiết kế","Plan ethical user research and synthesize insights.","Lập nghiên cứu người dùng có đạo đức và tổng hợp insight.","Produce a research-backed opportunity map.","Tạo bản đồ cơ hội dựa trên nghiên cứu.",["research question","insight","evidence"]),
       U("STEAM1618-02","Computational Creativity","Sáng tạo Tính toán","Use algorithms and parameters as creative materials.","Dùng thuật toán và tham số như vật liệu sáng tạo.","Create a generative visual/audio prototype.","Tạo mẫu hình ảnh/âm thanh sinh tạo.",["generative","parameter","system"]),
       U("STEAM1618-03","UX & Prototyping","UX & Tạo mẫu","Translate user needs into flows and testable prototypes.","Chuyển nhu cầu người dùng thành luồng và mẫu có thể kiểm thử.","Run a usability test and iterate.","Thực hiện kiểm thử khả dụng và cải tiến.",["user flow","prototype","usability"]),
@@ -181,7 +181,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("AIF79-05","Fair & Safe AI","AI Công bằng & An toàn","Practice asking who may be left out and what should stay private.","Thực hành hỏi ai có thể bị bỏ sót và dữ liệu nào cần riêng tư.","Create a safe-AI poster for children.","Tạo poster AI an toàn cho trẻ.",["fair","private","ask an adult"]),
       U("AIF79-06","AI Detective Challenge","Thử thách Thám tử AI","Use the foundation ideas to explain an AI-assisted situation.","Dùng kiến thức nền để giải thích tình huống có AI hỗ trợ.","Present an AI detective case.","Trình bày một vụ việc thám tử AI.",["I think… because…","evidence","human check"]),
     ],
-    "10-12": [
+    "10-13": [
       U("AIF1012-01","Features, Labels & Datasets","Đặc trưng, Nhãn & Bộ dữ liệu","Identify features, labels and examples in a dataset.","Xác định đặc trưng, nhãn và ví dụ trong bộ dữ liệu.","Design a small classification dataset.","Thiết kế bộ dữ liệu phân loại nhỏ.",["feature","label","dataset"]),
       U("AIF1012-02","Training & Testing","Huấn luyện & Kiểm thử","Understand why examples used for learning and checking should be separated.","Hiểu vì sao ví dụ học và kiểm tra nên tách riêng.","Run a paper-based train/test simulation.","Mô phỏng huấn luyện/kiểm thử bằng giấy.",["train","test","accuracy"]),
       U("AIF1012-03","Classification & Prediction","Phân loại & Dự đoán","Explore how models map patterns to outputs.","Khám phá cách mô hình ánh xạ mẫu sang đầu ra.","Build a no-code rule/model comparison.","So sánh quy tắc và mô hình không cần code.",["input","prediction","model"]),
@@ -189,7 +189,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("AIF1012-05","Bias, Privacy & Human Choice","Thiên lệch, Riêng tư & Quyền chọn","Identify biased examples and privacy risks.","Nhận biết ví dụ thiên lệch và rủi ro riêng tư.","Audit a fictional AI app for fairness and privacy.","Kiểm tra ứng dụng AI giả định về công bằng và riêng tư.",["bias","privacy","consent"]),
       U("AIF1012-06","No-Code AI Mini Project","Dự án AI Không Code","Plan, test and explain a small age-appropriate AI model or simulation.","Lập kế hoạch, thử và giải thích mô hình hoặc mô phỏng AI nhỏ.","Create a simple classifier with approved classroom tooling or cards.","Tạo bộ phân loại đơn giản bằng công cụ lớp học được duyệt hoặc thẻ.",["purpose","test","limitation"]),
     ],
-    "13-15": [
+    "14-16": [
       U("AIF1315-01","Machine Learning Concepts","Khái niệm Học máy","Understand model, feature, label, training and inference.","Hiểu mô hình, đặc trưng, nhãn, huấn luyện và suy luận.","Map a real use case into an ML pipeline.","Vẽ quy trình ML cho tình huống thực.",["training","inference","pipeline"]),
       U("AIF1315-02","Data Preparation","Chuẩn bị Dữ liệu","Explore data quality, balance, missing values and representation.","Khám phá chất lượng, cân bằng, dữ liệu thiếu và tính đại diện.","Clean and document a small dataset.","Làm sạch và tài liệu hóa bộ dữ liệu nhỏ.",["quality","representative","missing value"]),
       U("AIF1315-03","Evaluating Models","Đánh giá Mô hình","Use accuracy, error cases and simple confusion matrices.","Dùng độ chính xác, trường hợp sai và ma trận nhầm lẫn đơn giản.","Compare two model result sheets.","So sánh kết quả hai mô hình.",["false positive","false negative","metric"]),
@@ -197,7 +197,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("AIF1315-05","Responsible AI","AI Có Trách nhiệm","Analyze fairness, transparency, privacy, safety and human oversight.","Phân tích công bằng, minh bạch, riêng tư, an toàn và giám sát con người.","Create a risk-and-control sheet for an AI idea.","Tạo bảng rủi ro và kiểm soát cho ý tưởng AI.",["risk","control","oversight"]),
       U("AIF1315-06","AI Foundation Capstone","Dự án Tổng hợp AI Nền tảng","Design and defend an AI-assisted solution without overclaiming capability.","Thiết kế và bảo vệ giải pháp có AI hỗ trợ mà không phóng đại năng lực.","Present problem, data, model idea, evaluation and safeguards.","Trình bày vấn đề, dữ liệu, ý tưởng mô hình, đánh giá và bảo vệ.",["assumption","evaluation","safeguard"]),
     ],
-    "16-18": [
+    "17-18": [
       U("AIF1618-01","AI System Lifecycle","Vòng đời Hệ thống AI","Map problem framing, data, modeling, evaluation, deployment and monitoring.","Mô tả xác định vấn đề, dữ liệu, mô hình, đánh giá, triển khai và giám sát.","Create an AI lifecycle canvas for a real sector.","Tạo canvas vòng đời AI cho ngành thực tế.",["lifecycle","stakeholder","objective"]),
       U("AIF1618-02","Supervised & Unsupervised Thinking","Tư duy Có giám sát & Không giám sát","Compare classification/regression with clustering-style exploration.","So sánh phân loại/hồi quy với khám phá kiểu phân cụm.","Choose an approach for several business/education cases.","Chọn cách tiếp cận cho các tình huống doanh nghiệp/giáo dục.",["supervised","unsupervised","target"]),
       U("AIF1618-03","Model Evaluation & Trade-offs","Đánh giá Mô hình & Đánh đổi","Interpret metrics in context and identify costly errors.","Diễn giải chỉ số theo ngữ cảnh và nhận diện lỗi tốn kém.","Build an evaluation scorecard.","Tạo bảng điểm đánh giá mô hình.",["precision","recall","trade-off"]),
@@ -215,7 +215,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("AI279-05","Prompting as Clear Instructions","Prompt là Chỉ dẫn Rõ ràng","Practice giving clear, bounded instructions to an AI assistant.","Thực hành đưa chỉ dẫn rõ, có giới hạn cho trợ lý AI.","Rewrite vague instructions into safe clear prompts.","Viết lại chỉ dẫn mơ hồ thành prompt rõ và an toàn.",["instruction","specific","check"]),
       U("AI279-06","Human-in-the-Loop Creator","Nhà sáng tạo Có Con người Kiểm soát","Combine AI suggestion, human choice and verification.","Kết hợp gợi ý AI, lựa chọn con người và xác minh.","Create a human-check workflow poster.","Tạo poster quy trình con người kiểm tra.",["suggest","decide","verify"]),
     ],
-    "10-12": [
+    "10-13": [
       U("AI21012-01","Build a Simple Classifier","Xây Bộ phân loại Đơn giản","Train and test a small no-code model with safe data.","Huấn luyện và kiểm thử mô hình không code bằng dữ liệu an toàn.","Build a small image/text classifier with approved tooling.","Tạo bộ phân loại ảnh/văn bản nhỏ bằng công cụ được duyệt.",["train","label","test"]),
       U("AI21012-02","Understanding Errors","Hiểu Lỗi Mô hình","Analyze false positives and false negatives intuitively.","Phân tích dương tính giả và âm tính giả trực quan.","Create an error table and improve the dataset.","Tạo bảng lỗi và cải tiến dữ liệu.",["error","false positive","false negative"]),
       U("AI21012-03","Prompt Systems","Hệ thống Prompt","Use role, context, task, constraints and checking steps.","Dùng vai trò, ngữ cảnh, nhiệm vụ, ràng buộc và bước kiểm tra.","Build a reusable prompt template for learning.","Tạo mẫu prompt tái sử dụng cho học tập.",["context","constraint","format"]),
@@ -223,7 +223,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("AI21012-05","Human-in-the-Loop Workflows","Quy trình Có Con người Kiểm soát","Design checkpoints where people approve important actions.","Thiết kế điểm kiểm tra để con người duyệt hành động quan trọng.","Map an AI-assisted homework workflow.","Vẽ quy trình bài tập có AI hỗ trợ.",["approve","checkpoint","responsibility"]),
       U("AI21012-06","AI Creator Project","Dự án Nhà sáng tạo AI","Build and present a safe AI-assisted prototype.","Xây và trình bày mẫu có AI hỗ trợ an toàn.","Demo, test and reflect on a prototype.","Demo, kiểm thử và phản tư về mẫu.",["demo","test case","reflection"]),
     ],
-    "13-15": [
+    "14-16": [
       U("AI21315-01","AI Pipelines","Quy trình AI","Connect data, preprocessing, model, evaluation and output.","Kết nối dữ liệu, tiền xử lý, mô hình, đánh giá và đầu ra.","Diagram and simulate an end-to-end AI pipeline.","Vẽ và mô phỏng quy trình AI đầu-cuối.",["pipeline","preprocess","output"]),
       U("AI21315-02","Embeddings & Similarity","Embedding & Độ tương đồng","Understand vector-like representations and similarity conceptually.","Hiểu biểu diễn dạng vector và độ tương đồng ở mức khái niệm.","Build a paper similarity search.","Tạo tìm kiếm tương đồng bằng giấy.",["embedding","similarity","retrieve"]),
       U("AI21315-03","Retrieval + Generation","Truy xuất + Tạo sinh","Understand grounded generation using approved source material.","Hiểu tạo sinh có căn cứ dựa trên nguồn được duyệt.","Design a small source-grounded Q&A system.","Thiết kế hệ hỏi đáp có nguồn nhỏ.",["retrieve","source","grounded"]),
@@ -231,7 +231,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("AI21315-05","Evaluation & Red Teaming","Đánh giá & Kiểm thử Rủi ro","Create test cases for quality, safety and failure modes.","Tạo ca kiểm thử cho chất lượng, an toàn và lỗi.","Build an evaluation checklist for an AI prototype.","Tạo checklist đánh giá mẫu AI.",["test case","failure mode","evaluate"]),
       U("AI21315-06","Responsible AI System Capstone","Dự án Hệ thống AI Có Trách nhiệm","Prototype an AI workflow with evidence, controls and reflection.","Tạo mẫu quy trình AI có minh chứng, kiểm soát và phản tư.","Present architecture, tests, risks and human checkpoints.","Trình bày kiến trúc, kiểm thử, rủi ro và điểm kiểm tra con người.",["architecture","guardrail","evidence"]),
     ],
-    "16-18": [
+    "17-18": [
       U("AI21618-01","Applied AI Architecture","Kiến trúc AI Ứng dụng","Design an AI-enabled system with deterministic and model-driven parts.","Thiết kế hệ có AI với phần xác định và phần dựa trên mô hình.","Produce an architecture diagram and data-flow map.","Tạo sơ đồ kiến trúc và luồng dữ liệu.",["architecture","deterministic","orchestration"]),
       U("AI21618-02","APIs, Models & Data Boundaries","API, Mô hình & Ranh giới Dữ liệu","Understand API-mediated AI systems and safe data boundaries.","Hiểu hệ AI qua API và ranh giới dữ liệu an toàn.","Design a mock API contract with privacy limits.","Thiết kế hợp đồng API giả lập có giới hạn riêng tư.",["API","schema","data boundary"]),
       U("AI21618-03","RAG & Knowledge Systems","RAG & Hệ Tri thức","Design retrieval-grounded systems and source citation flows.","Thiết kế hệ dựa trên truy xuất và luồng dẫn nguồn.","Prototype a small knowledge assistant using approved content.","Tạo mẫu trợ lý tri thức bằng nội dung được duyệt.",["retrieval","chunk","citation"]),
@@ -249,7 +249,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("ROB79-05","Robot Safety","An toàn Robot","Identify safe zones, people and robot limits.","Nhận biết vùng an toàn, con người và giới hạn robot.","Design a safe robot playground.","Thiết kế khu hoạt động robot an toàn.",["safe zone","warning","human"]),
       U("ROB79-06","Mini Robot Mission","Nhiệm vụ Robot Nhỏ","Combine sequence, sensing and explanation.","Kết hợp trình tự, cảm biến và giải thích.","Complete and explain a rescue-delivery challenge.","Hoàn thành và giải thích thử thách cứu hộ/giao hàng.",["mission","debug","success"]),
     ],
-    "10-12": [
+    "10-13": [
       U("ROB1012-01","Chassis & Motion","Khung xe & Chuyển động","Understand wheelbase, traction and turning.","Hiểu khoảng cách bánh, độ bám và quay.","Build or simulate a stable robot chassis.","Làm hoặc mô phỏng khung robot ổn định.",["chassis","traction","turn"]),
       U("ROB1012-02","Sensor Inputs","Đầu vào Cảm biến","Compare touch, distance, light and line sensors.","So sánh cảm biến chạm, khoảng cách, ánh sáng và dò line.","Calibrate a sensor threshold.","Hiệu chuẩn ngưỡng cảm biến.",["sensor","threshold","calibrate"]),
       U("ROB1012-03","Loops & Conditions","Vòng lặp & Điều kiện","Use loops and conditions in robot behavior.","Dùng vòng lặp và điều kiện cho hành vi robot.","Program repeatable navigation behavior.","Lập trình hành vi điều hướng lặp.",["loop","condition","debug"]),
@@ -257,7 +257,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("ROB1012-05","Robot Manipulation","Robot Thao tác","Explore grippers and simple mechanisms.","Khám phá kẹp và cơ cấu thao tác đơn giản.","Design a pick-and-place mechanism.","Thiết kế cơ cấu gắp-đặt.",["grip","lift","place"]),
       U("ROB1012-06","Mission Challenge","Thử thách Nhiệm vụ","Integrate navigation, sensing and manipulation.","Tích hợp điều hướng, cảm biến và thao tác.","Complete a warehouse or rescue mission.","Hoàn thành nhiệm vụ kho hoặc cứu hộ.",["mission","constraint","team role"]),
     ],
-    "13-15": [
+    "14-16": [
       U("ROB1315-01","Microcontrollers & I/O","Vi điều khiển & I/O","Understand digital/analog input-output and program flow.","Hiểu đầu vào-đầu ra số/tương tự và luồng chương trình.","Connect simulated or physical sensors and actuators.","Kết nối cảm biến và cơ cấu chấp hành mô phỏng/thật.",["microcontroller","analog","actuator"]),
       U("ROB1315-02","Feedback Control","Điều khiển Phản hồi","Use error and correction in closed-loop behavior.","Dùng sai lệch và hiệu chỉnh trong vòng kín.","Tune a simple proportional controller concept.","Tinh chỉnh khái niệm điều khiển tỉ lệ đơn giản.",["error","feedback","gain"]),
       U("ROB1315-03","Sensor Fusion","Hợp nhất Cảm biến","Combine multiple signals for better decisions.","Kết hợp nhiều tín hiệu để quyết định tốt hơn.","Design a two-sensor navigation strategy.","Thiết kế chiến lược điều hướng hai cảm biến.",["fusion","reliability","signal"]),
@@ -265,7 +265,7 @@ const curriculum: Record<FutureSkillsTrack, Record<FutureSkillsAgeBand, FutureSk
       U("ROB1315-05","Vision for Robotics","Thị giác cho Robot","Understand image detection as a sensor input with uncertainty.","Hiểu phát hiện hình ảnh là đầu vào cảm biến có bất định.","Prototype a vision-triggered behavior concept.","Tạo mẫu hành vi kích hoạt bằng thị giác.",["detect","confidence","camera"]),
       U("ROB1315-06","Robotics Capstone","Dự án Robot Tổng hợp","Integrate mechanics, electronics, code and testing.","Tích hợp cơ khí, điện tử, mã và kiểm thử.","Run a documented robotics mission challenge.","Thực hiện thử thách robot có tài liệu.",["integration","test log","iteration"]),
     ],
-    "16-18": [
+    "17-18": [
       U("ROB1618-01","Kinematics & Motion Planning","Động học & Lập kế hoạch Chuyển động","Model robot position, velocity and movement constraints.","Mô hình hóa vị trí, vận tốc và ràng buộc chuyển động robot.","Create a motion plan for a mobile or arm robot.","Tạo kế hoạch chuyển động cho robot di động hoặc tay máy.",["kinematics","trajectory","constraint"]),
       U("ROB1618-02","Embedded Systems","Hệ thống Nhúng","Connect sensing, computation and actuation under resource limits.","Kết nối cảm biến, tính toán và chấp hành dưới giới hạn tài nguyên.","Design an embedded control architecture.","Thiết kế kiến trúc điều khiển nhúng.",["embedded","latency","resource"]),
       U("ROB1618-03","Control Systems","Hệ Điều khiển","Analyze feedback, stability and tuning conceptually.","Phân tích phản hồi, ổn định và tinh chỉnh ở mức khái niệm.","Tune and compare control strategies.","Tinh chỉnh và so sánh chiến lược điều khiển.",["stability","controller","response"]),
@@ -296,9 +296,9 @@ export const FUTURE_SKILLS_DELIVERY_MODEL = {
   sessionsPerPathway: 12,
   sessionMinutes: {
     "7-9": 60,
-    "10-12": 75,
-    "13-15": 90,
-    "16-18": 90,
+    "10-13": 75,
+    "14-16": 90,
+    "17-18": 90,
   } as Record<FutureSkillsAgeBand, number>,
   lessonPatternEn: ["Launch in English", "Explore / investigate", "Build / apply", "Test / discuss", "Reflect / evidence"],
   lessonPatternVi: ["Khởi động bằng tiếng Anh", "Khám phá / khảo sát", "Xây dựng / áp dụng", "Thử nghiệm / thảo luận", "Phản tư / minh chứng"],
