@@ -337,3 +337,93 @@ export async function updateSchoolCompanyConnection(formData: FormData) {
   revalidatePath("/workspace/admin");
   revalidatePath("/workspace/partner/industry-connect");
 }
+
+
+export async function createIndustryPartner(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const companyName = textValue(formData.get("companyName"), 180);
+  const website = textValue(formData.get("website"), 500);
+  const sector = textValue(formData.get("sector"), 120);
+  const overviewEn = textValue(formData.get("overviewEn"), 3000);
+  const overviewVi = textValue(formData.get("overviewVi"), 3000);
+  if (companyName.length < 2) throw new Error("Company name is required.");
+  if (website) {
+    try {
+      const url = new URL(website);
+      if (!["https:", "http:"].includes(url.protocol)) throw new Error("bad protocol");
+    } catch {
+      throw new Error("Company website must be a valid http(s) URL.");
+    }
+  }
+
+  const sql = getDb();
+  const semanticId = `industry-${randomUUID().slice(0, 8)}`;
+  const rows = await sql`
+    insert into industry_partners (
+      semantic_id, company_name, website, sector, overview_en, overview_vi, status
+    )
+    values (
+      ${semanticId}, ${companyName}, ${website || null}, ${sector || null},
+      ${overviewEn || null}, ${overviewVi || null}, 'verified'
+    )
+    returning id
+  `;
+  const partnerId = String(rows[0]?.id || "");
+  if (!partnerId) throw new Error("Could not create company profile.");
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, 'industry_partner_created', 'industry_partner', ${partnerId},
+      ${JSON.stringify({ companyName, website, sector })}::jsonb
+    )
+  `;
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
+
+export async function createIndustryRole(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const industryPartnerId = textValue(formData.get("industryPartnerId"), 60);
+  const titleEn = textValue(formData.get("titleEn"), 160);
+  const titleVi = textValue(formData.get("titleVi"), 160);
+  const summaryEn = textValue(formData.get("summaryEn"), 3000);
+  const summaryVi = textValue(formData.get("summaryVi"), 3000);
+  const educationNotesEn = textValue(formData.get("educationNotesEn"), 3000);
+  const educationNotesVi = textValue(formData.get("educationNotesVi"), 3000);
+  const skills = textValue(formData.get("skills"), 2000).split(",").map((item) => item.trim()).filter(Boolean).slice(0, 20);
+  const ageRelevance = textValue(formData.get("ageRelevance"), 200).split(",").map((item) => item.trim()).filter((item) => ["7-9","10-12","13-15","16-18"].includes(item));
+  assertUuid(industryPartnerId, "industry partner");
+  if (!titleEn || !titleVi) throw new Error("Role title is required in both languages.");
+
+  const sql = getDb();
+  const partner = await sql`select id from industry_partners where id=${industryPartnerId} and status='verified' limit 1`;
+  if (!partner[0]) throw new Error("Verified company profile not found.");
+  const roleKey = `role-${randomUUID().slice(0, 8)}`;
+
+  const rows = await sql`
+    insert into industry_roles (
+      industry_partner_id, role_key, title_en, title_vi, summary_en, summary_vi,
+      skill_tags, education_notes_en, education_notes_vi, age_relevance, status
+    )
+    values (
+      ${industryPartnerId}, ${roleKey}, ${titleEn}, ${titleVi},
+      ${summaryEn || null}, ${summaryVi || null}, ${skills},
+      ${educationNotesEn || null}, ${educationNotesVi || null},
+      ${ageRelevance}, 'published'
+    )
+    returning id
+  `;
+  const roleId = String(rows[0]?.id || "");
+  if (!roleId) throw new Error("Could not create company role.");
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, 'industry_role_created', 'industry_role', ${roleId},
+      ${JSON.stringify({ industryPartnerId, titleEn, skills, ageRelevance })}::jsonb
+    )
+  `;
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
