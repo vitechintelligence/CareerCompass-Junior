@@ -121,18 +121,14 @@ create table if not exists steam_teacher_observations (
 create index if not exists idx_steam_teacher_observations_run
   on steam_teacher_observations(run_id, created_at desc);
 
-do $
-begin
-  if not exists (select 1 from pg_trigger where tgname='learner_delivery_profiles_set_updated_at') then
-    create trigger learner_delivery_profiles_set_updated_at
-      before update on learner_delivery_profiles for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='steam_missions_set_updated_at') then
-    create trigger steam_missions_set_updated_at
-      before update on steam_missions for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='steam_mission_runs_set_updated_at') then
-    create trigger steam_mission_runs_set_updated_at
-      before update on steam_mission_runs for each row execute function set_updated_at();
-  end if;
-end $$;
+create trigger learner_delivery_profiles_set_updated_at
+  before update on learner_delivery_profiles
+  for each row execute function set_updated_at();
+
+create trigger steam_missions_set_updated_at
+  before update on steam_missions
+  for each row execute function set_updated_at();
+
+create trigger steam_mission_runs_set_updated_at
+  before update on steam_mission_runs
+  for each row execute function set_updated_at();
