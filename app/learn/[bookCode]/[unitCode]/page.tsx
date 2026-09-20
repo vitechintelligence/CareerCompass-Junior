@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getPublishedUnit, listPublishedUnits } from "@/lib/curriculum";
 import { getBookCatalogItem, getCatalogUnit } from "@/lib/book-catalog";
+import { getFullInteractiveBook } from "@/lib/full-interactive-books";
 import GenericActivity from "./GenericActivity";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,10 @@ export default async function DatabaseUnitPage({
   searchParams: Promise<{ lang?: string }>;
 }) {
   const { bookCode, unitCode } = await params;
+  if (getFullInteractiveBook(bookCode)) {
+    redirect(`/learn/${encodeURIComponent(bookCode)}?start=${encodeURIComponent(unitCode)}`);
+  }
+
   const { lang } = await searchParams;
   const locale: "en" | "vi" = lang === "vi" ? "vi" : "en";
 
