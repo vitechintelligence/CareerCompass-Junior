@@ -247,3 +247,93 @@ export async function setInstitutionSiteStatus(formData: FormData) {
   revalidatePath("/workspace/admin");
   revalidatePath(`/institution/${String(rows[0].slug)}`);
 }
+
+
+export async function updateIntegrationProviderRequest(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const requestId = textValue(formData.get("requestId"), 60);
+  const status = textValue(formData.get("status"), 20);
+  const adminNote = textValue(formData.get("adminNote"), 1000);
+  assertUuid(requestId, "integration request");
+  if (!["reviewing", "approved", "rejected", "closed"].includes(status)) {
+    throw new Error("Invalid integration request status.");
+  }
+
+  const sql = getDb();
+  const rows = await sql`
+    update integration_provider_requests
+    set status=${status}, admin_note=${adminNote || null}, reviewed_by=${admin.id}, reviewed_at=now(), updated_at=now()
+    where id=${requestId}
+    returning organization_id, provider_name
+  `;
+  if (!rows[0]) throw new Error("Integration request not found.");
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(rows[0].organization_id)}, 'integration_request_review',
+      'integration_provider_request', ${requestId},
+      ${JSON.stringify({ status, adminNote, providerName: String(rows[0].provider_name) })}::jsonb
+    )
+  `;
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/integrations");
+}
+
+export async function updateIndustryConnectionRequest(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const requestId = textValue(formData.get("requestId"), 60);
+  const status = textValue(formData.get("status"), 20);
+  const adminNote = textValue(formData.get("adminNote"), 1000);
+  assertUuid(requestId, "industry connection request");
+  if (!["reviewing", "connected", "closed"].includes(status)) {
+    throw new Error("Invalid industry request status.");
+  }
+
+  const sql = getDb();
+  const rows = await sql`
+    update industry_connection_requests
+    set status=${status}, admin_note=${adminNote || null}, reviewed_by=${admin.id}, reviewed_at=now(), updated_at=now()
+    where id=${requestId}
+    returning organization_id, company_name
+  `;
+  if (!rows[0]) throw new Error("Industry connection request not found.");
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(rows[0].organization_id)}, 'industry_connection_request_review',
+      'industry_connection_request', ${requestId},
+      ${JSON.stringify({ status, adminNote, companyName: String(rows[0].company_name) })}::jsonb
+    )
+  `;
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
+
+export async function updateSchoolCompanyConnection(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const connectionId = textValue(formData.get("connectionId"), 60);
+  const status = textValue(formData.get("status"), 20);
+  assertUuid(connectionId, "school-company connection");
+  if (!["active", "declined", "paused"].includes(status)) throw new Error("Invalid connection status.");
+
+  const sql = getDb();
+  const rows = await sql`
+    update school_company_connections
+    set status=${status}, approved_by=${admin.id}, updated_at=now()
+    where id=${connectionId}
+    returning organization_id, industry_partner_id
+  `;
+  if (!rows[0]) throw new Error("School-company connection not found.");
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(rows[0].organization_id)}, 'school_company_connection_status',
+      'school_company_connection', ${connectionId}, ${JSON.stringify({ status })}::jsonb
+    )
+  `;
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
