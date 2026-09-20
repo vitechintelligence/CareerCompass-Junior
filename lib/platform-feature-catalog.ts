@@ -2,7 +2,10 @@ export type PlatformFeatureCategory =
   | "learning"
   | "operations"
   | "intelligence"
-  | "compliance";
+  | "compliance"
+  | "future_skills"
+  | "teacher"
+  | "ecosystem";
 
 export type PlatformFeatureDefinition = {
   key: string;
@@ -35,6 +38,21 @@ export const PLATFORM_FEATURES: PlatformFeatureDefinition[] = [
   { key: "intelligence_search", label: "Intelligence: search", description: "Context-aware search over allowed institutional content.", category: "intelligence" },
   { key: "intelligence_summary", label: "Intelligence: summarize", description: "Human-reviewed summaries of permitted learning and operational signals.", category: "intelligence" },
   { key: "intelligence_recommendations", label: "Intelligence: recommendations", description: "Assistive recommendations with administrator/teacher control.", category: "intelligence" },
+
+  { key: "program_stem", label: "K12 STEM", description: "Progressive STEM investigation and engineering pathways for ages 7–18.", category: "future_skills" },
+  { key: "program_steam", label: "K12 STEAM", description: "STEM + art, design, communication and human-centered project learning.", category: "future_skills" },
+  { key: "program_ai_foundation", label: "AI Foundations", description: "Age-appropriate AI literacy, data, model thinking, safety and responsible use.", category: "future_skills" },
+  { key: "program_ai_level_2", label: "AI Level 2", description: "AI systems, prompting, retrieval, agents, evaluation and guarded deployment progression.", category: "future_skills" },
+  { key: "program_robotics", label: "Robotics", description: "Robotics progression from sequences and sensors to control systems and autonomous machines.", category: "future_skills" },
+
+  { key: "teacher_my_classroom", label: "Teacher: My Classroom", description: "A separate teacher-managed classroom area for school subjects outside ViTech programs.", category: "teacher", essential: true },
+  { key: "assessment_engine", label: "Teacher: quizzes & exams", description: "Teacher-created quizzes, exams, student attempts, auto-scoring and review.", category: "teacher", essential: true },
+  { key: "teacher_upskilling", label: "Teacher: professional learning", description: "Structured upskilling aligned to practical teaching, assessment, digital learning and innovation needs.", category: "teacher", essential: true },
+  { key: "teacher_dashboard_plus", label: "Teacher: command dashboard", description: "Quick view of classes, attendance, assessments, submissions, professional learning and integrations.", category: "teacher", essential: true },
+
+  { key: "industry_connector", label: "School ↔ Company Connector", description: "Request and manage school-company links, role profiles, skill requirements and career exposure.", category: "ecosystem" },
+  { key: "vinaskilltrust_services", label: "VinaSkillTrust services", description: "Partner access to verification, Studio work simulations and capability-development services.", category: "ecosystem" },
+  { key: "custom_integration_requests", label: "Custom integration requests", description: "Institutions can request a new third-party app or module connection for ViTech review.", category: "ecosystem" },
 ];
 
 export const PLATFORM_FEATURE_KEYS = new Set(PLATFORM_FEATURES.map((feature) => feature.key));
@@ -43,8 +61,8 @@ export function defaultFeaturesForOrganization(organizationType: string) {
   const base = PLATFORM_FEATURES.filter((feature) => feature.essential).map((feature) => feature.key);
   const optional =
     organizationType === "school"
-      ? ["parent_reporting", "announcements", "intelligence_search", "intelligence_summary"]
-      : ["payments", "announcements", "integrations", "intelligence_search", "intelligence_summary", "intelligence_recommendations"];
+      ? ["parent_reporting", "announcements", "integrations", "industry_connector", "vinaskilltrust_services", "custom_integration_requests", "program_stem", "program_steam", "program_ai_foundation", "program_robotics", "intelligence_search", "intelligence_summary"]
+      : ["payments", "announcements", "integrations", "industry_connector", "vinaskilltrust_services", "custom_integration_requests", "program_stem", "program_steam", "program_ai_foundation", "program_robotics", "intelligence_search", "intelligence_summary", "intelligence_recommendations"];
   return Array.from(new Set([...base, ...optional]));
 }
 
