@@ -205,7 +205,7 @@ export default async function StudentWorkspacePage() {
 }
 
 function StudentHeader() {
-  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>Student Workspace</strong><div className="muted" style={{ fontSize: 12 }}>My Compass · live learning</div></div><Link className="pill" href="/books">Books</Link></header>;
+  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>Student Workspace</strong><div className="muted" style={{ fontSize: 12 }}>My Compass · live learning</div></div><div className="actions"><Link className="pill" href="/books">Books</Link><Link className="pill" href="/programs/future-skills">Future Skills</Link><Link className="pill" href="/workspace/student/industry">Companies & Careers</Link></div></header>;
 }
 
 function StudentGate({ signedIn }: { signedIn: boolean }) {
