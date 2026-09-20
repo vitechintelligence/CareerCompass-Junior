@@ -1,6 +1,19 @@
 -- Reusable STEAM mission runtime and evidence model.
 -- Community Bridge Designer is the first proof-of-concept; future missions reuse these tables.
 
+create table if not exists learner_delivery_profiles (
+  organization_id uuid not null references organizations(id) on delete cascade,
+  learner_id uuid not null references profiles(id) on delete cascade,
+  age_band text not null check (age_band in ('7-9','10-13','14-16','17-18')),
+  assigned_by uuid references profiles(id) on delete set null,
+  assigned_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (organization_id, learner_id)
+);
+
+create index if not exists idx_learner_delivery_profiles_age
+  on learner_delivery_profiles(organization_id, age_band, learner_id);
+
 create table if not exists steam_missions (
   id uuid primary key default gen_random_uuid(),
   mission_key text not null unique,
@@ -108,8 +121,12 @@ create table if not exists steam_teacher_observations (
 create index if not exists idx_steam_teacher_observations_run
   on steam_teacher_observations(run_id, created_at desc);
 
-do $$
+do $
 begin
+  if not exists (select 1 from pg_trigger where tgname='learner_delivery_profiles_set_updated_at') then
+    create trigger learner_delivery_profiles_set_updated_at
+      before update on learner_delivery_profiles for each row execute function set_updated_at();
+  end if;
   if not exists (select 1 from pg_trigger where tgname='steam_missions_set_updated_at') then
     create trigger steam_missions_set_updated_at
       before update on steam_missions for each row execute function set_updated_at();
