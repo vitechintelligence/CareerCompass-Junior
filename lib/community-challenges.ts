@@ -37,6 +37,16 @@ export const COMMUNITY_RUBRIC = [
   { key: "solution", labelEn: "Solution quality", labelVi: "Chất lượng giải pháp", points: 15 },
 ] as const;
 
+
+export function rubricForMode(mode: ParticipationMode) {
+  if (mode !== "individual") return COMMUNITY_RUBRIC.map((item) => ({ ...item }));
+  return COMMUNITY_RUBRIC.map((item) =>
+    item.key === "teamwork"
+      ? { ...item, key: "self_direction", labelEn: "Self-direction & process", labelVi: "Tự chủ & quy trình" }
+      : { ...item },
+  );
+}
+
 export const COMMUNITY_KUDOS = [
   { key: "inspiring", labelEn: "Inspiring", labelVi: "Truyền cảm hứng", icon: "✨" },
   { key: "clever", labelEn: "Clever idea", labelVi: "Ý tưởng thông minh", icon: "💡" },
