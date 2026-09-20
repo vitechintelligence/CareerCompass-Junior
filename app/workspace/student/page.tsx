@@ -41,6 +41,20 @@ export default async function StudentWorkspacePage() {
     limit 8
   `;
 
+  const assessments = await sql`
+    select a.id, a.title_en, a.title_vi, a.assessment_type, a.due_at, c.name as class_name,
+           (select max(aa.attempt_number)::int from assessment_attempts aa where aa.assessment_id=a.id and aa.student_id=${profile.id}) as last_attempt,
+           (select max(aa.score) from assessment_attempts aa where aa.assessment_id=a.id and aa.student_id=${profile.id}) as best_score,
+           (select max(aa.max_score) from assessment_attempts aa where aa.assessment_id=a.id and aa.student_id=${profile.id}) as max_score
+    from class_memberships cm
+    join classes c on c.id=cm.class_id
+    join assessments a on a.class_id=c.id and a.status='published'
+    where cm.student_id=${profile.id}
+      and cm.status='active'
+      and c.status='active'
+    order by a.due_at asc nulls last, a.created_at desc
+    limit 8
+  `;
   const capsules = await sql`
     select id, title_en, title_vi, status, mastery_level, achieved_on, created_at
     from learning_capsules
@@ -78,6 +92,7 @@ export default async function StudentWorkspacePage() {
     ? Math.round(enrollments.reduce((sum, row) => sum + Number(row.progress_percent || 0), 0) / enrollments.length)
     : 0;
   const pendingAssignments = assignments.filter((row) => !["accepted", "returned"].includes(String(row.submission_status))).length;
+  const pendingAssessments = assessments.filter((row) => !row.last_attempt).length;
 
   return (
     <main className="workspacePage">
@@ -95,6 +110,7 @@ export default async function StudentWorkspacePage() {
         <section className="metricGrid">
           <Metric label="Book progress" value={`${averageProgress}%`} detail={`${enrollments.length} active book${enrollments.length === 1 ? "" : "s"}`} />
           <Metric label="Assignments" value={String(pendingAssignments)} detail="Pending / in progress" />
+          <Metric label="Assessments" value={String(pendingAssessments)} detail="Quiz / exam waiting" />
           <Metric label="Learning evidence" value={String(capsules.length)} detail="Recent capsules" />
         </section>
 
@@ -138,6 +154,24 @@ export default async function StudentWorkspacePage() {
 
         <section className="workspaceGrid">
           <article className="panel">
+            <div className="eyebrow">Quizzes & exams</div>
+            <h2 className="workspaceTitle">Teacher assessments</h2>
+            {assessments.length === 0 ? <EmptyState text="No published quizzes or exams are waiting right now." /> : (
+              <div className="workspaceList">
+                {assessments.map((item) => (
+                  <div className="workspaceRow" key={String(item.id)}>
+                    <div><strong>{String(item.title_en)}</strong><div className="muted">{String(item.class_name)} · {String(item.assessment_type)}{item.due_at ? ` · due ${new Date(String(item.due_at)).toLocaleDateString("en-GB")}` : ""}</div></div>
+                    <div className="actions">
+                      {item.last_attempt ? <span className="pill">{item.max_score ? `${String(item.best_score ?? 0)} / ${String(item.max_score)}` : "submitted"}</span> : <span className="pill">new</span>}
+                      <Link className="button soft" href={`/workspace/student/assessment/${String(item.id)}`}>Open</Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+
+          <article className="panel">
             <div className="eyebrow">Learning evidence</div>
             <h2 className="workspaceTitle">My achievements</h2>
             {capsules.length === 0 ? <EmptyState text="Evidence-eligible activities will build your learning capsule here as you complete them." /> : (
@@ -147,6 +181,9 @@ export default async function StudentWorkspacePage() {
             )}
           </article>
 
+        </section>
+
+        <section className="workspaceGrid">
           <article className="panel">
             <div className="eyebrow">Class updates</div>
             <h2 className="workspaceTitle">Announcements</h2>
