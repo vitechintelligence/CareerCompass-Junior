@@ -1,5 +1,5 @@
 -- Reusable STEAM mission runtime and evidence model.
--- Community Bridge Designer is the first proof-of-concept; future missions reuse these tables.
+-- Community Bridge Designer is the first proof-of-concept. Future missions reuse these tables.
 
 create table if not exists learner_delivery_profiles (
   organization_id uuid not null references organizations(id) on delete cascade,
