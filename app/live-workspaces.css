@@ -74,6 +74,52 @@
 .authSwitch { margin-top: 22px; }
 .authSwitch a { color: var(--blue); font-weight: 850; }
 
+.authLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.authLabelRow a { color: var(--blue); font-size: 12px; font-weight: 850; }
+.passwordField { position: relative; display: block; }
+.passwordField input { padding-right: 48px; }
+.passwordToggle {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #52647e;
+  cursor: pointer;
+}
+.passwordToggle:hover { background: #edf3ff; color: var(--blue); }
+.passwordToggle:focus-visible { outline: 2px solid #7ca1df; outline-offset: 2px; }
+.passwordToggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.authSuccessBox {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #b9dfcf;
+  border-radius: 16px;
+  background: #effaf5;
+  color: #176548;
+}
+.authSuccessBox strong { display: block; margin-bottom: 6px; }
+.authSuccessBox p { margin: 0; line-height: 1.55; }
+
 .workspaceContent {
   width: min(100%, 1320px);
   margin: 0 auto;
