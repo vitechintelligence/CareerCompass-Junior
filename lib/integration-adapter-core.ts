@@ -3,7 +3,11 @@ export type IntegrationCapability =
   | "grade_passback"
   | "sso"
   | "content_launch"
-  | "analytics_export";
+  | "analytics_export"
+  | "resource_sync"
+  | "assessment_sync"
+  | "career_content"
+  | "simulation_launch";
 
 export type IntegrationProtocol =
   | "oauth2"
