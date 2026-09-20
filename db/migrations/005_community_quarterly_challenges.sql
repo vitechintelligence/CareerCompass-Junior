@@ -1,5 +1,75 @@
--- Developer-style learner community, quarterly competitions, team showcases and advisor feedback.
--- Partner-controlled by default. Network-wide showcase requires a separate platform-admin review step.
+-- Partner-controlled learner community, age-level access, quarterly challenges,
+-- localized agreement records, institution data-mode preferences and showcase governance.
+-- This migration is prepared only; do not apply to production without explicit approval.
+
+create table if not exists organization_data_policies (
+  organization_id uuid primary key references organizations(id) on delete cascade,
+  evidence_storage_mode text not null default 'platform_metadata'
+    check (evidence_storage_mode in ('platform_metadata','school_capsule','vng_cloud','local_browser','manual')),
+  ai_mode text not null default 'off'
+    check (ai_mode in ('off','byok','local_browser')),
+  ai_provider text,
+  byok_configured boolean not null default false,
+  vng_status text not null default 'not_requested'
+    check (vng_status in ('not_requested','requested','configured')),
+  observability_mode text not null default 'metadata_only'
+    check (observability_mode in ('metadata_only','disabled','self_hosted')),
+  raw_student_content_tracing boolean not null default false,
+  partner_acknowledged_data_responsibility boolean not null default false,
+  configured_by uuid references profiles(id) on delete set null,
+  configured_at timestamptz,
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists community_agreement_acceptances (
+  id uuid primary key default gen_random_uuid(),
+  organization_id uuid not null references organizations(id) on delete cascade,
+  profile_id uuid not null references profiles(id) on delete cascade,
+  accepted_role text not null check (accepted_role in ('partner_admin','teacher')),
+  locale text not null default 'vi' check (locale in ('vi','en')),
+  terms_version text not null,
+  privacy_version text not null,
+  accepted boolean not null default true,
+  accepted_at timestamptz not null default now(),
+  revoked_at timestamptz,
+  unique (organization_id, profile_id, terms_version, privacy_version)
+);
+
+create index if not exists idx_community_agreement_profile
+  on community_agreement_acceptances(profile_id, accepted, accepted_at desc);
+
+create table if not exists community_staff_permissions (
+  organization_id uuid not null references organizations(id) on delete cascade,
+  teacher_id uuid not null references profiles(id) on delete cascade,
+  can_initiate_seasons boolean not null default false,
+  can_enable_students boolean not null default false,
+  can_moderate boolean not null default false,
+  can_assign_advisors boolean not null default false,
+  granted_by uuid references profiles(id) on delete set null,
+  granted_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (organization_id, teacher_id)
+);
+
+create index if not exists idx_community_staff_teacher
+  on community_staff_permissions(teacher_id, organization_id);
+
+create table if not exists community_student_access (
+  organization_id uuid not null references organizations(id) on delete cascade,
+  student_id uuid not null references profiles(id) on delete cascade,
+  age_band text not null check (age_band in ('7-9','10-13','14-16','17-18')),
+  status text not null default 'enabled' check (status in ('enabled','paused','revoked')),
+  guardian_consent_confirmed boolean not null default false,
+  learner_acknowledged boolean not null default false,
+  consent_policy_version text,
+  enabled_by uuid references profiles(id) on delete set null,
+  enabled_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (organization_id, student_id)
+);
+
+create index if not exists idx_community_student_access_status
+  on community_student_access(organization_id, status, age_band);
 
 create table if not exists community_seasons (
   id uuid primary key default gen_random_uuid(),
@@ -11,7 +81,6 @@ create table if not exists community_seasons (
   quarter integer not null check (quarter between 1 and 4),
   theme_en text,
   theme_vi text,
-  track_scope text[] not null default '{}',
   age_bands text[] not null default '{}',
   starts_on date not null,
   submission_due_on date not null,
@@ -24,11 +93,12 @@ create table if not exists community_seasons (
   max_team_size integer not null default 5 check (max_team_size between 1 and 30),
   advisor_feedback_required boolean not null default true,
   publish_advisor_feedback boolean not null default false,
-  created_by uuid references profiles(id) on delete set null,
+  initiated_by uuid references profiles(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   check (submission_due_on >= starts_on),
-  check (showcase_on is null or showcase_on >= submission_due_on)
+  check (showcase_on is null or showcase_on >= submission_due_on),
+  check (age_bands <@ array['7-9','10-13','14-16','17-18']::text[])
 );
 
 create unique index if not exists uq_community_season_org_quarter
@@ -41,13 +111,16 @@ create table if not exists community_challenges (
   id uuid primary key default gen_random_uuid(),
   season_id uuid not null references community_seasons(id) on delete cascade,
   semantic_id text not null unique,
-  track text not null check (track in ('stem','steam','ai-foundation','ai-level-2','robotics','open')),
-  age_band text check (age_band is null or age_band in ('7-9','10-12','13-15','16-18')),
+  mission_key text not null,
+  studio_key text not null check (studio_key in (
+    'integrated-steam','science','technology','engineering','creative-design',
+    'math-logic','green-innovation','robotics','ai-innovation','future-space','invention'
+  )),
+  age_band text not null check (age_band in ('7-9','10-13','14-16','17-18')),
   participation_mode text not null default 'small_group'
     check (participation_mode in ('individual','small_group','large_group')),
   min_team_size integer not null default 1 check (min_team_size between 1 and 30),
   max_team_size integer not null default 5 check (max_team_size between 1 and 30),
-  future_skills_unit_code text,
   title_en text not null,
   title_vi text not null,
   brief_en text not null,
@@ -64,7 +137,7 @@ create table if not exists community_challenges (
 );
 
 create index if not exists idx_community_challenges_season
-  on community_challenges(season_id, status, track, age_band, participation_mode);
+  on community_challenges(season_id, status, age_band, participation_mode, studio_key);
 
 create table if not exists community_advisors (
   season_id uuid not null references community_seasons(id) on delete cascade,
@@ -93,7 +166,8 @@ create table if not exists community_teams (
   created_by uuid references profiles(id) on delete set null,
   advisor_profile_id uuid references profiles(id) on delete set null,
   status text not null default 'active' check (status in ('active','submitted','finalist','winner','archived')),
-  showcase_visibility text not null default 'team' check (showcase_visibility in ('team','organization','network_pending','network')),
+  showcase_visibility text not null default 'team'
+    check (showcase_visibility in ('team','organization','network_pending','network')),
   partner_approved_showcase boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -193,6 +267,18 @@ create index if not exists idx_community_results_season
 
 do $$
 begin
+  if not exists (select 1 from pg_trigger where tgname='organization_data_policies_set_updated_at') then
+    create trigger organization_data_policies_set_updated_at
+      before update on organization_data_policies for each row execute function set_updated_at();
+  end if;
+  if not exists (select 1 from pg_trigger where tgname='community_staff_permissions_set_updated_at') then
+    create trigger community_staff_permissions_set_updated_at
+      before update on community_staff_permissions for each row execute function set_updated_at();
+  end if;
+  if not exists (select 1 from pg_trigger where tgname='community_student_access_set_updated_at') then
+    create trigger community_student_access_set_updated_at
+      before update on community_student_access for each row execute function set_updated_at();
+  end if;
   if not exists (select 1 from pg_trigger where tgname='community_seasons_set_updated_at') then
     create trigger community_seasons_set_updated_at
       before update on community_seasons for each row execute function set_updated_at();
