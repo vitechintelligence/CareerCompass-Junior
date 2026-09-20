@@ -265,42 +265,38 @@ create table if not exists community_results (
 create index if not exists idx_community_results_season
   on community_results(season_id, published, placement);
 
-do $$
-begin
-  if not exists (select 1 from pg_trigger where tgname='organization_data_policies_set_updated_at') then
-    create trigger organization_data_policies_set_updated_at
-      before update on organization_data_policies for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_staff_permissions_set_updated_at') then
-    create trigger community_staff_permissions_set_updated_at
-      before update on community_staff_permissions for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_student_access_set_updated_at') then
-    create trigger community_student_access_set_updated_at
-      before update on community_student_access for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_seasons_set_updated_at') then
-    create trigger community_seasons_set_updated_at
-      before update on community_seasons for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_challenges_set_updated_at') then
-    create trigger community_challenges_set_updated_at
-      before update on community_challenges for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_teams_set_updated_at') then
-    create trigger community_teams_set_updated_at
-      before update on community_teams for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_submissions_set_updated_at') then
-    create trigger community_submissions_set_updated_at
-      before update on community_submissions for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_feedback_set_updated_at') then
-    create trigger community_feedback_set_updated_at
-      before update on community_feedback for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='community_results_set_updated_at') then
-    create trigger community_results_set_updated_at
-      before update on community_results for each row execute function set_updated_at();
-  end if;
-end $$;
+create trigger organization_data_policies_set_updated_at
+  before update on organization_data_policies
+  for each row execute function set_updated_at();
+
+create trigger community_staff_permissions_set_updated_at
+  before update on community_staff_permissions
+  for each row execute function set_updated_at();
+
+create trigger community_student_access_set_updated_at
+  before update on community_student_access
+  for each row execute function set_updated_at();
+
+create trigger community_seasons_set_updated_at
+  before update on community_seasons
+  for each row execute function set_updated_at();
+
+create trigger community_challenges_set_updated_at
+  before update on community_challenges
+  for each row execute function set_updated_at();
+
+create trigger community_teams_set_updated_at
+  before update on community_teams
+  for each row execute function set_updated_at();
+
+create trigger community_submissions_set_updated_at
+  before update on community_submissions
+  for each row execute function set_updated_at();
+
+create trigger community_feedback_set_updated_at
+  before update on community_feedback
+  for each row execute function set_updated_at();
+
+create trigger community_results_set_updated_at
+  before update on community_results
+  for each row execute function set_updated_at();
