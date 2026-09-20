@@ -167,6 +167,19 @@ export async function setCommunityStudentAccess(formData: FormData) {
       updated_at=now()
   `;
 
+  const deliveryProfileReady = await sql`select to_regclass('public.learner_delivery_profiles') as table_name`;
+  if (deliveryProfileReady[0]?.table_name) {
+    await sql`
+      insert into learner_delivery_profiles (organization_id, learner_id, age_band, assigned_by, assigned_at)
+      values (${organizationId}, ${String(learner[0].id)}, ${ageBand}, ${actor.id}, now())
+      on conflict (organization_id, learner_id) do update set
+        age_band=excluded.age_band,
+        assigned_by=excluded.assigned_by,
+        assigned_at=now(),
+        updated_at=now()
+    `;
+  }
+
   revalidatePath("/workspace/partner/community");
   revalidatePath("/workspace/teacher/community");
   revalidatePath("/workspace/student/community");
