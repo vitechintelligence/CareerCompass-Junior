@@ -4,7 +4,9 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
+import { isLearnerAgeBand } from "@/lib/learner-age-bands";
 import { getChallengeTemplate, rubricForMode } from "@/lib/community-challenges";
+import { requireCommunityManager } from "@/lib/community-access";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -27,30 +29,7 @@ function assertUuid(value: string, label: string) {
   if (!UUID_RE.test(value)) throw new Error(`Invalid ${label}.`);
 }
 
-async function requirePartnerOrganization(organizationId: string) {
-  assertUuid(organizationId, "organization");
-  const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
-    throw new Error("Partner administrator access required.");
-  }
-
-  if (profile.account_type === "partner_admin") {
-    const sql = getDb();
-    const rows = await sql`
-      select 1
-      from organization_memberships
-      where organization_id=${organizationId}
-        and profile_id=${profile.id}
-        and role='partner_admin'
-        and status='active'
-      limit 1
-    `;
-    if (!rows[0]) throw new Error("You do not manage this organization.");
-  }
-  return profile;
-}
-
-async function requirePartnerSeason(seasonId: string) {
+async function loadSeason(seasonId: string) {
   assertUuid(seasonId, "season");
   const sql = getDb();
   const rows = await sql`
@@ -60,13 +39,21 @@ async function requirePartnerSeason(seasonId: string) {
     limit 1
   `;
   if (!rows[0]) throw new Error("Community season not found.");
-  await requirePartnerOrganization(String(rows[0].organization_id));
   return rows[0];
+}
+
+async function requireSeasonCapability(
+  seasonId: string,
+  capability: "initiate" | "enable_students" | "moderate" | "assign_advisors",
+) {
+  const season = await loadSeason(seasonId);
+  await requireCommunityManager(String(season.organization_id), capability);
+  return season;
 }
 
 export async function createCommunitySeason(formData: FormData) {
   const organizationId = text(formData.get("organizationId"), 60);
-  const profile = await requirePartnerOrganization(organizationId);
+  const profile = await requireCommunityManager(organizationId, "initiate");
   const titleEn = text(formData.get("titleEn"), 160);
   const titleVi = text(formData.get("titleVi"), 160);
   const themeEn = text(formData.get("themeEn"), 500);
@@ -77,18 +64,15 @@ export async function createCommunitySeason(formData: FormData) {
   const submissionDueOn = dateValue(formData.get("submissionDueOn"));
   const showcaseOnRaw = text(formData.get("showcaseOn"), 10);
   const showcaseOn = showcaseOnRaw ? dateValue(formData.get("showcaseOn")) : null;
-  const tracks = formData.getAll("tracks").map(String).filter((item) =>
-    ["stem","steam","ai-foundation","ai-level-2","robotics"].includes(item),
-  );
-  const ageBands = formData.getAll("ageBands").map(String).filter((item) =>
-    ["7-9","10-12","13-15","16-18"].includes(item),
-  );
+  const ageBands = formData.getAll("ageBands").map(String).filter(isLearnerAgeBand);
   const maxTeamSize = Math.max(1, Math.min(30, Number(text(formData.get("maxTeamSize"), 2)) || 5));
   const leaderboardMode = text(formData.get("leaderboardMode"), 20) || "podium_only";
+
   if (!["hidden","podium_only","full"].includes(leaderboardMode)) throw new Error("Invalid leaderboard mode.");
   if (!titleEn || !titleVi) throw new Error("Season title is required in English and Vietnamese.");
   if (!Number.isInteger(year) || year < 2025 || year > 2100) throw new Error("Invalid season year.");
   if (![1,2,3,4].includes(quarter)) throw new Error("Quarter must be 1–4.");
+  if (ageBands.length === 0) throw new Error("Select at least one learner age level.");
   if (submissionDueOn < startsOn) throw new Error("Submission due date cannot be before the start date.");
   if (showcaseOn && showcaseOn < submissionDueOn) throw new Error("Showcase date cannot be before submissions close.");
 
@@ -97,13 +81,13 @@ export async function createCommunitySeason(formData: FormData) {
   await sql`
     insert into community_seasons (
       organization_id, semantic_id, title_en, title_vi, year, quarter,
-      theme_en, theme_vi, track_scope, age_bands, starts_on, submission_due_on,
+      theme_en, theme_vi, age_bands, starts_on, submission_due_on,
       showcase_on, leaderboard_mode, allow_student_team_creation, allow_peer_kudos,
-      max_team_size, advisor_feedback_required, publish_advisor_feedback, created_by
+      max_team_size, advisor_feedback_required, publish_advisor_feedback, initiated_by
     )
     values (
       ${organizationId}, ${semanticId}, ${titleEn}, ${titleVi}, ${year}, ${quarter},
-      ${themeEn || null}, ${themeVi || null}, ${tracks}, ${ageBands}, ${startsOn},
+      ${themeEn || null}, ${themeVi || null}, ${ageBands}, ${startsOn},
       ${submissionDueOn}, ${showcaseOn}, ${leaderboardMode},
       ${bool(formData.get("allowStudentTeamCreation"))}, ${bool(formData.get("allowPeerKudos"))},
       ${maxTeamSize}, ${bool(formData.get("advisorFeedbackRequired"))},
@@ -112,12 +96,13 @@ export async function createCommunitySeason(formData: FormData) {
   `;
 
   revalidatePath("/workspace/partner/community");
+  revalidatePath("/workspace/teacher/community");
   revalidatePath("/workspace/student/community");
 }
 
 export async function updateCommunitySeasonStatus(formData: FormData) {
   const seasonId = text(formData.get("seasonId"), 60);
-  await requirePartnerSeason(seasonId);
+  await requireSeasonCapability(seasonId, "moderate");
   const status = text(formData.get("status"), 20);
   if (!["draft","open","review","showcase","closed"].includes(status)) throw new Error("Invalid season status.");
 
@@ -130,18 +115,18 @@ export async function updateCommunitySeasonStatus(formData: FormData) {
   }
 
   revalidatePath("/workspace/partner/community");
-  revalidatePath("/workspace/student/community");
   revalidatePath("/workspace/teacher/community");
+  revalidatePath("/workspace/student/community");
 }
 
 export async function updateCommunitySeasonControls(formData: FormData) {
   const seasonId = text(formData.get("seasonId"), 60);
-  await requirePartnerSeason(seasonId);
+  await requireSeasonCapability(seasonId, "moderate");
   const leaderboardMode = text(formData.get("leaderboardMode"), 20);
   if (!["hidden","podium_only","full"].includes(leaderboardMode)) throw new Error("Invalid leaderboard mode.");
   const visibility = text(formData.get("visibility"), 30);
   if (!["organization","network_pending"].includes(visibility)) {
-    throw new Error("Partners may keep a showcase inside the institution or request network review.");
+    throw new Error("Institution managers may keep a showcase inside the institution or request ViTech network review.");
   }
   const maxTeamSize = Math.max(1, Math.min(30, Number(text(formData.get("maxTeamSize"), 2)) || 5));
 
@@ -160,15 +145,22 @@ export async function updateCommunitySeasonControls(formData: FormData) {
   `;
 
   revalidatePath("/workspace/partner/community");
+  revalidatePath("/workspace/teacher/community");
   revalidatePath("/workspace/student/community");
 }
 
 export async function addCommunityChallenge(formData: FormData) {
   const seasonId = text(formData.get("seasonId"), 60);
-  const season = await requirePartnerSeason(seasonId);
+  const season = await requireSeasonCapability(seasonId, "moderate");
   const templateKey = text(formData.get("templateKey"), 220);
   const template = getChallengeTemplate(templateKey);
   if (!template) throw new Error("Challenge template not found.");
+
+  const seasonAges = await getDb()`select age_bands from community_seasons where id=${seasonId} limit 1`;
+  const allowedAges = Array.isArray(seasonAges[0]?.age_bands) ? seasonAges[0].age_bands.map(String) : [];
+  if (!allowedAges.includes(template.ageBand)) {
+    throw new Error("This age level is not enabled for the selected season.");
+  }
 
   const actor = await getCurrentProfile();
   if (!actor) throw new Error("Sign in required.");
@@ -187,29 +179,29 @@ export async function addCommunityChallenge(formData: FormData) {
 
   await sql`
     insert into community_challenges (
-      season_id, semantic_id, track, age_band, participation_mode, min_team_size,
-      max_team_size, future_skills_unit_code, title_en, title_vi, brief_en, brief_vi,
+      season_id, semantic_id, mission_key, studio_key, age_band, participation_mode,
+      min_team_size, max_team_size, title_en, title_vi, brief_en, brief_vi,
       deliverables, rubric, skills_focus, bonus_rules, status, created_by
     )
     values (
-      ${seasonId}, ${semanticId}, ${template.track}, ${template.ageBand},
+      ${seasonId}, ${semanticId}, ${template.missionKey}, ${template.studioKey}, ${template.ageBand},
       ${template.participationMode}, ${template.minTeamSize},
       ${Math.min(template.maxTeamSize, Number(season.max_team_size || template.maxTeamSize))},
-      ${template.unitCode}, ${template.titleEn}, ${template.titleVi},
-      ${template.briefEn}, ${template.briefVi}, ${JSON.stringify(deliverables)}::jsonb,
-      ${JSON.stringify(rubric)}::jsonb, ${template.skillsFocus},
-      ${JSON.stringify(bonusRules)}::jsonb,
+      ${template.titleEn}, ${template.titleVi}, ${template.briefEn}, ${template.briefVi},
+      ${JSON.stringify(deliverables)}::jsonb, ${JSON.stringify(rubric)}::jsonb,
+      ${template.skillsFocus}, ${JSON.stringify(bonusRules)}::jsonb,
       ${String(season.status) === "open" ? "open" : "draft"}, ${actor.id}
     )
   `;
 
   revalidatePath("/workspace/partner/community");
+  revalidatePath("/workspace/teacher/community");
   revalidatePath("/workspace/student/community");
 }
 
 export async function assignCommunityAdvisor(formData: FormData) {
   const seasonId = text(formData.get("seasonId"), 60);
-  const season = await requirePartnerSeason(seasonId);
+  const season = await requireSeasonCapability(seasonId, "assign_advisors");
   const advisorSemanticId = text(formData.get("advisorSemanticId"), 100);
   const advisorRole = text(formData.get("advisorRole"), 20) || "mentor";
   if (!SEMANTIC_RE.test(advisorSemanticId)) throw new Error("Invalid advisor semantic ID.");
@@ -253,7 +245,8 @@ export async function approveCommunityShowcase(formData: FormData) {
     limit 1
   `;
   if (!rows[0]) throw new Error("Team not found.");
-  await requirePartnerOrganization(String(rows[0].organization_id));
+  await requireCommunityManager(String(rows[0].organization_id), "moderate");
+
   const scope = text(formData.get("scope"), 30);
   if (!["organization","network_pending"].includes(scope)) throw new Error("Invalid showcase scope.");
 
@@ -273,12 +266,13 @@ export async function approveCommunityShowcase(formData: FormData) {
   }
 
   revalidatePath("/workspace/partner/community");
+  revalidatePath("/workspace/teacher/community");
   revalidatePath("/workspace/student/community");
 }
 
 export async function publishCommunityResult(formData: FormData) {
   const seasonId = text(formData.get("seasonId"), 60);
-  await requirePartnerSeason(seasonId);
+  await requireSeasonCapability(seasonId, "moderate");
   const teamId = text(formData.get("teamId"), 60);
   assertUuid(teamId, "team");
   const awardLabel = text(formData.get("awardLabel"), 120);
@@ -319,5 +313,6 @@ export async function publishCommunityResult(formData: FormData) {
   `;
 
   revalidatePath("/workspace/partner/community");
+  revalidatePath("/workspace/teacher/community");
   revalidatePath("/workspace/student/community");
 }
