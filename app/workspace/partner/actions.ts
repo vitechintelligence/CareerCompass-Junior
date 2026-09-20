@@ -205,3 +205,52 @@ export async function enrollStudent(formData: FormData) {
 
   revalidatePath("/workspace/partner");
 }
+
+
+export async function recordLearnerConsent(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
+  const consentType = String(formData.get("consentType") || "");
+  const learnerConfirmation = formData.get("learnerConfirmation") === "on";
+  const guardianConfirmation = formData.get("guardianConfirmation") === "on";
+
+  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId)) {
+    throw new Error("Organization and valid learner ID are required.");
+  }
+
+  const allowedTypes = ["digital_learning", "learning_evidence", "guardian_reporting", "ai_assistive_features"];
+  if (!allowedTypes.includes(consentType)) throw new Error("Invalid consent type.");
+
+  const actor = await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const learner = await sql`
+    select id
+    from profiles
+    where semantic_id = ${semanticId}
+      and account_type = 'student'
+      and status = 'active'
+    limit 1
+  `;
+  const learnerId = String(learner[0]?.id || "");
+  if (!learnerId) throw new Error("Active learner profile not found.");
+
+  await sql`
+    insert into learner_consent_records (
+      learner_id, organization_id, consent_type, status,
+      learner_confirmation, guardian_confirmation, policy_version, captured_by, captured_at
+    )
+    values (
+      ${learnerId}, ${organizationId}, ${consentType}, 'active',
+      ${learnerConfirmation}, ${guardianConfirmation}, '2026-01', ${actor.id}, now()
+    )
+    on conflict (learner_id, organization_id, consent_type, policy_version) do update set
+      status = 'active',
+      learner_confirmation = excluded.learner_confirmation,
+      guardian_confirmation = excluded.guardian_confirmation,
+      captured_by = excluded.captured_by,
+      captured_at = now(),
+      revoked_at = null
+  `;
+
+  revalidatePath("/workspace/partner");
+}
