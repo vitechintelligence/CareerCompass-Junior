@@ -112,7 +112,14 @@ export async function runInstitutionBuild(formData: FormData) {
   const { profile: admin } = await requirePlatformAdmin();
   const organizationId = textValue(formData.get("organizationId"), 60);
   assertUuid(organizationId, "organization");
-  const selectedFeatures = sanitizeFeatureKeys(formData.getAll("features").map((value) => String(value)));
+  const preset = textValue(formData.get("preset"), 20);
+  const requested = sanitizeFeatureKeys(formData.getAll("features").map((value) => String(value)));
+  const selectedFeatures =
+    preset === "all"
+      ? PLATFORM_FEATURES.map((feature) => feature.key)
+      : preset === "essential"
+        ? PLATFORM_FEATURES.filter((feature) => feature.essential).map((feature) => feature.key)
+        : requested;
 
   const sql = getDb();
   const rows = await sql`
