@@ -3,6 +3,8 @@ import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { integrationStandards, listIntegrationProviders, listOrganizationIntegrations } from "@/lib/integrations";
 import IntegrationActions from "./IntegrationActions";
+import CustomIntegrationRequestForm from "./CustomIntegrationRequestForm";
+import { runAdapterDiagnostic } from "@/lib/integration-diagnostics";
 
 export const dynamic = "force-dynamic";
 
@@ -33,12 +35,23 @@ export default async function PartnerIntegrationsPage() {
   if (!organization) return <Gate title="No organization assigned" copy="Your partner account is not attached to an active school or training center yet." />;
 
   const organizationId = String(organization.id);
-  const [providers, installations] = await Promise.all([
+  const [providers, installations, requestRows] = await Promise.all([
     listIntegrationProviders(),
     listOrganizationIntegrations(organizationId),
+    sql`
+      select id, provider_name, status, created_at
+      from integration_provider_requests
+      where organization_id=${organizationId}
+      order by created_at desc
+      limit 8
+    `,
   ]);
 
   const categories = Array.from(new Set(providers.map((provider) => provider.category)));
+  const diagnostics = providers.map((provider) => ({ slug: provider.slug, ...runAdapterDiagnostic(provider.slug) }));
+  const healthyAdapters = diagnostics.filter((item) => item.ok).length;
+  const healthyInstallations = installations.filter((item) => String(item.health_state) === "healthy").length;
+  const unhealthyInstallations = installations.filter((item) => ["degraded", "error"].includes(String(item.health_state))).length;
 
   return (
     <main className="workspacePage">
@@ -58,6 +71,19 @@ export default async function PartnerIntegrationsPage() {
           <Metric label="Installed" value={String(installations.length)} detail="Organization connectors" />
           <Metric label="Standards" value={String(integrationStandards.length)} detail="Interoperability paths" />
           <Metric label="Providers" value={String(providers.length)} detail="Available + beta" />
+          <Metric label="Adapter core" value={`${healthyAdapters}/${providers.length}`} detail="Normalization + secret-scrubbing checks" />
+        </section>
+
+        <section className="panel">
+          <div className="eyebrow">System health</div>
+          <h2 className="workspaceTitle">Integration adapter health</h2>
+          <div className="miniGrid">
+            <div className="miniCard light"><strong>{healthyAdapters === providers.length ? "Healthy" : "Review"}</strong><span>{healthyAdapters}/{providers.length} provider profiles pass canonical diagnostics</span></div>
+            <div className="miniCard light"><strong>{String(healthyInstallations)}</strong><span>healthy installed connections</span></div>
+            <div className="miniCard light"><strong>{String(unhealthyInstallations)}</strong><span>degraded / error installed connections</span></div>
+            <div className="miniCard light"><strong>{String(requestRows.length)}</strong><span>recent custom connector requests</span></div>
+          </div>
+          <p className="muted" style={{ marginTop: 12 }}>The built-in diagnostic validates canonical people/classes/enrollments/events and recursively scrubs credential-like fields. Provider authorization and live external API health are checked separately once a real connection is configured.</p>
         </section>
 
         <section className="panel">
@@ -82,6 +108,24 @@ export default async function PartnerIntegrationsPage() {
           <article className="panel">
             <div className="eyebrow">Current organization</div><h2 className="workspaceTitle">Installed connections</h2>
             {installations.length === 0 ? <div className="emptyState"><span>◎</span><p className="muted">No connector slot has been prepared yet. Choose a provider below to create one safely.</p></div> : <div className="workspaceList">{installations.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.display_label || item.provider_name)}</strong><div className="muted">{String(item.provider_name)} · {String(item.protocol)}</div></div><span className="pill">{String(item.health_state)} · {String(item.status)}</span></div>)}</div>}
+          </article>
+        </section>
+
+        <section className="workspaceGrid">
+          <article className="panel">
+            <div className="eyebrow">Request any app</div>
+            <h2 className="workspaceTitle">Need a connector that is not listed?</h2>
+            <p className="muted">Tell ViTech which third-party app, school module or content platform you want connected. We review its API/standard, data boundaries and safest adapter path before activation.</p>
+            <CustomIntegrationRequestForm organizationId={organizationId} />
+          </article>
+          <article className="panel">
+            <div className="eyebrow">Recent requests</div>
+            <h2 className="workspaceTitle">Connector request queue</h2>
+            {requestRows.length === 0 ? <div className="emptyState"><span>◎</span><p className="muted">No custom connector requests yet.</p></div> : (
+              <div className="workspaceList">
+                {requestRows.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.provider_name)}</strong><div className="muted">{new Date(String(item.created_at)).toLocaleDateString("en-GB")}</div></div><span className="pill">{String(item.status)}</span></div>)}
+              </div>
+            )}
           </article>
         </section>
 

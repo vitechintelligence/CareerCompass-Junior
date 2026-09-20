@@ -74,6 +74,52 @@
 .authSwitch { margin-top: 22px; }
 .authSwitch a { color: var(--blue); font-weight: 850; }
 
+.authLabelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.authLabelRow a { color: var(--blue); font-size: 12px; font-weight: 850; }
+.passwordField { position: relative; display: block; }
+.passwordField input { padding-right: 48px; }
+.passwordToggle {
+  position: absolute;
+  right: 7px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #52647e;
+  cursor: pointer;
+}
+.passwordToggle:hover { background: #edf3ff; color: var(--blue); }
+.passwordToggle:focus-visible { outline: 2px solid #7ca1df; outline-offset: 2px; }
+.passwordToggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+.authSuccessBox {
+  margin-top: 24px;
+  padding: 18px;
+  border: 1px solid #b9dfcf;
+  border-radius: 16px;
+  background: #effaf5;
+  color: #176548;
+}
+.authSuccessBox strong { display: block; margin-bottom: 6px; }
+.authSuccessBox p { margin: 0; line-height: 1.55; }
+
 .workspaceContent {
   width: min(100%, 1320px);
   margin: 0 auto;
@@ -204,4 +250,303 @@
   .workspaceRow .pill { align-self: flex-start; }
   .inlineFields { grid-template-columns: 1fr; }
   .gatePanel { margin-top: 20px; }
+}
+
+
+/* Community governance + STEAM Lab */
+.communityStageGrid,
+.communityShowcaseGrid,
+.communityChallengeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.communityCheckGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.communityCheck {
+  display: flex !important;
+  grid-template-columns: none !important;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #fbfcfe;
+  font-weight: 700 !important;
+}
+
+.communityCheck input {
+  width: auto !important;
+  margin-top: 2px;
+}
+
+.communityFilters {
+  display: grid;
+  gap: 10px;
+}
+
+.communityTemplateCard,
+.communityChallengeCard,
+.communityShowcaseCard,
+.communityTeamCard {
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: #fbfcfe;
+  padding: 18px;
+}
+
+.communityTemplateCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.communityTemplateCard > div { min-width: 0; }
+.communityTemplateCard p { margin: 8px 0 10px; }
+
+.communityOptionActive {
+  border-color: #6d92d6;
+  box-shadow: 0 0 0 3px rgba(36,88,214,.08);
+}
+
+.communityHero {
+  padding: clamp(26px, 4vw, 42px);
+  border-radius: 28px;
+  background: linear-gradient(145deg, #102b50, #173e72);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  gap: 22px;
+  align-items: flex-start;
+  box-shadow: var(--shadow);
+}
+
+.communityHero .muted { color: rgba(255,255,255,.74); }
+
+.communityHeroBadge {
+  min-width: 190px;
+  display: grid;
+  gap: 4px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+}
+
+.communityHeroBadge span { color: rgba(255,255,255,.72); font-size: 12px; }
+
+.communitySeasonMeta,
+.communityKudosRow,
+.communityChallengeStats,
+.communityJoinForm,
+.communityLinkGrid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.communityJoinForm input {
+  min-width: 180px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 12px 13px;
+  font: inherit;
+  text-transform: uppercase;
+}
+
+.communityLinkGrid {
+  align-items: stretch;
+}
+
+.communityLinkGrid > label {
+  flex: 1 1 220px;
+}
+
+.communityTeamCard {
+  display: grid;
+  gap: 14px;
+}
+
+.communityTeamHead { margin: -4px; }
+
+.kudoButton {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.kudoButton:hover { background: #edf3ff; }
+
+.communityAgreementBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5,18,35,.72);
+  backdrop-filter: blur(6px);
+}
+
+.communityAgreementModal {
+  width: min(860px, 100%);
+  max-height: min(88vh, 900px);
+  overflow: auto;
+  border: 0;
+  border-radius: 26px;
+  padding: clamp(24px, 4vw, 38px);
+  background: white;
+  box-shadow: 0 30px 90px rgba(0,0,0,.28);
+}
+
+.communityAgreementModal h2 { margin: 8px 0 12px; font-size: clamp(28px, 4vw, 42px); }
+.communityAgreementModal h3 { margin: 24px 0 8px; }
+.communityAgreementModal ul { padding-left: 22px; display: grid; gap: 8px; }
+
+.steamMissionShell {
+  display: grid;
+  gap: 18px;
+}
+
+.steamMissionHero {
+  padding: clamp(24px, 4vw, 38px);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top right, rgba(255,255,255,.14), transparent 18rem),
+    linear-gradient(145deg, #143961, #1f5d70);
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  box-shadow: var(--shadow);
+}
+
+.steamMissionHero h1 { margin: 8px 0 12px; font-size: clamp(34px, 5vw, 54px); line-height: 1; }
+.steamMissionHero p { max-width: 820px; color: rgba(255,255,255,.78); }
+
+.steamMissionStatus {
+  min-width: 150px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  display: grid;
+  gap: 3px;
+  align-content: start;
+}
+
+.steamMissionStatus strong { font-size: 34px; }
+.steamMissionStatus small { color: rgba(255,255,255,.7); }
+
+.steamProcessStrip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+}
+
+.steamProcessStrip span {
+  white-space: nowrap;
+  border-radius: 999px;
+  padding: 8px 11px;
+  border: 1px solid var(--line);
+  background: white;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.steamProcessStrip span.active {
+  background: #153f73;
+  color: white;
+  border-color: #153f73;
+}
+
+.bridgePreview {
+  min-height: 230px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #cfdbea;
+  border-radius: 20px;
+  margin: 12px 0 22px;
+  background:
+    linear-gradient(#cce8f3 0 58%, #7bb5c6 58% 72%, #8bb47b 72%);
+}
+
+.bridgeDeck {
+  position: absolute;
+  left: 50%;
+  top: 48%;
+  transform: translate(-50%, -50%);
+  height: 18px;
+  border-radius: 9px;
+  background: #6c513d;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: flex-start;
+  transition: width .2s ease;
+}
+
+.bridgeDeck.style-modern { background: #4d6277; }
+.bridgeDeck.style-nature { background: #6a7654; }
+.bridgeDeck.style-community-art { background: linear-gradient(90deg, #6d5b73, #b46b52, #4f7f76); }
+
+.bridgeSupport {
+  width: 10px;
+  height: 86px;
+  border-radius: 4px;
+  background: #394b5f;
+  transform: translateY(10px);
+}
+
+.bridgeBank {
+  position: absolute;
+  bottom: 18px;
+  font-size: 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,.8);
+  padding: 5px 8px;
+  border-radius: 999px;
+}
+
+.bridgeBank.left { left: 14px; }
+.bridgeBank.right { right: 14px; }
+
+.steamAttemptTimeline {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.steamAttemptTimeline > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 12px;
+  border-left: 4px solid #4f78b8;
+  background: #f6f9fd;
+  border-radius: 0 12px 12px 0;
+}
+
+@media (max-width: 760px) {
+  .communityHero,
+  .steamMissionHero,
+  .communityTemplateCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .communityHeroBadge,
+  .steamMissionStatus { min-width: 0; }
 }

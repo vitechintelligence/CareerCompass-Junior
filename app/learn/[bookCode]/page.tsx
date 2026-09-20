@@ -2,13 +2,34 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getBookCatalogItem } from "@/lib/book-catalog";
+import { fullInteractiveStartHash, getFullInteractiveBook } from "@/lib/full-interactive-books";
+import FullInteractiveBookEmbed from "./FullInteractiveBookEmbed";
 
-export default async function BookOverviewPage({ params, searchParams }: { params: Promise<{ bookCode: string }>; searchParams: Promise<{ lang?: string }> }) {
+export default async function BookOverviewPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ bookCode: string }>;
+  searchParams: Promise<{ lang?: string; start?: string }>;
+}) {
   const { bookCode } = await params;
-  const { lang } = await searchParams;
+  const { lang, start } = await searchParams;
   const locale: "en" | "vi" = lang === "vi" ? "vi" : "en";
   const book = getBookCatalogItem(bookCode);
   if (!book) notFound();
+
+  const fullInteractive = getFullInteractiveBook(bookCode);
+  if (fullInteractive) {
+    const startHash = fullInteractiveStartHash(bookCode, start);
+    return (
+      <FullInteractiveBookEmbed
+        title={book.title}
+        subtitle={book.subtitle}
+        summary={fullInteractive.lessonSummary}
+        source={`/interactive-books/${fullInteractive.slug}${startHash}`}
+      />
+    );
+  }
 
   return (
     <main className="lessonApp">

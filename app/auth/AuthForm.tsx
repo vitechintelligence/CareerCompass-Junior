@@ -43,10 +43,24 @@ function authSetupMessage(auth: NonNullable<HealthPayload["auth"]>) {
   return "Authentication reached the deployment, but Neon Auth could not complete the request. Check the Neon Auth URL, trusted origin and deployment runtime logs.";
 }
 
+function EyeIcon({ hidden }: { hidden: boolean }) {
+  return hidden ? (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M3 3l18 18M10.6 10.6a2 2 0 002.8 2.8M9.9 4.3A10.8 10.8 0 0112 4c5.5 0 9.5 5.2 9.5 8a7.7 7.7 0 01-1.7 3.6M6.2 6.2C3.8 7.8 2.5 10.1 2.5 12c0 2.8 4 8 9.5 8a10.8 10.8 0 004.1-.8" />
+    </svg>
+  ) : (
+    <svg aria-hidden="true" viewBox="0 0 24 24">
+      <path d="M2.5 12c0-2.8 4-8 9.5-8s9.5 5.2 9.5 8-4 8-9.5 8-9.5-5.2-9.5-8z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 export default function AuthForm({ mode, callbackUrl }: Props) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -123,8 +137,34 @@ export default function AuthForm({ mode, callbackUrl }: Props) {
             <input autoComplete="email" maxLength={254} type="email" required value={email} onChange={(event) => setEmail(event.target.value)} />
           </label>
           <label>
-            <span>Password</span>
-            <input autoComplete={isSignUp ? "new-password" : "current-password"} minLength={8} maxLength={128} type="password" required value={password} onChange={(event) => setPassword(event.target.value)} />
+            <span className="authLabelRow">
+              <span>Password</span>
+              {!isSignUp && (
+                <Link href={`/auth/forgot-password?callbackURL=${encodeURIComponent(callbackUrl)}`}>
+                  Forgot password?
+                </Link>
+              )}
+            </span>
+            <span className="passwordField">
+              <input
+                autoComplete={isSignUp ? "new-password" : "current-password"}
+                minLength={8}
+                maxLength={128}
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <button
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                className="passwordToggle"
+                onClick={() => setShowPassword((value) => !value)}
+                type="button"
+              >
+                <EyeIcon hidden={showPassword} />
+              </button>
+            </span>
           </label>
           <button className="button primary" disabled={busy} type="submit">
             {busy ? "Please wait…" : isSignUp ? "Create student account" : "Sign in"}

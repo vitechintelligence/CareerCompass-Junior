@@ -1,0 +1,381 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(36, 92, 173, 0.12), transparent 32rem),
+    linear-gradient(180deg, #f3f8fc 0%, #edf4f9 100%);
+  color: #102846;
+  padding: 24px;
+}
+
+.shell {
+  max-width: 1280px;
+  margin: 0 auto;
+}
+
+.topbar {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.brand strong {
+  display: block;
+  font-size: 15px;
+}
+
+.brand span {
+  display: block;
+  color: #63758d;
+  font-size: 12px;
+  margin-top: 2px;
+}
+
+.adminBadge {
+  border-radius: 999px;
+  background: #dff7f1;
+  color: #087a65;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.hero {
+  background: #102846;
+  color: white;
+  border-radius: 28px;
+  padding: 28px;
+  display: grid;
+  gap: 22px;
+  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
+  box-shadow: 0 24px 60px rgba(16, 40, 70, 0.18);
+}
+
+.eyebrow {
+  color: #7faeff;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.hero h1 {
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 0.98;
+  margin: 12px 0 14px;
+  max-width: 850px;
+}
+
+.hero p {
+  color: #cfdbeb;
+  line-height: 1.7;
+  margin: 0;
+  max-width: 760px;
+}
+
+.heroPanel {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+}
+
+.graphSteps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.graphStep {
+  background: white;
+  color: #102846;
+  min-height: 76px;
+  border-radius: 16px;
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  font-size: 11px;
+}
+
+.graphStep b {
+  font-size: 18px;
+  color: #2869d8;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+.metric {
+  background: white;
+  border: 1px solid #dce6ef;
+  border-radius: 20px;
+  padding: 18px;
+  min-height: 112px;
+}
+
+.metric span {
+  color: #708298;
+  font-size: 12px;
+}
+
+.metric strong {
+  display: block;
+  font-size: 34px;
+  margin-top: 10px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.panel {
+  background: rgba(255,255,255,0.95);
+  border: 1px solid #dce6ef;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 12px 35px rgba(16, 40, 70, 0.06);
+}
+
+.panel h2, .panel h3 {
+  margin: 6px 0 10px;
+}
+
+.muted {
+  color: #6f8196;
+  line-height: 1.6;
+}
+
+.requestList, .orgList {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.requestCard, .orgCard {
+  border: 1px solid #dfe7ef;
+  border-radius: 20px;
+  padding: 16px;
+  background: #fbfdff;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: #edf4ff;
+  color: #245ec2;
+  padding: 7px 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.pillPending {
+  background: #fff4cf;
+  color: #7e5c00;
+}
+
+.pillLive {
+  background: #dff7f1;
+  color: #087a65;
+}
+
+.pillDraft {
+  background: #edf0f5;
+  color: #5d6f86;
+}
+
+.form {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.input, .textarea {
+  width: 100%;
+  border: 1px solid #cad8e5;
+  border-radius: 14px;
+  padding: 11px 12px;
+  font: inherit;
+  color: inherit;
+  background: white;
+  box-sizing: border-box;
+}
+
+.textarea {
+  min-height: 72px;
+  resize: vertical;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.button {
+  border: 0;
+  border-radius: 14px;
+  padding: 11px 15px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e7eef6;
+  color: #15304f;
+}
+
+.buttonPrimary {
+  background: #102846;
+  color: white;
+  box-shadow: 0 10px 24px rgba(16, 40, 70, 0.16);
+}
+
+.buttonGraph {
+  background: linear-gradient(135deg, #1554c5, #317ce9);
+  color: white;
+  box-shadow: 0 10px 24px rgba(34, 100, 210, 0.2);
+}
+
+.buttonDanger {
+  background: #fff0f0;
+  color: #a33636;
+}
+
+.featureDetails {
+  margin-top: 14px;
+  border-top: 1px solid #e4ebf2;
+  padding-top: 14px;
+}
+
+.featureDetails summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.featureGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 14px 0;
+}
+
+.feature {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  background: white;
+  border: 1px solid #e0e8f0;
+  border-radius: 14px;
+  padding: 10px;
+}
+
+.feature input {
+  margin-top: 3px;
+}
+
+.feature strong {
+  font-size: 12px;
+  display: block;
+}
+
+.feature span {
+  font-size: 11px;
+  color: #708298;
+  line-height: 1.4;
+  display: block;
+  margin-top: 3px;
+}
+
+.intelligenceBox {
+  margin-top: 12px;
+  padding: 14px;
+  border-radius: 16px;
+  background: #102846;
+  color: white;
+}
+
+.intelligenceBox small {
+  color: #b9c9de;
+  display: block;
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.empty {
+  border: 1px dashed #c8d5e2;
+  border-radius: 16px;
+  padding: 18px;
+  color: #6f8196;
+  text-align: center;
+  margin-top: 14px;
+}
+
+.small {
+  font-size: 11px;
+  color: #73869c;
+}
+
+@media (max-width: 900px) {
+  .hero, .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding: 12px;
+  }
+
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .graphSteps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

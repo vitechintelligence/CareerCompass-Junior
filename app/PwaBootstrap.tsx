@@ -21,7 +21,6 @@ export function PwaBootstrap() {
     if (!appRoute) return;
 
     const previouslyDismissed = window.sessionStorage.getItem("ccj-install-dismissed") === "1";
-    setDismissed(previouslyDismissed);
 
     const standalone = window.matchMedia("(display-mode: standalone)").matches ||
       Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
