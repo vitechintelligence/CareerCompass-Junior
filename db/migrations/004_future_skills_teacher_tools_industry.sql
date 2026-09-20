@@ -173,6 +173,7 @@ create table if not exists industry_connection_requests (
   sector text,
   collaboration_types text[] not null default '{}',
   note text,
+  admin_note text,
   status text not null default 'pending' check (status in ('pending','reviewing','connected','closed')),
   reviewed_by uuid references profiles(id) on delete set null,
   reviewed_at timestamptz,
