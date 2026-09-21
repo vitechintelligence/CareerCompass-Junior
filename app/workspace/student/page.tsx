@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { ensureStudentProfile, getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
+import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function StudentWorkspacePage() {
   const user = await getSessionUser();
   if (!user) return <StudentGate signedIn={false} />;
+
+  const admin = await getPlatformAdminContext();
+  if (admin) redirect("/workspace/admin");
 
   let profile = await getCurrentProfile();
   if (!profile) profile = await ensureStudentProfile("vi");
@@ -210,7 +215,7 @@ function StudentHeader() {
 }
 
 function StudentGate({ signedIn }: { signedIn: boolean }) {
-  return <main className="workspacePage"><StudentHeader /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signedIn ? "Student access required" : "Sign in to My Compass"}</h2><p className="muted">{signedIn ? "This account is not a student account. Teacher and partner accounts should use their assigned workspace." : "Sign in to connect your book progress, assignments, feedback and learning evidence."}</p><div className="actions">{!signedIn && <Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace%2Fstudent">Sign in</Link>}<Link className="button" href="/portal/student">View public preview</Link></div></section></div></main>;
+  return <main className="workspacePage"><StudentHeader /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signedIn ? "Student access required" : "Sign in to My Compass"}</h2><p className="muted">{signedIn ? "This account is not a student account. Teacher and partner accounts should use their assigned workspace." : "Sign in to connect your book progress, assignments, feedback and learning evidence."}</p><div className="actions">{!signedIn && <Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace">Sign in</Link>}<Link className="button" href="/portal/student">View public preview</Link></div></section></div></main>;
 }
 
 function Metric({ label, value, detail }: { label: string; value: string; detail: string }) { return <div className="metric"><span className="muted">{label}</span><strong>{value}</strong><span className="muted">{detail}</span></div>; }
