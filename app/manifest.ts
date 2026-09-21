@@ -15,10 +15,16 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["education", "productivity"],
     icons: [
       {
-        src: "/vitech-logo.svg",
-        sizes: "any",
-        type: "image/svg+xml",
+        src: "/pwa-icons/v2/192",
+        sizes: "192x192",
+        type: "image/png",
         purpose: "any",
+      },
+      {
+        src: "/pwa-icons/v2/512",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
       },
     ],
     shortcuts: [
@@ -27,21 +33,21 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: "Student",
         description: "Open the live Career Compass learner workspace",
         url: "/workspace/student",
-        icons: [{ src: "/vitech-logo.svg", sizes: "any", type: "image/svg+xml" }],
+        icons: [{ src: "/pwa-icons/v2/192", sizes: "192x192", type: "image/png" }],
       },
       {
         name: "Teacher Workspace",
         short_name: "Teacher",
         description: "Open ClassFlow teacher operations",
         url: "/workspace/teacher",
-        icons: [{ src: "/vitech-logo.svg", sizes: "any", type: "image/svg+xml" }],
+        icons: [{ src: "/pwa-icons/v2/192", sizes: "192x192", type: "image/png" }],
       },
       {
         name: "Partner Workspace",
         short_name: "Partner",
         description: "Open school and training-center operations",
         url: "/workspace/partner",
-        icons: [{ src: "/vitech-logo.svg", sizes: "any", type: "image/svg+xml" }],
+        icons: [{ src: "/pwa-icons/v2/192", sizes: "192x192", type: "image/png" }],
       },
     ],
   };

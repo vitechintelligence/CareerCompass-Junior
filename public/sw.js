@@ -1,5 +1,5 @@
-const PUBLIC_CACHE = "ccj-public-v1";
-const PUBLIC_SHELL = ["/international", "/offline", "/vitech-logo.svg"];
+const PUBLIC_CACHE = "ccj-public-v2";
+const PUBLIC_SHELL = ["/international", "/offline", "/vitech-logo.svg", "/pwa-icons/v2/180", "/pwa-icons/v2/192", "/pwa-icons/v2/512"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(PUBLIC_CACHE).then((cache) => cache.addAll(PUBLIC_SHELL)).then(() => self.skipWaiting()));
