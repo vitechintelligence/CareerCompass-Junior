@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
-import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
+import { ensureStudentProfile, getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -9,7 +9,8 @@ export default async function StudentWorkspacePage() {
   const user = await getSessionUser();
   if (!user) return <StudentGate signedIn={false} />;
 
-  const profile = await getCurrentProfile();
+  let profile = await getCurrentProfile();
+  if (!profile) profile = await ensureStudentProfile("vi");
   if (!profile || profile.account_type !== "student") return <StudentGate signedIn />;
 
   const sql = getDb();
