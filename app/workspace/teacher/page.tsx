@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
+import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
 import { createAssignment, recordAttendance, saveFeedback } from "./actions";
 
@@ -11,6 +13,9 @@ export default async function TeacherWorkspacePage() {
   if (!user) {
     return <WorkspaceGate title="Teacher Workspace" copy="Sign in with a teacher account to open live classes, attendance and submissions." />;
   }
+
+  const admin = await getPlatformAdminContext();
+  if (admin) redirect("/workspace/admin");
 
   const profile = await getCurrentProfile();
   if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
@@ -221,7 +226,7 @@ export default async function TeacherWorkspacePage() {
 }
 
 function WorkspaceGate({ title, copy, signedIn = false }: { title: string; copy: string; signedIn?: boolean }) {
-  return <main className="workspacePage"><WorkspaceHeader title={title} subtitle="Role-protected workspace" /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signedIn ? "Access not assigned" : "Sign in required"}</h2><p className="muted">{copy}</p><div className="actions"><Link className="button primary" href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace/teacher")}`}>Sign in</Link><Link className="button" href="/portal/teacher">View public teacher preview</Link></div></section></div></main>;
+  return <main className="workspacePage"><WorkspaceHeader title={title} subtitle="Role-protected workspace" /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signedIn ? "Access not assigned" : "Sign in required"}</h2><p className="muted">{copy}</p><div className="actions"><Link className="button primary" href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace")}`}>Sign in</Link><Link className="button" href="/portal/teacher">View public teacher preview</Link></div></section></div></main>;
 }
 
 function WorkspaceHeader({ title, subtitle }: { title: string; subtitle: string }) {
