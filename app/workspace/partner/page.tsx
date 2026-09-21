@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
+import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
 import { activateTeacher, assignTeacher, createClass, enrollStudent, recordLearnerConsent, requestPartnerAccess } from "./actions";
 
@@ -9,6 +11,9 @@ export const dynamic = "force-dynamic";
 export default async function PartnerWorkspacePage() {
   const user = await getSessionUser();
   if (!user) return <PartnerGate mode="signin" />;
+
+  const admin = await getPlatformAdminContext();
+  if (admin) redirect("/workspace/admin");
 
   const profile = await getCurrentProfile();
   const sql = getDb();
@@ -234,7 +239,7 @@ export default async function PartnerWorkspacePage() {
 
 function PartnerGate({ mode }: { mode: "signin" | "membership" }) {
   const signIn = mode === "signin";
-  return <main className="workspacePage"><PartnerHeader /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signIn ? "Sign in required" : "Partner membership not assigned"}</h2><p className="muted">{signIn ? "Sign in before opening the partner onboarding and management workspace." : "Your account has partner-level access but is not attached to an active organization yet."}</p><div className="actions"><Link className="button primary" href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace/partner")}`}>Sign in</Link><Link className="button" href="/portal/partner">View partner preview</Link></div></section></div></main>;
+  return <main className="workspacePage"><PartnerHeader /><div className="workspaceContent"><section className="panel gatePanel"><h2>{signIn ? "Sign in required" : "Partner membership not assigned"}</h2><p className="muted">{signIn ? "Sign in before opening the partner onboarding and management workspace." : "Your account has partner-level access but is not attached to an active organization yet."}</p><div className="actions"><Link className="button primary" href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace")}`}>Sign in</Link><Link className="button" href="/portal/partner">View partner preview</Link></div></section></div></main>;
 }
 
 function PartnerHeader() { return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>Partner Workspace</strong><div className="muted" style={{ fontSize: 12 }}>Schools · training centers · live delivery</div></div><Link className="pill" href="/portal/partner">Portal preview</Link></header>; }
