@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
 import { getPlatformAdminContext, platformAdminEmailsForDisplay } from "@/lib/auth/platform-admin";
+import { getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { defaultFeaturesForOrganization, PLATFORM_FEATURES } from "@/lib/platform-feature-catalog";
 import { approvePartnerRequest, createIndustryPartner, createIndustryRole, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus, updateIndustryConnectionRequest, updateIntegrationProviderRequest, updateSchoolCompanyConnection } from "./actions";
@@ -11,14 +12,25 @@ export const dynamic = "force-dynamic";
 export default async function PlatformAdminPage() {
   const admin = await getPlatformAdminContext();
   if (!admin) {
+    const user = await getSessionUser();
+    const signedIn = Boolean(user?.id);
+
     return (
       <main className={styles.page}>
         <div className={styles.shell}>
           <section className={styles.panel}>
             <div className={styles.eyebrow}>ViTech control plane</div>
-            <h1>Platform administrator sign-in required</h1>
-            <p className={styles.muted}>This workspace can approve institutions, allocate modules and trigger the LangGraph institution builder.</p>
-            <Link className={`${styles.button} ${styles.buttonPrimary}`} href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace/admin")}`}>Sign in as administrator</Link>
+            <h1>{signedIn ? "Platform administrator access not assigned" : "Platform administrator sign-in required"}</h1>
+            <p className={styles.muted}>
+              {signedIn
+                ? "This account is authenticated, but it is not authorized for the ViTech control plane. A platform owner must authorize the verified account before administrator access is granted."
+                : "This workspace can approve institutions, allocate modules and trigger the LangGraph institution builder."}
+            </p>
+            {signedIn ? (
+              <Link className={`${styles.button} ${styles.buttonPrimary}`} href="/workspace">Open my assigned workspace</Link>
+            ) : (
+              <Link className={`${styles.button} ${styles.buttonPrimary}`} href={`/auth/sign-in?callbackURL=${encodeURIComponent("/workspace/admin")}`}>Sign in as administrator</Link>
+            )}
           </section>
         </div>
       </main>

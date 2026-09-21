@@ -9,6 +9,10 @@ export const dynamic = "force-dynamic";
 const OBJECT_TYPES = new Set<CanonicalObjectType>(["person", "class", "enrollment", "event"]);
 const PROVIDER_RE = /^[a-z0-9-]{2,80}$/;
 
+function isCanonicalObjectType(value: string): value is CanonicalObjectType {
+  return OBJECT_TYPES.has(value as CanonicalObjectType);
+}
+
 export async function POST(request: Request) {
   let payload: { organizationId?: string; providerSlug?: string; objectType?: string; data?: unknown };
   try {
@@ -28,10 +32,10 @@ export async function POST(request: Request) {
   if (!PROVIDER_RE.test(providerSlug)) {
     return NextResponse.json({ error: "A valid providerSlug is required." }, { status: 400 });
   }
-  if (!OBJECT_TYPES.has(rawObjectType as CanonicalObjectType) || !payload.data || typeof payload.data !== "object" || Array.isArray(payload.data)) {
+  if (!isCanonicalObjectType(rawObjectType) || !payload.data || typeof payload.data !== "object" || Array.isArray(payload.data)) {
     return NextResponse.json({ error: "objectType and object data are required." }, { status: 400 });
   }
-  const objectType = rawObjectType as CanonicalObjectType;
+  const objectType = rawObjectType;
 
   const sql = getDb();
   const providers = await sql`

@@ -20,10 +20,11 @@ export default async function PortalPage({
   if (!roles.includes(rawRole as PortalRole)) notFound();
 
   const role = rawRole as PortalRole;
-  if (role === "student") {
-    const profile = await getCurrentProfile();
-    if (profile?.account_type === "student") redirect("/workspace/student");
-  }
+  const profile = await getCurrentProfile();
+  if (profile?.account_type === "platform_admin") redirect("/workspace/admin");
+  if (role === "student" && profile?.account_type === "student") redirect("/workspace/student");
+  if (role === "teacher" && profile?.account_type === "teacher") redirect("/workspace/teacher");
+  if (role === "partner" && profile?.account_type === "partner_admin") redirect("/workspace/partner");
 
   const locale: Locale = lang === "vi" ? "vi" : "en";
   const copy = portalCopy[role];

@@ -29,6 +29,32 @@ export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
   const displayName = typeof rawName === "string" ? rawName.trim().slice(0, 80) : null;
   const semanticId = `vn-learner-${authSubject.replaceAll("-", "").slice(0, 16)}`;
 
+  const existingRows = await sql`
+    select id, semantic_id, auth_subject, display_name, account_type, preferred_locale, status
+    from profiles
+    where auth_subject = ${authSubject}
+    limit 1
+  `;
+  const existing = (existingRows[0] ?? null) as LmsProfile | null;
+
+  if (existing) {
+    if (existing.account_type !== "student" || existing.status !== "active") return null;
+
+    const rows = await sql`
+      update profiles
+      set
+        display_name = coalesce(${displayName || null}, display_name),
+        preferred_locale = ${locale},
+        updated_at = now()
+      where id = ${existing.id}
+        and account_type = 'student'
+        and status = 'active'
+      returning id, semantic_id, auth_subject, display_name, account_type, preferred_locale, status
+    `;
+
+    return (rows[0] ?? null) as LmsProfile | null;
+  }
+
   const rows = await sql`
     insert into profiles (
       semantic_id,
@@ -53,7 +79,9 @@ export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
     returning id, semantic_id, auth_subject, display_name, account_type, preferred_locale, status
   `;
 
-  return (rows[0] ?? null) as LmsProfile | null;
+  const created = (rows[0] ?? null) as LmsProfile | null;
+  if (!created || created.account_type !== "student" || created.status !== "active") return null;
+  return created;
 }
 
 export async function getCurrentProfile() {
