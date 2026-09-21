@@ -69,6 +69,7 @@ create table if not exists vst_junior_simulations (
   instructions text not null,
   target_grades text[] not null default '{}',
   safety_notes text,
+  company_safeguards_confirmed boolean not null default false,
   status text not null default 'submitted'
     check (status in ('submitted','reviewing','approved','rejected','published','archived')),
   moderation_note text,
