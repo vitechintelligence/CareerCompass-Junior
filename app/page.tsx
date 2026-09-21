@@ -29,7 +29,7 @@ export default function Home() {
 
     // The collection section in the static landing remains visually untouched;
     // this adds a real app destination when a visitor chooses to explore books.
-    for (const candidate of Array.from(doc.querySelectorAll<HTMLElement>('[data-en="See the program books"]'))) {
+    for (const candidate of Array.from(doc.querySelectorAll<HTMLElement>('[data-en="Explore the learning library"]'))) {
       const anchor = candidate.closest("a");
       if (anchor) anchor.setAttribute("data-book-collection", "/books");
     }
@@ -38,7 +38,7 @@ export default function Home() {
   return (
     <iframe
       ref={frameRef}
-      src="/landing.html"
+      src="/landing.html?v=20260921-library-v5"
       title="Career Compass Junior"
       onLoad={connectLandingToApp}
       style={{ position: "fixed", inset: 0, width: "100vw", height: "100dvh", border: 0, background: "white" }}
