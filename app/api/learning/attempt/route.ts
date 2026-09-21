@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
-import { ensureStudentProfile } from "@/lib/auth/profile";
+import { ensureStudentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -52,9 +52,14 @@ export async function POST(request: Request) {
   }
 
   const locale = payload.locale === "en" ? "en" : "vi";
-  const profile = await ensureStudentProfile(locale);
-  if (!profile) {
+  const user = await getSessionUser();
+  if (!user) {
     return jsonError("Sign in to sync learning progress.", 401, { localOnly: true });
+  }
+
+  const profile = await ensureStudentProfile(locale);
+  if (!profile || profile.account_type !== "student" || profile.status !== "active") {
+    return jsonError("Student access is required to write learning progress.", 403, { localOnly: true });
   }
 
   const sql = getDb();
