@@ -41,6 +41,7 @@ export default async function PortalPage({
           <Link href={`/portal/student?lang=${locale}`}>Student</Link>
           <Link href={`/portal/teacher?lang=${locale}`}>Teacher</Link>
           <Link href={`/portal/partner?lang=${locale}`}>Partner</Link>
+          <Link href="/workspace/admin">Admin</Link>
         </nav>
         <Link className="pill" href={`/portal/${role}?lang=${otherLocale}`}>
           {locale === "en" ? "Tiếng Việt" : "English"}
@@ -83,7 +84,7 @@ export default async function PortalPage({
             </p>
             <div className="actions">
               {role === "student" && <Link className="button primary" href="/auth/sign-up?callbackURL=%2Fworkspace%2Fstudent">Activate student access</Link>}
-              {role === "teacher" && <Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace%2Fteacher">Teacher sign in</Link>}
+              {role === "teacher" && <Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace">Teacher sign in</Link>}
               {role === "partner" && <Link className="button primary" href="/workspace/partner">Partner access</Link>}
             </div>
           </aside>
