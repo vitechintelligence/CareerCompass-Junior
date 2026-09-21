@@ -28,12 +28,9 @@ export const metadata: Metadata = {
   publisher: "ViTech Intelligence Solutions",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: [
-      { url: "/pwa-icons/v2/192", type: "image/png", sizes: "192x192" },
-      { url: "/pwa-icons/v2/512", type: "image/png", sizes: "512x512" },
-    ],
-    shortcut: "/pwa-icons/v2/192",
-    apple: [{ url: "/pwa-icons/v2/180", sizes: "180x180", type: "image/png" }],
+    icon: [{ url: "/vitech-app-icon-512.png?v=3", type: "image/png", sizes: "512x512" }],
+    shortcut: "/vitech-app-icon-512.png?v=3",
+    apple: [{ url: "/vitech-app-icon-512.png?v=3", sizes: "512x512", type: "image/png" }],
   },
   appleWebApp: {
     capable: true,
