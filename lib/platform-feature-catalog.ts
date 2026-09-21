@@ -52,7 +52,7 @@ export const PLATFORM_FEATURES: PlatformFeatureDefinition[] = [
   { key: "teacher_upskilling", label: "Teacher: professional learning", description: "Structured upskilling aligned to practical teaching, assessment, digital learning and innovation needs.", category: "teacher", essential: true },
   { key: "teacher_dashboard_plus", label: "Teacher: command dashboard", description: "Quick view of classes, attendance, assessments, submissions, professional learning and integrations.", category: "teacher", essential: true },
 
-  { key: "industry_connector", label: "School ↔ Company Connector", description: "Request and manage school-company links, role profiles, skill requirements and career exposure.", category: "ecosystem" },
+  { key: "industry_connector", label: "VinaSkillTrust Junior · School ↔ Company", description: "Grade 11–12-only school-company introductions, verified role intelligence and ViTech-moderated age-appropriate work simulations.", category: "ecosystem" },
   { key: "vinaskilltrust_services", label: "VinaSkillTrust services", description: "Partner access to verification, Studio work simulations and capability-development services.", category: "ecosystem" },
   { key: "custom_integration_requests", label: "Custom integration requests", description: "Institutions can request a new third-party app or module connection for ViTech review.", category: "ecosystem" },
 ];
