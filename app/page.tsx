@@ -38,7 +38,7 @@ export default function Home() {
   return (
     <iframe
       ref={frameRef}
-      src="/landing.html?v=20260921-library-v5"
+      src="/landing.html?v=20260922-partner-pricing-audio-v1"
       title="Career Compass Junior"
       onLoad={connectLandingToApp}
       style={{ position: "fixed", inset: 0, width: "100vw", height: "100dvh", border: 0, background: "white" }}
