@@ -17,7 +17,23 @@ export default async function StudentIndustryPage() {
     from organization_memberships om
     join school_company_connections c on c.organization_id=om.organization_id and c.status='active'
     join industry_partners p on p.id=c.industry_partner_id and p.status='verified'
-    where om.profile_id=${profile.id} and om.status='active'
+    where om.profile_id=${profile.id}
+      and om.status='active'
+      and exists (
+        select 1
+        from class_memberships cm
+        join classes cl
+          on cl.id=cm.class_id
+         and cl.organization_id=om.organization_id
+         and cl.status='active'
+        where cm.student_id=${profile.id}
+          and cm.status='active'
+          and (
+            ('11'=any(c.target_grades) and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])11([^0-9]|$)')
+            or
+            ('12'=any(c.target_grades) and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])12([^0-9]|$)')
+          )
+      )
     order by p.company_name
   `;
 
@@ -28,6 +44,50 @@ export default async function StudentIndustryPage() {
     where industry_partner_id = any(${companyIds}::uuid[])
       and status='published'
     order by title_en
+  `;
+
+  const simulations = companyIds.length === 0 ? [] : await sql`
+    select distinct
+      s.id, s.industry_partner_id, s.company_name, s.title, s.summary, s.instructions,
+      s.target_grades, s.safety_notes, s.published_at, s.created_at
+    from organization_memberships om
+    join school_company_connections c
+      on c.organization_id=om.organization_id
+     and c.status='active'
+    join vst_junior_simulations s
+      on s.organization_id=om.organization_id
+     and s.industry_partner_id=c.industry_partner_id
+     and s.status='published'
+    join industry_partners p
+      on p.id=s.industry_partner_id
+     and p.status='verified'
+    where om.profile_id=${profile.id}
+      and om.status='active'
+      and s.industry_partner_id = any(${companyIds}::uuid[])
+      and exists (
+        select 1
+        from class_memberships cm
+        join classes cl
+          on cl.id=cm.class_id
+         and cl.organization_id=om.organization_id
+         and cl.status='active'
+        where cm.student_id=${profile.id}
+          and cm.status='active'
+          and (
+            (
+              '11'=any(c.target_grades)
+              and '11'=any(s.target_grades)
+              and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])11([^0-9]|$)'
+            )
+            or
+            (
+              '12'=any(c.target_grades)
+              and '12'=any(s.target_grades)
+              and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])12([^0-9]|$)'
+            )
+          )
+      )
+    order by s.published_at desc nulls last, s.created_at desc
   `;
 
   const vi = profile.preferred_locale === "vi";
@@ -43,9 +103,9 @@ export default async function StudentIndustryPage() {
       <div className="workspaceContent">
         <section className="workspaceIdentity">
           <div>
-            <div className="eyebrow">School ↔ Company Connector</div>
+            <div className="eyebrow">VinaSkillTrust Junior · Grade 11–12</div>
             <h1 className="workspaceHeroTitle">{vi ? "Hiểu công ty làm gì, vai trò nào tồn tại và kỹ năng nào thực sự cần." : "See what companies do, which roles exist and what skills the work actually needs."}</h1>
-            <p className="muted">{vi ? "Nội dung ở đây chỉ hiển thị khi nhà trường và doanh nghiệp đã được kết nối/duyệt trong hệ thống." : "Content appears here only after the school-company connection and company profile are approved in the platform."}</p>
+            <p className="muted">{vi ? "Nội dung chỉ hiển thị cho học sinh thuộc lớp Khối 11 hoặc Khối 12 đủ điều kiện sau khi kết nối trường-doanh nghiệp, hồ sơ doanh nghiệp và mọi mô phỏng liên quan đã được phê duyệt." : "Content appears here only for learners in an eligible Grade 11 or Grade 12 class after the school-company connection, company profile and any simulation have passed the required approvals."}</p>
           </div>
           <span className="pill">{companies.length} {vi ? "công ty" : "companies"}</span>
         </section>
@@ -56,6 +116,7 @@ export default async function StudentIndustryPage() {
           <div className="cardGrid">
             {companies.map((company) => {
               const companyRoles = roles.filter((role) => String(role.industry_partner_id) === String(company.id));
+              const companySimulations = simulations.filter((simulation) => String(simulation.industry_partner_id) === String(company.id));
               return (
                 <article className="card" key={String(company.id)}>
                   <span className="pill">{String(company.sector || (vi ? "Doanh nghiệp" : "Industry"))}</span>
@@ -69,6 +130,21 @@ export default async function StudentIndustryPage() {
                           <p className="muted" style={{ margin: "4px 0 8px" }}>{vi ? String(role.summary_vi || "") : String(role.summary_en || "")}</p>
                           <div className="tagRow">{(Array.isArray(role.skill_tags) ? role.skill_tags : []).map((skill) => <span className="tag" key={String(skill)}>{String(skill)}</span>)}</div>
                           {(vi ? role.education_notes_vi : role.education_notes_en) && <p className="muted" style={{ marginTop: 8 }}><b>{vi ? "Chuẩn bị:" : "How to prepare:"}</b> {vi ? String(role.education_notes_vi) : String(role.education_notes_en)}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {companySimulations.length > 0 && (
+                    <div className="workspaceList">
+                      <div className="eyebrow">{vi ? "Mô phỏng đã được ViTech duyệt" : "ViTech-approved simulations"}</div>
+                      {companySimulations.map((simulation) => (
+                        <div className="feedbackCard" key={String(simulation.id)}>
+                          <strong>{String(simulation.title)}</strong>
+                          <p className="muted" style={{ margin: "5px 0 8px" }}>{String(simulation.summary)}</p>
+                          <p className="muted" style={{ margin: "0 0 8px" }}><b>{vi ? "Nhiệm vụ:" : "Your brief:"}</b> {String(simulation.instructions)}</p>
+                          <div className="tagRow">
+                            {(Array.isArray(simulation.target_grades) ? simulation.target_grades : []).map((grade) => <span className="tag" key={String(grade)}>Grade {String(grade)}</span>)}
+                          </div>
                         </div>
                       ))}
                     </div>
