@@ -24,7 +24,7 @@ async function invitationForToken(token: string) {
   const rows = await sql`
     select i.id as invitation_id, i.request_id, i.expires_at, i.response_status,
            r.organization_id, r.company_name, r.company_website, r.sector, r.industry_partner_id,
-           o.name as organization_name
+           r.target_grades, o.name as organization_name
     from vst_junior_company_invitations i
     join industry_connection_requests r on r.id=i.request_id
     join organizations o on o.id=r.organization_id
@@ -113,6 +113,10 @@ export async function submitVstJuniorSimulation(formData: FormData) {
   const invitation = await invitationForToken(token);
   if (!invitation || String(invitation.response_status) !== "accepted") {
     throw new Error("Accept the company connection before proposing a simulation.");
+  }
+  const requestedGrades = Array.isArray(invitation.target_grades) ? invitation.target_grades.map(String) : [];
+  if (targetGrades.some((grade) => !requestedGrades.includes(grade))) {
+    throw new Error("Simulation grades must stay within the Grade 11–12 cohort requested by the institution.");
   }
 
   const sql = getDb();
