@@ -596,6 +596,36 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
   .standard-shift{padding:70px 0}
   .cta{padding:80px 0}
 }
+
+/* Partner deployment pricing — 2026 */
+.partner-pricing{position:relative;overflow:hidden;background:linear-gradient(180deg,#f7fbff 0%,#edf6fb 50%,#f8fcfb 100%);padding:92px 0}
+.partner-pricing:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;right:-180px;top:-220px;background:radial-gradient(circle,rgba(71,184,255,.16),transparent 68%);pointer-events:none}
+.partner-pricing:after{content:"";position:absolute;width:440px;height:440px;border-radius:50%;left:-180px;bottom:-230px;background:radial-gradient(circle,rgba(20,184,166,.14),transparent 68%);pointer-events:none}
+.pp-shell{position:relative;z-index:1}.pp-head{display:grid;grid-template-columns:1.08fr .92fr;gap:56px;align-items:end;margin-bottom:30px}
+.pp-head h2{margin:12px 0 14px;font-size:clamp(36px,4.4vw,56px);line-height:1.04;letter-spacing:-.045em;color:var(--navy)}
+.pp-head p{margin:0;color:var(--muted);font-size:14px;line-height:1.75}
+.pp-path{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 22px}
+.pp-step{padding:14px 15px;border-radius:16px;border:1px solid #d8e6f2;background:rgba(255,255,255,.8);font-size:10px;line-height:1.45;color:#64758a;position:relative}
+.pp-step b{display:block;color:var(--navy);font-size:12px;margin-bottom:3px}.pp-step i{font-style:normal}
+.pp-step span{display:inline-grid;place-items:center;width:25px;height:25px;border-radius:9px;background:var(--blue-light);color:var(--blue);font-size:9px;font-weight:900;margin-bottom:8px}
+.pp-pilot{display:grid;grid-template-columns:1fr auto;gap:28px;align-items:center;padding:27px 30px;margin-bottom:22px;border-radius:25px;background:linear-gradient(120deg,#071d38,#0b355a 58%,#08756f);color:#fff;box-shadow:0 22px 55px rgba(7,29,56,.16)}
+.pp-pilot-tag{display:inline-flex;padding:7px 10px;border-radius:999px;background:#fff2ae;color:#6e5200;font-size:9px;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+.pp-pilot h3{margin:10px 0 7px;font-size:clamp(25px,3vw,38px);line-height:1.08;letter-spacing:-.035em}.pp-pilot p{margin:0;color:#c8d9e8;font-size:12px;line-height:1.65}
+.pp-pilot-price{text-align:right;min-width:240px}.pp-pilot-price strong{display:block;font-family:"Plus Jakarta Sans","Be Vietnam Pro",sans-serif;font-size:39px;line-height:1;color:#fff}.pp-pilot-price small{display:block;margin-top:7px;color:#a9c7d8;font-size:10px}
+.pp-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.pp-card{display:flex;flex-direction:column;padding:23px 20px;border-radius:22px;background:#fff;border:1px solid #dce7f1;box-shadow:0 12px 34px rgba(10,35,65,.055);transition:transform .25s ease,box-shadow .25s ease,border-color .25s}
+.pp-card:hover{transform:translateY(-6px);box-shadow:0 24px 50px rgba(10,35,65,.1);border-color:#bfd6e8}.pp-card.featured{border:2px solid #7ccdc3;background:linear-gradient(180deg,#fff,#f2fbf9)}
+.pp-card .pp-label{font-size:9px;font-weight:950;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}.pp-card h3{font-size:18px;line-height:1.25;color:var(--navy);margin:10px 0 3px}
+.pp-users{font-size:10px;color:#718197;min-height:28px}.pp-amount{font-family:"Plus Jakarta Sans","Be Vietnam Pro",sans-serif;font-weight:850;color:var(--navy);font-size:25px;letter-spacing:-.03em;margin:17px 0 3px}
+.pp-amount small{display:block;font-family:"Be Vietnam Pro",sans-serif;font-weight:650;font-size:9px;letter-spacing:0;color:#718197;margin-top:5px}
+.pp-card ul{list-style:none;padding:0;margin:16px 0 20px;display:grid;gap:9px;flex:1}.pp-card li{position:relative;padding-left:19px;color:#596b81;font-size:10.5px;line-height:1.5}
+.pp-card li:before{content:"✓";position:absolute;left:0;color:var(--teal);font-weight:950}.pp-card .btn{justify-content:center}
+.pp-support{display:grid;grid-template-columns:auto 1fr auto;gap:18px;align-items:center;margin-top:16px;padding:19px 21px;border-radius:19px;background:#fff;border:1px dashed #b9ccdd}
+.pp-support-ic{width:43px;height:43px;border-radius:14px;display:grid;place-items:center;background:var(--lav);font-size:19px}.pp-support b{display:block;color:var(--navy);font-size:13px}
+.pp-support p{margin:3px 0 0;color:var(--muted);font-size:10.5px;line-height:1.5}.pp-support strong{font-family:"Plus Jakarta Sans","Be Vietnam Pro",sans-serif;color:var(--navy);font-size:17px;white-space:nowrap}
+.pp-fine{margin:15px 2px 0;color:#8190a2;font-size:9.5px;line-height:1.55}
+@media(max-width:1060px){.pp-head{grid-template-columns:1fr;gap:10px}.pp-grid{grid-template-columns:1fr 1fr}.pp-path{grid-template-columns:1fr 1fr}}
+@media(max-width:690px){.partner-pricing{padding:64px 0}.pp-head h2{font-size:35px}.pp-path,.pp-grid{grid-template-columns:1fr}.pp-pilot{grid-template-columns:1fr;padding:24px 21px}.pp-pilot-price{text-align:left;min-width:0}.pp-pilot-price strong{font-size:34px}.pp-support{grid-template-columns:auto 1fr}.pp-support strong{grid-column:2;white-space:normal}.pp-card{padding:20px}}
 </style>
 </head>
 <body>
@@ -618,6 +648,7 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
     <a href="#journey" data-target="journey" data-vi="Lộ trình" data-en="Journey">Lộ trình</a>
     <a href="#portals" data-target="portals" data-vi="Cổng học tập" data-en="Portals">Cổng học tập</a>
     <a href="#centers" data-target="centers" data-vi="Dành cho trung tâm" data-en="For centers">Dành cho trung tâm</a>
+    <a href="#partner-pricing" data-target="partner-pricing" data-vi="Gói đối tác" data-en="Partner plans">Gói đối tác</a>
   </nav>
   <div class="nav-right">
     <div class="lang-toggle" role="group" aria-label="Language / Ngôn ngữ">
@@ -641,6 +672,7 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
     <a href="#journey" data-target="journey" data-vi="Lộ trình" data-en="Journey">Lộ trình</a>
     <a href="#portals" data-target="portals" data-vi="Cổng học tập" data-en="Portals">Cổng học tập</a>
     <a href="#centers" data-target="centers" data-vi="Dành cho trung tâm" data-en="For centers">Dành cho trung tâm</a>
+    <a href="#partner-pricing" data-target="partner-pricing" data-vi="Gói đối tác" data-en="Partner plans">Gói đối tác</a>
   </div>
   <div class="drawer-foot">
     <div class="lang-toggle" role="group" aria-label="Language / Ngôn ngữ">
@@ -766,8 +798,8 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
 
     <div class="ll-fine-print">
       <p data-vi="<strong>Mua cá nhân / đăng ký:</strong> chỉ dành cho phụ huynh, người giám hộ hoặc người lớn hợp pháp. Người chưa thành niên không thể tự mua hoặc tự ghi danh; quyền truy cập học viên phải được phụ huynh/người giám hộ hoặc cơ sở tham gia cho phép." data-en="<strong>Individual purchase / subscription:</strong> available only to parents, guardians, or other legal adults. Minors cannot independently purchase or self-enroll; learner access must be authorized by a parent/guardian or participating institution."><strong>Mua cá nhân / đăng ký:</strong> chỉ dành cho phụ huynh, người giám hộ hoặc người lớn hợp pháp. Người chưa thành niên không thể tự mua hoặc tự ghi danh; quyền truy cập học viên phải được phụ huynh/người giám hộ hoặc cơ sở tham gia cho phép.</p>
-      <p data-vi="<strong>Đối tác:</strong> các học phần và nội dung số đủ điều kiện được <b>MIỄN PHÍ</b> trong gói Partner Access đã được phê duyệt." data-en="<strong>Partners:</strong> eligible modules and digital learning content are <b>FREE</b> within approved Partner Access bundles."><strong>Đối tác:</strong> các học phần và nội dung số đủ điều kiện được <b>MIỄN PHÍ</b> trong gói Partner Access đã được phê duyệt.</p>
-      <p data-vi="<strong>Giảng viên độc lập:</strong> các học phần và sách số đủ điều kiện được sử dụng miễn phí sau khi được phê duyệt Partner Access." data-en="<strong>Solo instructors:</strong> eligible modules and digital books are free once the instructor is approved for Partner Access."><strong>Giảng viên độc lập:</strong> các học phần và sách số đủ điều kiện được sử dụng miễn phí sau khi được phê duyệt Partner Access.</p>
+      <p data-vi="<strong>Đối tác:</strong> các học phần và nội dung số đủ điều kiện được bao gồm theo gói Partner Access / giấy phép đã được phê duyệt cho cơ sở." data-en="<strong>Partners:</strong> eligible modules and digital learning content are included according to the institution's approved Partner Access / license plan."><strong>Đối tác:</strong> các học phần và nội dung số đủ điều kiện được bao gồm theo gói Partner Access / giấy phép đã được phê duyệt cho cơ sở.</p>
+      <p data-vi="<strong>Giảng viên độc lập:</strong> quyền truy cập học phần và sách số được xác định theo thỏa thuận / gói Partner Access được phê duyệt." data-en="<strong>Solo instructors:</strong> module and digital-book access is determined by the approved instructor / Partner Access arrangement."><strong>Giảng viên độc lập:</strong> quyền truy cập học phần và sách số được xác định theo thỏa thuận / gói Partner Access được phê duyệt.</p>
       <p data-vi="<strong>Bản in:</strong> sách và học liệu bản cứng chưa được phân phối tại Việt Nam." data-en="<strong>Hard copies:</strong> printed books and modules are not yet available for distribution in Vietnam."><strong>Bản in:</strong> sách và học liệu bản cứng chưa được phân phối tại Việt Nam.</p>
       <p class="asterisk" data-vi="* “Có bản in” nghĩa là tài liệu được thiết kế ở định dạng có thể in. Tình trạng sản xuất, xuất bản, vận chuyển và phân phối thực tế phụ thuộc từng thị trường và thỏa thuận." data-en="* “Hard copy: Yes” means the material is designed in a printable book/workbook format. Actual production, publication, shipping and distribution depend on market availability and agreement.">* “Có bản in” nghĩa là tài liệu được thiết kế ở định dạng có thể in. Tình trạng sản xuất, xuất bản, vận chuyển và phân phối thực tế phụ thuộc từng thị trường và thỏa thuận.</p>
     </div>
@@ -998,6 +1030,75 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
       </ul>
     </div>
   </div>
+</div></section>
+
+
+<section class="partner-pricing reveal" id="partner-pricing"><div class="container pp-shell">
+  <div class="pp-head">
+    <div>
+      <div class="kicker" data-vi="Gói triển khai dành cho đối tác" data-en="Partner deployment plans">Gói triển khai dành cho đối tác</div>
+      <h2 data-vi="Bắt đầu nhỏ. Chứng minh giá trị. Mở rộng khi số học viên tăng." data-en="Start small. Prove value. Scale as enrollment grows.">Bắt đầu nhỏ. Chứng minh giá trị. Mở rộng khi số học viên tăng.</h2>
+    </div>
+    <p data-vi="Chọn gói SaaS theo học viên hoặc giấy phép theo cơ sở. Các gói kết nối cổng học tập, học liệu số, công cụ giáo viên và theo dõi tiến độ trong một hệ thống — với lộ trình nâng cấp rõ ràng khi chương trình phát triển." data-en="Choose per-student SaaS or an annual site license. Plans connect portals, digital learning assets, teacher tools and progress visibility in one system — with a clear upgrade path as your program grows.">Chọn gói SaaS theo học viên hoặc giấy phép theo cơ sở. Các gói kết nối cổng học tập, học liệu số, công cụ giáo viên và theo dõi tiến độ trong một hệ thống — với lộ trình nâng cấp rõ ràng khi chương trình phát triển.</p>
+  </div>
+
+  <div class="pp-path" aria-label="Partner growth path">
+    <div class="pp-step"><span>01</span><b data-vi="Thử nghiệm 1 tháng" data-en="1-month pilot">Thử nghiệm 1 tháng</b><i data-vi="Kiểm chứng với nhóm nhỏ trước." data-en="Validate with a small cohort first.">Kiểm chứng với nhóm nhỏ trước.</i></div>
+    <div class="pp-step"><span>02</span><b data-vi="SaaS theo học viên" data-en="Per-student SaaS">SaaS theo học viên</b><i data-vi="Thanh toán theo số học viên thực tế." data-en="Pay for the learners you activate.">Thanh toán theo số học viên thực tế.</i></div>
+    <div class="pp-step"><span>03</span><b data-vi="Giấy phép cơ sở" data-en="Site license">Giấy phép cơ sở</b><i data-vi="Ổn định chi phí khi quy mô tăng." data-en="Predictable cost as usage grows.">Ổn định chi phí khi quy mô tăng.</i></div>
+    <div class="pp-step"><span>04</span><b data-vi="Mạng lưới nhiều cơ sở" data-en="Multi-campus">Mạng lưới nhiều cơ sở</b><i data-vi="Thương hiệu riêng và hỗ trợ chuyên trách." data-en="White-label and dedicated support.">Thương hiệu riêng và hỗ trợ chuyên trách.</i></div>
+  </div>
+
+  <div class="pp-pilot">
+    <div>
+      <span class="pp-pilot-tag" data-vi="ƯU ĐÃI PILOT" data-en="PILOT PROMOTION">ƯU ĐÃI PILOT</span>
+      <h3 data-vi="Thử Career Compass Junior trong 1 tháng trước khi mở rộng." data-en="Try Career Compass Junior for one month before you scale.">Thử Career Compass Junior trong 1 tháng trước khi mở rộng.</h3>
+      <p data-vi="Bao gồm quyền truy cập cho 30 học viên + đào tạo triển khai cho 2 giáo viên. Phù hợp để chạy một lớp mẫu, thu thập phản hồi và đánh giá quy trình vận hành trước khi chọn gói dài hạn." data-en="Includes access for 30 students + implementation training for 2 teachers. Ideal for running a representative cohort, gathering feedback and validating delivery before choosing a longer-term plan.">Bao gồm quyền truy cập cho 30 học viên + đào tạo triển khai cho 2 giáo viên. Phù hợp để chạy một lớp mẫu, thu thập phản hồi và đánh giá quy trình vận hành trước khi chọn gói dài hạn.</p>
+    </div>
+    <div class="pp-pilot-price"><strong>5,000,000 VND</strong><small data-vi="1 tháng · 30 học viên · đào tạo 2 giáo viên" data-en="1 month · 30 students · training for 2 teachers">1 tháng · 30 học viên · đào tạo 2 giáo viên</small></div>
+  </div>
+
+  <div class="pp-grid">
+    <article class="pp-card featured">
+      <span class="pp-label">FLEXIBLE SaaS</span><h3 data-vi="Theo học viên" data-en="Per-Student SaaS">Theo học viên</h3>
+      <div class="pp-users" data-vi="Dành cho lớp đang tăng trưởng hoặc triển khai linh hoạt" data-en="For growing cohorts and flexible rollout">Dành cho lớp đang tăng trưởng hoặc triển khai linh hoạt</div>
+      <div class="pp-amount">150K–250K VND<small data-vi="/ học viên / 3 tháng · khoảng US$6–$10" data-en="/ student / 3 months · approx. US$6–$10">/ học viên / 3 tháng · khoảng US$6–$10</small></div>
+      <ul>
+        <li data-vi="Toàn quyền truy cập Career Compass Junior portal theo gói được duyệt" data-en="Full Career Compass Junior portal access within the approved bundle">Toàn quyền truy cập Career Compass Junior portal theo gói được duyệt</li>
+        <li data-vi="Workbook số & mẫu dự án" data-en="Digital student workbook & project templates">Workbook số & mẫu dự án</li>
+        <li data-vi="Theo dõi tiến độ & báo cáo phụ huynh tự động theo tính năng được bật" data-en="Automated progress and parent reporting where enabled">Theo dõi tiến độ & báo cáo phụ huynh tự động theo tính năng được bật</li>
+        <li data-vi="Không gian học viên, giáo viên & đối tác kết nối" data-en="Connected student, teacher and partner workspaces">Không gian học viên, giáo viên & đối tác kết nối</li>
+      </ul>
+      <a class="btn primary" href="mailto:business@vitechintelligence.com?subject=Career%20Compass%20Junior%20Per-Student%20SaaS" data-vi="Trao đổi gói SaaS" data-en="Discuss SaaS plan">Trao đổi gói SaaS</a>
+    </article>
+
+    <article class="pp-card">
+      <span class="pp-label">SITE LICENSE</span><h3 data-vi="Trung tâm nhỏ / Một khối" data-en="Small Center / Single Grade">Trung tâm nhỏ / Một khối</h3>
+      <div class="pp-users" data-vi="Khoảng 50–100 người dùng" data-en="Approx. 50–100 users">Khoảng 50–100 người dùng</div>
+      <div class="pp-amount">15M–25M VND<small data-vi="/ năm" data-en="/ year">/ năm</small></div>
+      <ul><li data-vi="Giấy phép LMS cơ bản" data-en="Basic LMS licenses">Giấy phép LMS cơ bản</li><li data-vi="Teacher Guides + nền tảng & công cụ hỗ trợ giảng dạy" data-en="Teacher Guides + teaching support platform & tools">Teacher Guides + nền tảng & công cụ hỗ trợ giảng dạy</li><li data-vi="1 buổi đào tạo từ xa, 2 giờ" data-en="1 remote training session, 2 hours">1 buổi đào tạo từ xa, 2 giờ</li><li data-vi="Thiết lập cơ sở, lớp và quyền truy cập tiêu chuẩn" data-en="Standard institution, class and access setup">Thiết lập cơ sở, lớp và quyền truy cập tiêu chuẩn</li></ul>
+      <a class="btn ghost" href="mailto:business@vitechintelligence.com?subject=Career%20Compass%20Junior%20Small%20Site%20License" data-vi="Yêu cầu báo giá" data-en="Request quote">Yêu cầu báo giá</a>
+    </article>
+
+    <article class="pp-card">
+      <span class="pp-label">CAMPUS</span><h3 data-vi="Cơ sở trường học trung bình" data-en="Medium School Campus">Cơ sở trường học trung bình</h3>
+      <div class="pp-users" data-vi="Khoảng 200–500 người dùng" data-en="Approx. 200–500 users">Khoảng 200–500 người dùng</div>
+      <div class="pp-amount">45M–65M VND<small data-vi="/ năm" data-en="/ year">/ năm</small></div>
+      <ul><li data-vi="Triển khai LMS đầy đủ theo cơ sở" data-en="Full LMS custom deployment">Triển khai LMS đầy đủ theo cơ sở</li><li data-vi="Bộ lesson plans & rubrics hoàn chỉnh" data-en="Complete lesson plans & rubrics">Bộ lesson plans & rubrics hoàn chỉnh</li><li data-vi="Workshop đào tạo giáo viên trực tiếp tại cơ sở*" data-en="On-site teacher training workshop*">Workshop đào tạo giáo viên trực tiếp tại cơ sở*</li><li data-vi="Báo cáo, vận hành lớp & công cụ quản trị đối tác" data-en="Reporting, class operations & partner administration tools">Báo cáo, vận hành lớp & công cụ quản trị đối tác</li></ul>
+      <a class="btn ghost" href="mailto:business@vitechintelligence.com?subject=Career%20Compass%20Junior%20Campus%20License" data-vi="Trao đổi triển khai" data-en="Discuss deployment">Trao đổi triển khai</a>
+    </article>
+
+    <article class="pp-card">
+      <span class="pp-label">INSTITUTIONAL</span><h3 data-vi="Mạng lưới lớn / Nhiều cơ sở" data-en="Large Institutional Network">Mạng lưới lớn / Nhiều cơ sở</h3>
+      <div class="pp-users" data-vi="500+ người dùng / nhiều campus" data-en="500+ users / multi-campus">500+ người dùng / nhiều campus</div>
+      <div class="pp-amount">80M+ VND<small data-vi="/ năm · báo giá theo phạm vi" data-en="/ year · scoped quotation">/ năm · báo giá theo phạm vi</small></div>
+      <ul><li data-vi="Cổng white-label / thương hiệu riêng" data-en="Full white-label / branded portal">Cổng white-label / thương hiệu riêng</li><li data-vi="Hỗ trợ tài khoản chuyên trách" data-en="Dedicated account support">Hỗ trợ tài khoản chuyên trách</li><li data-vi="Cập nhật chương trình 2 lần/năm" data-en="Semi-annual curriculum updates">Cập nhật chương trình 2 lần/năm</li><li data-vi="Quy hoạch theo nhiều cơ sở, vai trò và module được duyệt" data-en="Multi-campus rollout with approved roles and modules">Quy hoạch theo nhiều cơ sở, vai trò và module được duyệt</li></ul>
+      <a class="btn ghost" href="mailto:business@vitechintelligence.com?subject=Career%20Compass%20Junior%20Institutional%20Network" data-vi="Thiết kế gói doanh nghiệp" data-en="Design institutional plan">Thiết kế gói doanh nghiệp</a>
+    </article>
+  </div>
+
+  <div class="pp-support"><span class="pp-support-ic">↗</span><div><b data-vi="Đào tạo bổ sung khi có nhân sự mới" data-en="Extra staff training when your team changes">Đào tạo bổ sung khi có nhân sự mới</b><p data-vi="Workshop bổ sung giữa năm để onboarding giáo viên/nhân sự mới vào phương pháp dạy theo dự án, công cụ và quy trình triển khai." data-en="Add a mid-year workshop to onboard new teachers or staff into the project-based curriculum, tools and delivery workflow.">Workshop bổ sung giữa năm để onboarding giáo viên/nhân sự mới vào phương pháp dạy theo dự án, công cụ và quy trình triển khai.</p></div><strong>3M–5M VND / workshop</strong></div>
+  <p class="pp-fine" data-vi="* Giá hiển thị là khung thương mại định hướng. Báo giá cuối cùng phụ thuộc phạm vi triển khai, số người dùng, module được bật, tích hợp tùy chỉnh, yêu cầu white-label và chi phí đi lại/đào tạo trực tiếp nếu có." data-en="* Displayed prices are indicative commercial ranges. Final quotation depends on deployment scope, active users, enabled modules, custom integrations, white-label requirements, and any travel/on-site training costs.">* Giá hiển thị là khung thương mại định hướng. Báo giá cuối cùng phụ thuộc phạm vi triển khai, số người dùng, module được bật, tích hợp tùy chỉnh, yêu cầu white-label và chi phí đi lại/đào tạo trực tiếp nếu có.</p>
 </div></section>
 
 <section class="contact-panel reveal" id="helpdesk"><div class="container">
