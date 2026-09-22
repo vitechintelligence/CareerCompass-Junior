@@ -4,7 +4,9 @@ import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { VST_JUNIOR_AGREEMENT } from "@/lib/vst-junior-terms";
 import { CompanyContactFinder } from "./CompanyContactFinder";
-import { requestCompanyConnection, requestVerifiedCompany } from "./actions";
+import { requestVerifiedCompany, resendJuniorInvitationForPartner } from "./actions";
+import CompanyConnectionForm from "./CompanyConnectionForm";
+import { parseJuniorRequestPayload, VSTJ_PARTNER_NOTICE } from "@/lib/vinaskilltrust-junior";
 
 export const dynamic = "force-dynamic";
 
@@ -70,7 +72,7 @@ export default async function IndustryConnectPage() {
     return <FeatureGate organizationName={String(organization.name)} />;
   }
 
-  const [partners, roles, connections, requests] = await Promise.all([
+  const [partners, roles, connections, requests, featureRows] = await Promise.all([
     sql`select id, company_name, website, sector, overview_en, overview_vi from industry_partners where status='verified' order by company_name`,
     sql`
       select r.id, r.industry_partner_id, r.title_en, r.title_vi, r.summary_en, r.summary_vi, r.skill_tags, r.age_relevance
@@ -94,8 +96,10 @@ export default async function IndustryConnectPage() {
       order by created_at desc
       limit 20
     `,
+    sql`select enabled from organization_features where organization_id=${organizationId} and feature_key='industry_connector' limit 1`,
   ]);
 
+  const connectorEnabled = profile.account_type === "platform_admin" || Boolean(featureRows[0]?.enabled);
   const connectionByPartner = new Map(connections.map((item) => [String(item.industry_partner_id), item]));
 
   return (
@@ -124,52 +128,56 @@ export default async function IndustryConnectPage() {
 
         <section className="workspaceGrid">
           <article className="panel">
-            <div className="eyebrow">Invite a company</div>
-            <h2 className="workspaceTitle">Create a Grade 11–12 connection request</h2>
-            <form action={requestCompanyConnection} className="workspaceForm">
-              <input type="hidden" name="organizationId" value={organizationId} />
-              <label><span>Company name</span><input name="companyName" maxLength={180} required placeholder="Company or employer" /></label>
-              <label><span>Official company email</span><input name="companyEmail" maxLength={254} type="email" required placeholder="partnerships@company.com" /></label>
-              <label><span>Contact person (optional)</span><input name="companyContactName" maxLength={160} placeholder="Partnerships / HR / CSR contact" /></label>
-              <label><span>Website</span><input name="companyWebsite" maxLength={500} type="url" placeholder="https://…" /></label>
-              <label><span>Sector</span><input name="sector" maxLength={120} placeholder="Technology / Manufacturing / Healthcare / Finance…" /></label>
-              <div><span className="muted" style={{ fontSize: 12 }}>Eligible cohort</span><div className="tagRow" style={{ marginTop: 8 }}><label className="tag"><input type="checkbox" name="targetGrades" value="11" /> Grade 11</label><label className="tag"><input type="checkbox" name="targetGrades" value="12" /> Grade 12</label></div></div>
-              <div><span className="muted" style={{ fontSize: 12 }}>Requested collaboration</span><div className="tagRow" style={{ marginTop: 8 }}>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="career_talk" /> Career talk</label>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="role_profiles" /> Role profiles</label>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="skills_briefing" /> Skills briefing</label>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="work_simulation" /> Work simulation</label>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="project_brief" /> Student project brief</label>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="mentoring" /> Mentoring</label>
-                <label className="tag"><input type="checkbox" name="collaborationTypes" value="site_visit" /> Site visit</label>
-              </div></div>
-              <label><span>What do you want students to understand?</span><textarea name="note" rows={4} maxLength={3000} placeholder="Keep this educational and do not include student personal data." /></label>
-              <AgreementChecks />
-              <button className="button primary" type="submit">Send secure company invitation</button>
-            </form>
+            <div className="eyebrow">Grade 11–12 controlled access</div>
+            <h2 className="workspaceTitle">VinaSkillTrust Junior · Company Connect</h2>
+            {!connectorEnabled ? (
+              <div className="emptyState">
+                <span>🔒</span>
+                <p className="muted">This institution has not been allocated the Industry Connector feature. A ViTech platform administrator must enable it first.</p>
+              </div>
+            ) : (
+              <>
+                <div className="feedbackCard" style={{ marginBottom: 16 }}>
+                  <strong>{VSTJ_PARTNER_NOTICE.title}</strong>
+                  <ul style={{ marginBottom: 0 }}>
+                    {VSTJ_PARTNER_NOTICE.bullets.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </div>
+                <CompanyConnectionForm organizationId={organizationId} />
+              </>
+            )}
           </article>
 
-          <div style={{ display: "grid", gap: 18 }}>
-            <CompanyContactFinder />
-            <article className="panel">
-              <div className="eyebrow">Connection queue</div>
-              <h2 className="workspaceTitle">Company requests</h2>
-              {requests.length === 0 ? <Empty text="No company requests yet." /> : (
-                <div className="workspaceList">
-                  {requests.map((item) => (
+          <article className="panel">
+            <div className="eyebrow">Invitation queue</div>
+            <h2 className="workspaceTitle">Your monitored company requests</h2>
+            {requests.length === 0 ? <Empty text="No company requests yet." /> : (
+              <div className="workspaceList">
+                {requests.map((item) => {
+                  const payload = parseJuniorRequestPayload(item.note);
+                  return (
                     <div className="workspaceRow" key={String(item.id)}>
                       <div>
                         <strong>{String(item.company_name)}</strong>
-                        <div className="muted">{String(item.company_email || "No email")} · Grade {(Array.isArray(item.target_grades) ? item.target_grades : []).map(String).join(" & ") || "—"}</div>
-                        <div className="muted">Delivery: {String(item.delivery_status)} · Company: {String(item.company_response_status)} · {new Date(String(item.created_at)).toLocaleDateString("en-GB")}</div>
+                        <div className="muted">{String(item.sector || "Sector not set")} · {new Date(String(item.created_at)).toLocaleDateString("en-GB")}</div>
+                        {payload && <div className="muted" style={{ fontSize: 12 }}>{payload.companyEmail} · Grades {payload.grades.join(" & ")} · invite {payload.invitation?.deliveryStatus || "pending"}</div>}
                       </div>
-                      <span className="pill">{String(item.status)}</span>
+                      <div className="actions">
+                        <span className="pill">{String(item.status)}</span>
+                        {connectorEnabled && payload && payload.invitation?.deliveryStatus !== "sent" && (
+                          <form action={resendJuniorInvitationForPartner}>
+                            <input type="hidden" name="organizationId" value={organizationId} />
+                            <input type="hidden" name="requestId" value={String(item.id)} />
+                            <button className="button soft" type="submit">Retry invite</button>
+                          </form>
+                        )}
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </article>
-          </div>
+                  );
+                })}
+              </div>
+            )}
+          </article>
         </section>
 
         <section className="panel">
