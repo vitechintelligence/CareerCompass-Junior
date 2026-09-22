@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/learning-library.css?v=20260921-5">
+<link rel="stylesheet" href="/learning-library.css?v=20260923-1">
 <style>
 /* =========================================================
    0. DESIGN TOKENS
@@ -626,6 +626,58 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
 .pp-fine{margin:15px 2px 0;color:#8190a2;font-size:9.5px;line-height:1.55}
 @media(max-width:1060px){.pp-head{grid-template-columns:1fr;gap:10px}.pp-grid{grid-template-columns:1fr 1fr}.pp-path{grid-template-columns:1fr 1fr}}
 @media(max-width:690px){.partner-pricing{padding:64px 0}.pp-head h2{font-size:35px}.pp-path,.pp-grid{grid-template-columns:1fr}.pp-pilot{grid-template-columns:1fr;padding:24px 21px}.pp-pilot-price{text-align:left;min-width:0}.pp-pilot-price strong{font-size:34px}.pp-support{grid-template-columns:auto 1fr}.pp-support strong{grid-column:2;white-space:normal}.pp-card{padding:20px}}
+
+/* =========================================================
+   CONNECTED ROLE PORTALS · Bootstrap 5-inspired SaaS preview
+   ========================================================= */
+.portal-v3{padding:94px 0;background:linear-gradient(180deg,#f8fbfe 0%,#edf4f9 100%);border-top:1px solid #e1e9f1;border-bottom:1px solid #e1e9f1}
+.portal-v3-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:28px;align-items:end;margin-bottom:28px}
+.portal-v3-head h2{margin:10px 0 12px;font-family:var(--font-display);font-size:clamp(36px,4.8vw,58px);line-height:1.02;letter-spacing:-.045em;color:var(--navy)}
+.portal-v3-head p{max-width:780px;margin:0;color:var(--muted);line-height:1.72}
+.portal-v3-badge{align-self:center;padding:11px 14px;border-radius:999px;background:#fff;border:1px solid #d9e4ee;color:#35516e;font-size:10px;font-weight:900;box-shadow:0 9px 24px rgba(12,38,67,.06)}
+.portal-v3-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.portal-v3-card{overflow:hidden;border-radius:28px;background:#fff;border:1px solid #d8e3ed;box-shadow:0 20px 52px rgba(12,38,67,.08);transition:transform .28s ease,box-shadow .28s ease}
+.portal-v3-card:hover{transform:translateY(-5px);box-shadow:0 30px 66px rgba(12,38,67,.13)}
+.portal-v3-copy{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding:22px 22px 18px}
+.portal-v3-role{display:inline-flex;align-items:center;gap:8px;padding:6px 9px;border-radius:999px;background:#edf4ff;color:#215cac;font-size:8.5px;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
+.portal-v3-role:before{content:"";width:7px;height:7px;border-radius:50%;background:#2d7eea;box-shadow:0 0 0 4px rgba(45,126,234,.10)}
+.portal-v3-card.teacher .portal-v3-role{background:#e9f8f5;color:#11796d}.portal-v3-card.teacher .portal-v3-role:before{background:#13a18f}
+.portal-v3-card.partner .portal-v3-role{background:#f3effd;color:#694ca2}.portal-v3-card.partner .portal-v3-role:before{background:#8d66ca}
+.portal-v3-card.admin .portal-v3-role{background:#fff2e9;color:#a55a26}.portal-v3-card.admin .portal-v3-role:before{background:#dc833e}
+.portal-v3-copy h3{margin:9px 0 5px;font-family:var(--font-display);font-size:23px;line-height:1.12;letter-spacing:-.03em;color:var(--navy)}
+.portal-v3-copy p{margin:0;color:#65768a;font-size:11px;line-height:1.55;max-width:520px}
+.portal-v3-link{flex:0 0 auto;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:#0d2b4f;color:#fff;text-decoration:none;font-size:16px;box-shadow:0 8px 20px rgba(10,30,63,.14)}
+.portal-v3-browser{margin:0 14px 14px;border:1px solid #cfdce8;border-radius:20px;overflow:hidden;background:#f3f6f9;box-shadow:0 14px 36px rgba(14,42,72,.09)}
+.pv-browserbar{height:34px;display:flex;align-items:center;gap:5px;padding:0 12px;background:#fff;border-bottom:1px solid #dde6ef}
+.pv-browserbar i{width:7px;height:7px;border-radius:50%;background:#d7e1ea}.pv-browserbar i:nth-child(2){background:#bdd4e5}.pv-browserbar i:nth-child(3){background:#79cbbb}
+.pv-browserbar span{margin-left:auto;color:#718197;font-size:7.5px;font-weight:850}
+.pv-app{display:grid;grid-template-columns:58px 1fr;min-height:348px}
+.pv-side{padding:13px 8px;background:#0b2a4b;display:flex;flex-direction:column;align-items:center;gap:10px}
+.pv-logo{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:#fff;color:#0c3158;font-family:var(--font-display);font-weight:950;font-size:11px;box-shadow:0 7px 18px rgba(0,0,0,.15)}
+.pv-side b{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#8fb0cc;background:rgba(255,255,255,.05);font-size:10px}
+.pv-side b.active{background:#1f66b5;color:#fff;box-shadow:0 6px 14px rgba(31,102,181,.25)}
+.pv-main{padding:15px;background:#f4f7fa;min-width:0}
+.pv-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.pv-top div strong{display:block;color:#163654;font-size:11px}.pv-top div small{display:block;color:#8291a2;font-size:7.5px;margin-top:2px}
+.pv-user{padding:6px 8px;border-radius:999px;background:#fff;border:1px solid #dce5ed;color:#496278;font-size:7px;font-weight:850}
+.pv-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:8px}
+.pv-metric{padding:10px;border-radius:11px;background:#fff;border:1px solid #dfe7ee;min-width:0}
+.pv-metric span{display:block;color:#8694a4;font-size:6.8px;font-weight:850;text-transform:uppercase;letter-spacing:.06em}
+.pv-metric strong{display:block;margin-top:4px;color:#153856;font-family:var(--font-display);font-size:16px}
+.pv-grid{display:grid;grid-template-columns:1.18fr .82fr;gap:8px}
+.pv-panel{padding:10px;border-radius:12px;background:#fff;border:1px solid #dfe7ee;min-width:0}
+.pv-panel-head{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}.pv-panel-head strong{color:#173954;font-size:8.3px}.pv-panel-head span{color:#2971c4;font-size:6.8px;font-weight:850}
+.pv-course{display:grid;grid-template-columns:32px 1fr auto;gap:7px;align-items:center;padding:7px 0;border-top:1px solid #edf1f5}
+.pv-course:first-of-type{border-top:0}.pv-course-icon{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:#eaf2fd;color:#2667b2;font-size:7px;font-weight:950}
+.pv-course div b{display:block;color:#24425d;font-size:7.4px}.pv-course div small{display:block;color:#8b98a6;font-size:6.4px;margin-top:2px}.pv-course em{font-style:normal;color:#168577;font-size:6.5px;font-weight:900}
+.pv-progress{height:5px;border-radius:99px;background:#e7edf3;overflow:hidden;margin-top:6px}.pv-progress i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#2c72ca,#29a691)}
+.pv-list{display:grid;gap:6px}.pv-list-row{padding:8px;border-radius:9px;background:#f7f9fb;border:1px solid #e9eef3}.pv-list-row b{display:block;color:#28445f;font-size:7.3px}.pv-list-row small{display:block;color:#8a98a8;font-size:6.4px;margin-top:2px}
+.pv-table{display:grid}.pv-tr{display:grid;grid-template-columns:1.2fr .7fr .65fr;gap:5px;align-items:center;padding:7px 3px;border-top:1px solid #edf1f5;color:#62758a;font-size:6.8px}.pv-tr.head{border-top:0;color:#91a0af;font-weight:900;text-transform:uppercase}.pv-tr b{color:#294760;font-size:7px}.pv-pill{display:inline-flex;padding:4px 6px;border-radius:999px;background:#e8f6f2;color:#167365;font-size:6px;font-weight:900}
+.pv-feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}.pv-feature{padding:8px;border-radius:9px;background:#f7f9fb;border:1px solid #e5ebf1}.pv-feature b{display:block;color:#28455f;font-size:7px}.pv-feature span{display:block;margin-top:3px;color:#19816f;font-size:6px;font-weight:900}
+.pv-queue{display:grid;gap:6px}.pv-queue-row{display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;padding:8px;border-radius:9px;background:#f8fafc;border:1px solid #e5ebf1}.pv-queue-row b{display:block;color:#29465f;font-size:7px}.pv-queue-row small{display:block;color:#8a98a7;font-size:6px;margin-top:2px}
+.portal-v3-note{margin-top:20px;padding:16px 18px;border-radius:18px;background:#0b2a4b;color:#d9e8f4;display:flex;gap:12px;align-items:center;font-size:10px;line-height:1.55}.portal-v3-note strong{color:#fff}
+@media(max-width:1000px){.portal-v3-grid{grid-template-columns:1fr}.portal-v3-head{grid-template-columns:1fr}.portal-v3-badge{justify-self:start}}
+@media(max-width:620px){.portal-v3{padding:66px 0}.portal-v3-copy{padding:18px}.portal-v3-copy h3{font-size:20px}.pv-app{grid-template-columns:44px 1fr;min-height:320px}.pv-side{padding:10px 6px}.pv-side b{width:27px;height:27px}.pv-main{padding:10px}.pv-grid{grid-template-columns:1fr}.pv-metrics{grid-template-columns:repeat(3,1fr)}.pv-browserbar span{display:none}}
 </style>
 </head>
 <body>
@@ -870,89 +922,74 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
   </div>
   <div class="process-caption reveal">
     <span><strong data-vi="Từ khám phá đến sẵn sàng:" data-en="From exploration to readiness:">Từ khám phá đến sẵn sàng:</strong> <span data-vi="góc nhìn trực quan về cách việc học, xác thực và định hướng có thể kết nối theo thời gian." data-en="a visual view of how learning, validation and guidance can connect over time.">góc nhìn trực quan về cách việc học, xác thực và định hướng có thể kết nối theo thời gian.</span></span>
-    <span data-vi="Vina Skill Trust · Mô hình Career Readiness" data-en="Vina Skill Trust · Career Readiness Model">Vina Skill Trust · Mô hình Career Readiness</span>
-  </div>
-  <div class="magic-line"></div>
-</div></section>
-
-<section class="section alt reveal"><div class="container">
-  <div class="kicker" data-vi="Trải nghiệm lớp học" data-en="The classroom experience">Trải nghiệm lớp học</div>
-  <h2 data-vi="Trẻ học thông qua trải nghiệm." data-en="Children learn by doing.">Trẻ học thông qua trải nghiệm.</h2>
-  <p class="intro" data-vi="Nhịp học biến việc luyện ngôn ngữ thụ động thành học tập chủ động." data-en="The lesson rhythm turns passive language practice into active learning.">Nhịp học biến việc luyện ngôn ngữ thụ động thành học tập chủ động.</p>
-  <div class="method">
-    <div class="method-card">
-      <h3 data-vi="KHÁM PHÁ · GIAO TIẾP · HỢP TÁC" data-en="DISCOVER · COMMUNICATE · COLLABORATE">KHÁM PHÁ · GIAO TIẾP · HỢP TÁC</h3>
-      <p data-vi="Trẻ khám phá một chủ đề, dùng tiếng Anh để trao đổi ý tưởng và làm việc cùng người khác." data-en="Children explore a topic, use English to exchange ideas and work with others.">Trẻ khám phá một chủ đề, dùng tiếng Anh để trao đổi ý tưởng và làm việc cùng người khác.</p>
-      <div class="cycle"><span class="mint" data-vi="Khám phá" data-en="Discover">Khám phá</span><span class="lav" data-vi="Giao tiếp" data-en="Communicate">Giao tiếp</span><span class="coral" data-vi="Hợp tác" data-en="Collaborate">Hợp tác</span></div>
-    </div>
-    <div class="method-card">
-      <h3 data-vi="SÁNG TẠO · TRÌNH BÀY · NHÌN LẠI" data-en="CREATE · PRESENT · REFLECT">SÁNG TẠO · TRÌNH BÀY · NHÌN LẠI</h3>
-      <p data-vi="Trẻ tạo ra sản phẩm, chia sẻ với người khác và suy ngẫm về những gì đã học được." data-en="Children make something, share it with an audience and think about what they learned.">Trẻ tạo ra sản phẩm, chia sẻ với người khác và suy ngẫm về những gì đã học được.</p>
-      <div class="cycle"><span class="sun" data-vi="Sáng tạo" data-en="Create">Sáng tạo</span><span class="mint" data-vi="Trình bày" data-en="Present">Trình bày</span><span class="lav" data-vi="Nhìn lại" data-en="Reflect">Nhìn lại</span></div>
-    </div>
-  </div>
-  <div class="sample">
-    <div class="sample-visual"><div class="sheet">
-      <div style="font-size:12px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;color:#587084" data-vi="Trang bài tập mẫu" data-en="Sample workbook activity">Trang bài tập mẫu</div>
-      <div style="font-size:24px;font-weight:900;letter-spacing:-.03em;margin-top:7px" data-vi="Tia lửa Thế mạnh của tôi" data-en="My Strength Sparks">Tia lửa Thế mạnh của tôi</div>
-      <div class="line short"></div>
-      <div class="boxes"><div class="box m"></div><div class="box c"></div><div class="box s"></div><div class="box l"></div></div>
-      <div class="line" style="margin-top:18px"></div><div class="line short"></div>
-    </div></div>
+    <span data-vi="Vina Skill Trust · Mô hình Career Readiness" data-en="Vina Skill Trust · Career Readiness Model">Vina Skill Trust · Mô hì
+<section class="portal-v3 reveal" id="portals"><div class="container">
+  <div class="portal-v3-head">
     <div>
-      <h3 style="font-size:26px;margin:0 0 10px" data-vi="Cuốn workbook trở thành minh chứng." data-en="The workbook becomes evidence.">Cuốn workbook trở thành minh chứng.</h3>
-      <p style="color:var(--muted)" data-vi="Học viên không chỉ hoàn thành trang bài tập. Bài làm của các em tạo nên một hồ sơ trực quan về sở thích, kỹ năng, dự án, sự nhìn lại và phát triển — dần hình thành nên Hồ sơ Career Compass cá nhân." data-en="Students do not just finish pages. Their work creates a visible record of interests, skills, projects, reflections and growth — building toward a personal Career Compass Profile.">Học viên không chỉ hoàn thành trang bài tập. Bài làm của các em tạo nên một hồ sơ trực quan về sở thích, kỹ năng, dự án, sự nhìn lại và phát triển — dần hình thành nên Hồ sơ Career Compass cá nhân.</p>
-      <p style="color:var(--muted)" data-vi="Dùng workbook như một công cụ trên lớp, một nhật ký nhìn lại bản thân, và cầu nối trò chuyện với phụ huynh." data-en="Use the workbook as a classroom tool, a reflection journal and a bridge to conversations with parents.">Dùng workbook như một công cụ trên lớp, một nhật ký nhìn lại bản thân, và cầu nối trò chuyện với phụ huynh.</p>
+      <div class="kicker" data-vi="Cổng học tập theo vai trò" data-en="Role-based platform portals">Cổng học tập theo vai trò</div>
+      <h2 data-vi="Mỗi vai trò nhìn thấy đúng công việc cần làm." data-en="Every role sees the work that matters to them.">Mỗi vai trò nhìn thấy đúng công việc cần làm.</h2>
+      <p data-vi="Không chỉ là một LMS chung. Career Compass Junior tách trải nghiệm thành các không gian thực tế cho học viên, giáo viên, đối tác/cơ sở và quản trị nền tảng — với quyền truy cập và công cụ phù hợp từng vai trò." data-en="Not one generic LMS. Career Compass Junior separates the experience into practical workspaces for learners, teachers, institutions and platform administration — with role-appropriate access and tools.">Không chỉ là một LMS chung. Career Compass Junior tách trải nghiệm thành các không gian thực tế cho học viên, giáo viên, đối tác/cơ sở và quản trị nền tảng — với quyền truy cập và công cụ phù hợp từng vai trò.</p>
     </div>
+    <div class="portal-v3-badge" data-vi="Responsive · Role protected · Bilingual-ready" data-en="Responsive · Role protected · Bilingual-ready">Responsive · Role protected · Bilingual-ready</div>
   </div>
-</div></section>
 
-<section class="standard-shift reveal" id="standard"><div class="container standard-grid">
-  <div class="standard-copy">
-    <div class="kicker light-kicker" data-vi="Một chuẩn mực hữu ích hơn cho việc học tiếng Anh" data-en="A more useful standard for English learning">Một chuẩn mực hữu ích hơn cho việc học tiếng Anh</div>
-    <h2 data-vi="Biến giờ học tiếng Anh thành không gian diễn tập cho cuộc sống thực." data-en="Make English class a rehearsal space for real life.">Biến giờ học tiếng Anh thành không gian diễn tập cho cuộc sống thực.</h2>
-    <p data-vi="Luyện thi và độ chính xác ngôn ngữ vẫn quan trọng. Career Compass bổ sung thêm điều mà các giờ học truyền thống thường bỏ ngoài thời khóa biểu: tư duy, thể hiện bản thân, sự tự tin xã hội, phát triển cá nhân, tò mò học thuật và khả năng lãnh đạo từ sớm." data-en="Test preparation and language accuracy still matter. Career Compass adds what conventional lessons often leave outside the timetable: reasoning, self-expression, social confidence, personal growth, intellectual curiosity and early leadership.">Luyện thi và độ chính xác ngôn ngữ vẫn quan trọng. Career Compass bổ sung thêm điều mà các giờ học truyền thống thường bỏ ngoài thời khóa biểu: tư duy, thể hiện bản thân, sự tự tin xã hội, phát triển cá nhân, tò mò học thuật và khả năng lãnh đạo từ sớm.</p>
-    <div class="standard-quote" data-vi="Ngôn ngữ có thể thay đổi. <strong>Năng lực thì ở lại.</strong>" data-en="The language may change. <strong>The capability stays.</strong>">Ngôn ngữ có thể thay đổi. <strong>Năng lực thì ở lại.</strong></div>
-    <a class="btn light-btn" href="#portals"><span data-vi="Xem trải nghiệm tiếp diễn trực tuyến" data-en="See how the experience continues online">Xem trải nghiệm tiếp diễn trực tuyến</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></a>
-  </div>
-  <div class="shift-stack" aria-label="So sánh mô hình học tập">
-    <div class="shift-card"><span class="shift-from">FROM</span><b data-vi="Biết đúng từ" data-en="Knowing the right words">Biết đúng từ</b><span class="shift-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="shift-to">TO</span><strong data-vi="Dùng từ ngữ để tạo ra điều gì đó" data-en="Using words to make something happen">Dùng từ ngữ để tạo ra điều gì đó</strong></div>
-    <div class="shift-card"><span class="shift-from">FROM</span><b data-vi="Câu trả lời học thuộc" data-en="Memorized answers">Câu trả lời học thuộc</b><span class="shift-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="shift-to">TO</span><strong data-vi="Câu trả lời, lựa chọn và giải thích có lập luận" data-en="Reasoned answers, choices and explanations">Câu trả lời, lựa chọn và giải thích có lập luận</strong></div>
-    <div class="shift-card"><span class="shift-from">FROM</span><b data-vi="Hoàn thành khóa học" data-en="Course completion">Hoàn thành khóa học</b><span class="shift-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span><span class="shift-to">TO</span><strong data-vi="Câu chuyện trực quan về kỹ năng, nhìn lại và trưởng thành" data-en="A visible story of skills, reflection and growth">Câu chuyện trực quan về kỹ năng, nhìn lại và trưởng thành</strong></div>
-  </div>
-</div></section>
-
-<section class="portal-section reveal" id="portals"><div class="container">
-  <div class="portal-heading">
-    <div>
-      <div class="kicker" data-vi="Không gian học tập kết nối" data-en="Connected learning spaces">Không gian học tập kết nối</div>
-      <h2 data-vi="Một chương trình. Hai cổng học tập chuyên biệt." data-en="One program. Two focused portals.">Một chương trình. Hai cổng học tập chuyên biệt.</h2>
-      <p class="intro" data-vi="Career Compass được thiết kế để tiếp diễn ngoài một buổi học. Học viên có không gian học tập cá nhân; giáo viên có không gian quản lý lớp thực tế — cả hai đều tập trung vào việc học hữu ích, tiến độ trực quan và giao tiếp." data-en="Career Compass is designed to continue beyond a single lesson. Students get a personal learning space; teachers get a practical class-management space — both centered on useful learning, visible progress and communication.">Career Compass được thiết kế để tiếp diễn ngoài một buổi học. Học viên có không gian học tập cá nhân; giáo viên có không gian quản lý lớp thực tế — cả hai đều tập trung vào việc học hữu ích, tiến độ trực quan và giao tiếp.</p>
-    </div>
-    <div class="portal-badge" data-vi="Lớp học · Cổng học tập · Ở nhà" data-en="Classroom · Portal · Home">Lớp học · Cổng học tập · Ở nhà</div>
-  </div>
-  <div class="portal-grid">
-    <article class="portal-card student-portal">
-      <div class="portal-copy">
-        <div class="portal-role"><span class="role-dot"></span><span data-vi="CỔNG HỌC VIÊN" data-en="STUDENT PORTAL">CỔNG HỌC VIÊN</span></div>
-        <h3 data-vi="Không gian Compass của tôi" data-en="My Compass Workspace">Không gian Compass của tôi</h3>
-        <p data-vi="Không gian cá nhân cho các nội dung lớp học trực tuyến, tài liệu bài học, ghi chú và những bài làm mà học viên muốn lưu giữ." data-en="A personal place for online class essentials, lesson resources, notes and the work a learner wants to keep.">Không gian cá nhân cho các nội dung lớp học trực tuyến, tài liệu bài học, ghi chú và những bài làm mà học viên muốn lưu giữ.</p>
-        <div class="portal-features">
-          <div><span>01</span><b data-vi="Nội dung lớp học trực tuyến" data-en="Online class essentials">Nội dung lớp học trực tuyến</b><small data-vi="Lưu link lớp học, nhiệm vụ hiện tại và tài liệu bài học dễ dàng truy cập." data-en="Keep class links, current tasks and lesson materials easy to reach.">Lưu link lớp học, nhiệm vụ hiện tại và tài liệu bài học dễ dàng truy cập.</small></div>
-          <div><span>02</span><b data-vi="Thư viện bài học cá nhân" data-en="Personal lesson library">Thư viện bài học cá nhân</b><small data-vi="Lưu lại những bài học yêu thích hoặc quan trọng để ôn tập sau này." data-en="Save favorite or important lessons for review and future use.">Lưu lại những bài học yêu thích hoặc quan trọng để ôn tập sau này.</small></div>
-          <div><span>03</span><b data-vi="Ghi chú & công cụ tư duy" data-en="Notes & thinking tools">Ghi chú & công cụ tư duy</b><small data-vi="Ghi lại câu hỏi, suy ngẫm, từ vựng, ý tưởng và ghi chú dự án." data-en="Capture questions, reflections, vocabulary, ideas and project notes.">Ghi lại câu hỏi, suy ngẫm, từ vựng, ý tưởng và ghi chú dự án.</small></div>
-          <div><span>04</span><b data-vi="Tải lên, tải xuống & chia sẻ" data-en="Upload, download & share">Tải lên, tải xuống & chia sẻ</b><small data-vi="Lưu giữ tệp do học viên chọn và chia sẻ trong ứng dụng hoặc ra ngoài khi cần." data-en="Keep learner-selected files and share them in-app or externally when needed.">Lưu giữ tệp do học viên chọn và chia sẻ trong ứng dụng hoặc ra ngoài khi cần.</small></div>
-        </div>
-        <a class="portal-cta" href="#contact"><span data-vi="Yêu cầu tài khoản học viên" data-en="Ask for student access">Yêu cầu tài khoản học viên</span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></a>
+  <div class="portal-v3-grid">
+    <article class="portal-v3-card student">
+      <div class="portal-v3-copy"><div><span class="portal-v3-role" data-vi="HỌC VIÊN" data-en="STUDENT">HỌC VIÊN</span><h3 data-vi="My Compass Student Workspace" data-en="My Compass Student Workspace">My Compass Student Workspace</h3><p data-vi="Sách tương tác, bài tập, đánh giá, tiến độ, thành tích, STEAM và khám phá nghề nghiệp trong một nơi." data-en="Interactive books, assignments, assessments, progress, achievements, STEAM and career exploration in one place.">Sách tương tác, bài tập, đánh giá, tiến độ, thành tích, STEAM và khám phá nghề nghiệp trong một nơi.</p></div><a class="portal-v3-link" href="/portal/student" aria-label="Student portal preview">↗</a></div>
+      <div class="portal-v3-browser">
+        <div class="pv-browserbar"><i></i><i></i><i></i><span>careercompassjunior.app/workspace/student</span></div>
+        <div class="pv-app"><aside class="pv-side"><div class="pv-logo">V</div><b class="active">⌂</b><b>▤</b><b>✓</b><b>◎</b><b>☆</b></aside><div class="pv-main">
+          <div class="pv-top"><div><strong data-vi="Xin chào, Mai 👋" data-en="Welcome back, Mai 👋">Xin chào, Mai 👋</strong><small data-vi="My Compass · học tập trực tiếp" data-en="My Compass · live learning">My Compass · học tập trực tiếp</small></div><span class="pv-user">Student · Active</span></div>
+          <div class="pv-metrics"><div class="pv-metric"><span>Book progress</span><strong>78%</strong></div><div class="pv-metric"><span>Assignments</span><strong>3</strong></div><div class="pv-metric"><span>Achievements</span><strong>8</strong></div></div>
+          <div class="pv-grid"><section class="pv-panel"><div class="pv-panel-head"><strong data-vi="Tiếp tục học" data-en="Continue learning">Tiếp tục học</strong><span>View all</span></div>
+            <div class="pv-course"><span class="pv-course-icon">EN</span><div><b>Career Compass Junior Mastery</b><small>Unit 7 · Communication Lab</small><div class="pv-progress"><i style="width:78%"></i></div></div><em>78%</em></div>
+            <div class="pv-course"><span class="pv-course-icon">ST</span><div><b>STEAM Bridge Mission</b><small>Design · test · improve</small><div class="pv-progress"><i style="width:46%"></i></div></div><em>46%</em></div>
+          </section><section class="pv-panel"><div class="pv-panel-head"><strong data-vi="Việc cần làm" data-en="Up next">Việc cần làm</strong><span>Today</span></div><div class="pv-list"><div class="pv-list-row"><b>Speaking evidence</b><small>Due today · 4:30 PM</small></div><div class="pv-list-row"><b>Career reflection</b><small>New · My Compass</small></div><div class="pv-list-row"><b>Quiz: Unit 7</b><small>10 questions</small></div></div></section></div>
+        </div></div>
       </div>
-      <div class="portal-ui student-ui" aria-label="Xem trước giao diện cổng học viên">
-        <div class="ui-top"><span class="ui-logo">C</span><span>My Compass</span><div class="ui-avatar">AN</div></div>
-        <div class="ui-body"><div class="ui-sidebar"><span class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1v-8Z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.1 2.1 0 0 0-3-3L5 17v3Z"/></svg></span><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></span></div>
-        <div class="ui-main">
-          <div class="welcome"><small data-vi="CHÀO BUỔI CHIỀU" data-en="GOOD AFTERNOON">CHÀO BUỔI CHIỀU</small><b data-vi="Sẵn sàng làm rõ ý tưởng của bạn chưa?" data-en="Ready to make your idea clearer?">Sẵn sàng làm rõ ý tưởng của bạn chưa?</b><div class="mini-progress"><i style="width:72%"></i></div></div>
-          <div class="ui-two">
-            <div class="ui-panel accent"><small data-vi="HÔM NAY" data-en="TODAY">HÔM NAY</small><b data-vi="Giải thích lựa chọn của bạn" data-en="Explain your choice">Giải thích lựa chọn của bạn</b><span>Communication Lab · 4:30 PM</span><button type="button" data-vi="Vào lớp" data-en="Join class">Vào lớp</button></div>
-            <div class="ui-panel"><small data-vi="THƯ VIỆN CỦA TÔI" data-en="MY LIBRARY">THƯ VIỆN CỦA TÔI</small><b data-vi="12 bài học đã lưu" data-en="12 saved lessons">12 bài học đã lưu</b><div class="file-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;display:inline-block;vertical-align:-1px;margin-right:4px"><path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5L14 3Z"/><path d="M14 3v5h4.5"/></svg>Decision Map <span>PDF</span></div><div class="file-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;display:inline-block;vertical-align:-1px;margin-right:4px"><path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5L14 3Z"/><path d="M14 3v5h4.5"/></svg>Team Challenge <span>DOC</span></div></div>
+    </article>
+
+    <article class="portal-v3-card teacher">
+      <div class="portal-v3-copy"><div><span class="portal-v3-role" data-vi="GIÁO VIÊN" data-en="TEACHER">GIÁO VIÊN</span><h3>Teacher Class Workspace</h3><p data-vi="Quản lý lớp, điểm danh, bài tập, đánh giá, phản hồi học viên và phát triển chuyên môn từ một dashboard." data-en="Manage classes, attendance, assignments, assessments, learner feedback and professional development from one dashboard.">Quản lý lớp, điểm danh, bài tập, đánh giá, phản hồi học viên và phát triển chuyên môn từ một dashboard.</p></div><a class="portal-v3-link" href="/portal/teacher" aria-label="Teacher portal preview">↗</a></div>
+      <div class="portal-v3-browser">
+        <div class="pv-browserbar"><i></i><i></i><i></i><span>careercompassjunior.app/workspace/teacher</span></div>
+        <div class="pv-app"><aside class="pv-side"><div class="pv-logo">V</div><b class="active">⌂</b><b>☷</b><b>✓</b><b>✎</b><b>↑</b></aside><div class="pv-main">
+          <div class="pv-top"><div><strong data-vi="Teacher Workspace" data-en="Teacher Workspace">Teacher Workspace</strong><small>Junior A · 2026–2027</small></div><span class="pv-user">Lead teacher</span></div>
+          <div class="pv-metrics"><div class="pv-metric"><span>Students</span><strong>24</strong></div><div class="pv-metric"><span>Attendance</span><strong>94%</strong></div><div class="pv-metric"><span>Review</span><strong>6</strong></div></div>
+          <section class="pv-panel"><div class="pv-panel-head"><strong data-vi="Nhịp độ lớp học" data-en="Class progress pulse">Nhịp độ lớp học</strong><span>Share update</span></div><div class="pv-table"><div class="pv-tr head"><span>Learner</span><span>Progress</span><span>Status</span></div><div class="pv-tr"><b>Minh Long</b><span>78%</span><span class="pv-pill">On track</span></div><div class="pv-tr"><b>Anh Huy</b><span>88%</span><span class="pv-pill">Strong</span></div><div class="pv-tr"><b>Bảo Ngọc</b><span>64%</span><span class="pv-pill">Practice</span></div></div></section>
+          <div class="pv-grid" style="margin-top:8px"><section class="pv-panel"><div class="pv-panel-head"><strong>Assignments</strong><span>Publish</span></div><div class="pv-list-row"><b>Project reflection</b><small>18 submitted · 6 awaiting review</small></div></section><section class="pv-panel"><div class="pv-panel-head"><strong>Teacher Upskill</strong><span>Open</span></div><div class="pv-list-row"><b>Module 4 · Assessment</b><small>Professional learning · 70%</small></div></section></div>
+        </div></div>
+      </div>
+    </article>
+
+    <article class="portal-v3-card partner">
+      <div class="portal-v3-copy"><div><span class="portal-v3-role" data-vi="ĐỐI TÁC / CƠ SỞ" data-en="PARTNER / INSTITUTION">ĐỐI TÁC / CƠ SỞ</span><h3>Institution Operations Workspace</h3><p data-vi="Quản lý giáo viên, học viên, lớp, module được cấp quyền, báo cáo và VinaSkillTrust Junior từ một trung tâm vận hành." data-en="Manage teachers, learners, classes, allocated modules, reporting and VinaSkillTrust Junior from one operational workspace.">Quản lý giáo viên, học viên, lớp, module được cấp quyền, báo cáo và VinaSkillTrust Junior từ một trung tâm vận hành.</p></div><a class="portal-v3-link" href="/portal/partner" aria-label="Partner portal preview">↗</a></div>
+      <div class="portal-v3-browser">
+        <div class="pv-browserbar"><i></i><i></i><i></i><span>careercompassjunior.app/workspace/partner</span></div>
+        <div class="pv-app"><aside class="pv-side"><div class="pv-logo">V</div><b class="active">⌂</b><b>👥</b><b>▦</b><b>⚙</b><b>↔</b></aside><div class="pv-main">
+          <div class="pv-top"><div><strong>Giong Chuan Global</strong><small>Training Center · Institution workspace</small></div><span class="pv-user">Partner admin</span></div>
+          <div class="pv-metrics"><div class="pv-metric"><span>Students</span><strong>96</strong></div><div class="pv-metric"><span>Teachers</span><strong>8</strong></div><div class="pv-metric"><span>Classes</span><strong>6</strong></div></div>
+          <div class="pv-grid"><section class="pv-panel"><div class="pv-panel-head"><strong data-vi="Quyền tính năng" data-en="Feature access">Quyền tính năng</strong><span>Managed by ViTech</span></div><div class="pv-feature-grid"><div class="pv-feature"><b>LMS Core</b><span>ENABLED</span></div><div class="pv-feature"><b>Interactive Books</b><span>ENABLED</span></div><div class="pv-feature"><b>Teacher Tools</b><span>ENABLED</span></div><div class="pv-feature"><b>VinaSkillTrust Jr.</b><span>GRADE 11–12</span></div></div></section><section class="pv-panel"><div class="pv-panel-head"><strong>Operations</strong><span>This month</span></div><div class="pv-list"><div class="pv-list-row"><b>92% active learners</b><small>Portal adoption</small></div><div class="pv-list-row"><b>4 company requests</b><small>VinaSkillTrust Junior</small></div><div class="pv-list-row"><b>1 staff workshop</b><small>Teacher onboarding</small></div></div></section></div>
+        </div></div>
+      </div>
+    </article>
+
+    <article class="portal-v3-card admin">
+      <div class="portal-v3-copy"><div><span class="portal-v3-role" data-vi="VITECH ADMIN" data-en="VITECH ADMIN">VITECH ADMIN</span><h3>Platform Administration Control Plane</h3><p data-vi="Kiểm soát onboarding cơ sở, feature access, LangGraph build, company verification, integration requests và moderation simulation." data-en="Control institution onboarding, feature access, LangGraph builds, company verification, integration requests and simulation moderation.">Kiểm soát onboarding cơ sở, feature access, LangGraph build, company verification, integration requests và moderation simulation.</p></div><a class="portal-v3-link" href="#contact" aria-label="Request platform admin demo">↗</a></div>
+      <div class="portal-v3-browser">
+        <div class="pv-browserbar"><i></i><i></i><i></i><span>careercompassjunior.app/workspace/admin</span></div>
+        <div class="pv-app"><aside class="pv-side"><div class="pv-logo">V</div><b class="active">⌂</b><b>◆</b><b>↔</b><b>✓</b><b>⚙</b></aside><div class="pv-main">
+          <div class="pv-top"><div><strong>ViTech Platform Administration</strong><small>Control plane · protected access</small></div><span class="pv-user">Platform admin</span></div>
+          <div class="pv-metrics"><div class="pv-metric"><span>Institutions</span><strong>12</strong></div><div class="pv-metric"><span>Build queue</span><strong>2</strong></div><div class="pv-metric"><span>Moderation</span><strong>4</strong></div></div>
+          <div class="pv-grid"><section class="pv-panel"><div class="pv-panel-head"><strong data-vi="Hàng đợi quản trị" data-en="Administration queue">Hàng đợi quản trị</strong><span>Review all</span></div><div class="pv-queue"><div class="pv-queue-row"><div><b>New partner application</b><small>Training center · Vietnam</small></div><span class="pv-pill">Review</span></div><div class="pv-queue-row"><div><b>Simulation proposal</b><small>Grade 11 · Technology</small></div><span class="pv-pill">Moderate</span></div><div class="pv-queue-row"><div><b>Integration request</b><small>SIS connector</small></div><span class="pv-pill">Open</span></div></div></section><section class="pv-panel"><div class="pv-panel-head"><strong>Feature allocation</strong><span>LangGraph</span></div><div class="pv-feature-grid"><div class="pv-feature"><b>Essential baseline</b><span>READY</span></div><div class="pv-feature"><b>Enable all</b><span>READY</span></div><div class="pv-feature"><b>Selected build</b><span>READY</span></div><div class="pv-feature"><b>Audit trail</b><span>ACTIVE</span></div></div></section></div>
+        </div></div>
+      </div>
+    </article>
+  </div>
+
+  <div class="portal-v3-note"><span>✦</span><div><strong data-vi="Đây là các workspace thực sự trong kiến trúc nền tảng." data-en="These represent the actual role-separated platform architecture.">Đây là các workspace thực sự trong kiến trúc nền tảng.</strong> <span data-vi="Quyền và dữ liệu hiển thị phụ thuộc vai trò, tổ chức và feature access được cấp; preview trên landing chỉ minh họa cách trải nghiệm vận hành." data-en="Visible data and controls depend on role, institution and allocated feature access; landing previews illustrate the operating experience.">Quyền và dữ liệu hiển thị phụ thuộc vai trò, tổ chức và feature access được cấp; preview trên landing chỉ minh họa cách trải nghiệm vận hành.</span></div></div>
+</div></section>
+ỆN CỦA TÔI" data-en="MY LIBRARY">THƯ VIỆN CỦA TÔI</small><b data-vi="12 bài học đã lưu" data-en="12 saved lessons">12 bài học đã lưu</b><div class="file-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;display:inline-block;vertical-align:-1px;margin-right:4px"><path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5L14 3Z"/><path d="M14 3v5h4.5"/></svg>Decision Map <span>PDF</span></div><div class="file-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:10px;height:10px;display:inline-block;vertical-align:-1px;margin-right:4px"><path d="M14 3H7a1.5 1.5 0 0 0-1.5 1.5v15A1.5 1.5 0 0 0 7 21h10a1.5 1.5 0 0 0 1.5-1.5V7.5L14 3Z"/><path d="M14 3v5h4.5"/></svg>Team Challenge <span>DOC</span></div></div>
           </div>
           <div class="ui-panel notes"><small data-vi="GHI CHÚ NHANH" data-en="QUICK NOTE">GHI CHÚ NHANH</small><p data-vi="“Một lý do thuyết phục giải thích <em>vì sao</em>, chứ không chỉ <em>là gì</em>.”" data-en="“A strong reason explains <em>why</em>, not only <em>what</em>.”">“Một lý do thuyết phục giải thích <em>vì sao</em>, chứ không chỉ <em>là gì</em>.”</p><span class="save-chip" data-vi="Đã lưu vào Ghi chú" data-en="Saved to My Notes">Đã lưu vào Ghi chú</span></div>
         </div></div>
@@ -1183,7 +1220,7 @@ dialog::backdrop{background:rgba(9,20,33,.55);backdrop-filter:blur(3px)}
   </div>
 </div>
 
-<script src="/learning-library.js?v=20260921-5"></script>
+<script src="/learning-library.js?v=20260923-1"></script>
 <script>
 (function(){
 "use strict";
