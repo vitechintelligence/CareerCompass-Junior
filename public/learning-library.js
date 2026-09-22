@@ -174,7 +174,7 @@ const items=[
 let currentFilter="all";
 let visibleItems=[...items];
 let activeId=items[0].id;
-let autoTimer=null;
+let featureDialog=null;
 
 const track=root.querySelector("#llTrack");
 const detail=root.querySelector("#llDetail");
@@ -207,7 +207,29 @@ function escapeHtml(value){
   return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[ch]));
 }
 
+function moduleIcon(item){
+  if(item.id.includes("ai")) return "AI";
+  if(item.id.includes("robot")) return "BOT";
+  if(item.id.includes("bridge") || item.id.includes("steam")) return "STEAM";
+  if(item.id.includes("community")) return "TEAM";
+  if(item.id.includes("teacher")) return "EDU";
+  if(item.id.includes("compass")) return "COMPASS";
+  return "LEARN";
+}
+
+function moduleVisual(item){
+  const chips=(lang()==="en"?item.features.en:item.features.vi).slice(0,3).map(x=>'<span>'+escapeHtml(x)+'</span>').join("");
+  return '<div class="ll-visual ll-module-visual ll-module-'+escapeHtml(item.visual||"course")+'">'+
+    '<div class="ll-module-glow"></div>'+
+    '<div class="ll-module-top"><span>'+escapeHtml(t(item.kind))+'</span><i>'+escapeHtml(t(item.status))+'</i></div>'+
+    '<div class="ll-module-center"><div class="ll-module-icon">'+moduleIcon(item)+'</div><div><small>'+(lang()==="en"?"INTERACTIVE MODULE":"HỌC PHẦN TƯƠNG TÁC")+'</small><strong>'+escapeHtml(item.title)+'</strong></div></div>'+
+    '<div class="ll-module-chips">'+chips+'</div>'+
+    '<div class="ll-module-footer"><b>'+escapeHtml(t(item.age))+'</b><span>'+escapeHtml(t(item.duration))+'</span></div>'+
+  '</div>';
+}
+
 function visual(item){
+  if(item.category==="interactive" || item.category==="courses") return moduleVisual(item);
   if(item.visual==="book"){
     return '<div class="ll-visual ll-book-visual"><div class="ll-book-cover" style="background-image:var('+item.cover+')"></div><div class="ll-book-sheet"><i></i><i></i><i></i><i></i><i></i></div></div>';
   }
@@ -237,13 +259,18 @@ function card(item){
     '<h3>'+escapeHtml(item.title)+'</h3>'+
     '<p>'+escapeHtml(t(item.short))+'</p>'+
     '<div class="ll-card-meta"><span>'+escapeHtml(t(item.age))+'</span><span>'+escapeHtml(t(item.language))+'</span></div>'+
+    '<div class="ll-open-hint">'+(lang()==="en"?"Click for wide preview":"Chạm để xem rộng")+' ↗</div>'+
   '</article>';
 }
 
 function renderTrack(){
   track.innerHTML=visibleItems.length?visibleItems.map(card).join(""):'<div class="ll-empty">'+(lang()==="en"?"No items match this view yet.":"Chưa có nội dung phù hợp với bộ lọc này.")+'</div>';
   track.querySelectorAll(".ll-card").forEach(el=>{
-    const activate=()=>select(el.dataset.id,true);
+    const activate=()=>{
+      const item=byId(el.dataset.id);
+      select(el.dataset.id,false);
+      openFeature(item);
+    };
     el.addEventListener("click",activate);
     el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();activate()}});
   });
@@ -279,6 +306,44 @@ function renderDetail(item){
   },110);
 }
 
+function ensureFeatureDialog(){
+  if(featureDialog) return featureDialog;
+  featureDialog=document.createElement("dialog");
+  featureDialog.className="ll-feature-dialog";
+  featureDialog.setAttribute("aria-label",lang()==="en"?"Learning experience preview":"Xem trước trải nghiệm học tập");
+  featureDialog.innerHTML='<div class="ll-feature-dialog-shell"><button class="ll-feature-close" type="button" aria-label="Close">×</button><div class="ll-feature-dialog-body"></div></div>';
+  document.body.appendChild(featureDialog);
+  featureDialog.querySelector(".ll-feature-close").addEventListener("click",()=>featureDialog.close());
+  featureDialog.addEventListener("click",e=>{if(e.target===featureDialog) featureDialog.close()});
+  return featureDialog;
+}
+
+function featureDialogHtml(item){
+  const objectives=(lang()==="en"?item.objectives.en:item.objectives.vi).map(x=>'<li>'+escapeHtml(x)+'</li>').join("");
+  const features=(lang()==="en"?item.features.en:item.features.vi).map(x=>'<span>'+escapeHtml(x)+'</span>').join("");
+  return '<div class="ll-feature-dialog-visual">'+visual(item)+'</div>'+
+    '<div class="ll-feature-dialog-copy">'+
+      '<div class="ll-detail-badges"><span>'+escapeHtml(t(item.kind))+'</span><span>'+escapeHtml(t(item.status))+'</span><span>'+escapeHtml(categoryLabel(item.category))+'</span></div>'+
+      '<h3>'+escapeHtml(item.title)+'</h3>'+
+      '<p>'+escapeHtml(t(item.short))+'</p>'+
+      '<ul class="ll-detail-objectives">'+objectives+'</ul>'+
+      '<div class="ll-feature-title">'+(lang()==="en"?"Included":"Bao gồm")+'</div>'+
+      '<div class="ll-features">'+features+'</div>'+
+      '<div class="ll-feature-dialog-meta">'+
+        meta(lang()==="en"?"Duration":"Thời lượng",t(item.duration))+
+        meta(lang()==="en"?"Age / grade":"Độ tuổi / lớp",t(item.age)+" · "+t(item.grade))+
+      '</div>'+
+      '<div class="ll-detail-actions">'+routeLink(item.primary)+secondaryLink(item.secondary)+'</div>'+
+    '</div>';
+}
+
+function openFeature(item){
+  if(!item) return;
+  const dialog=ensureFeatureDialog();
+  dialog.querySelector(".ll-feature-dialog-body").innerHTML=featureDialogHtml(item);
+  if(!dialog.open) dialog.showModal();
+}
+
 function meta(label,value){return '<div class="ll-meta-box"><span>'+escapeHtml(label)+'</span><strong>'+escapeHtml(value)+'</strong></div>'}
 
 function select(id,scroll){
@@ -289,9 +354,11 @@ function select(id,scroll){
   renderDetail(item);
   if(scroll){
     const active=root.querySelector('.ll-card[data-id="'+CSS.escape(id)+'"]');
-    active?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
+    if(active){
+      const left=active.offsetLeft-(track.clientWidth-active.clientWidth)/2;
+      track.scrollTo({left:Math.max(0,left),behavior:"smooth"});
+    }
   }
-  restartAuto();
 }
 
 function filter(category){
@@ -338,17 +405,17 @@ function refreshLanguage(){
   renderTrack();
   renderDetail(byId(activeId));
   const current=byId(activeId);
+  if(featureDialog?.open && current){
+    featureDialog.querySelector(".ll-feature-dialog-body").innerHTML=featureDialogHtml(current);
+  }
   if(current && smartResult.dataset.used==="1"){
     smartResult.innerHTML=(lang()==="en"?'<strong>Current selection:</strong> ':'<strong>Lựa chọn hiện tại:</strong> ')+escapeHtml(current.title)+' · '+escapeHtml(t(current.short));
   }
 }
 
 function restartAuto(){
-  window.clearInterval(autoTimer);
-  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  autoTimer=window.setInterval(()=>{
-    if(!root.matches(":hover") && !root.contains(document.activeElement)) step(1);
-  },6500);
+  // Intentionally disabled. The learning library is user-controlled so it never
+  // pulls the visitor back toward the carousel while they read lower sections.
 }
 
 filterButtons.forEach(btn=>btn.addEventListener("click",()=>filter(btn.dataset.filter||"all")));
@@ -363,5 +430,4 @@ languageObserver.observe(document.documentElement,{attributes:true,attributeFilt
 
 renderTrack();
 renderDetail(byId(activeId));
-restartAuto();
 })();
