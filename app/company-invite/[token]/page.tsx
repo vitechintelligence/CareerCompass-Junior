@@ -14,7 +14,7 @@ export default async function CompanyInvitePage({ params }: { params: Promise<{ 
   const { token } = await params;
   const sql = getDb();
   const rows = token.length >= 32 ? await sql`
-    select i.id as invitation_id, i.expires_at, i.response_status, i.responder_name,
+    select i.id as invitation_id, i.expires_at, (i.expires_at <= now()) as expired, i.response_status, i.responder_name,
            r.id as request_id, r.company_name, r.company_website, r.sector, r.collaboration_types,
            r.note, r.target_grades, o.name as organization_name
     from vst_junior_company_invitations i
@@ -26,7 +26,7 @@ export default async function CompanyInvitePage({ params }: { params: Promise<{ 
   const invitation = rows[0];
 
   if (!invitation) return <InvalidInvite copy="This secure invitation could not be found." />;
-  const expired = new Date(String(invitation.expires_at)).getTime() < Date.now();
+  const expired = Boolean(invitation.expired);
   const accepted = String(invitation.response_status) === "accepted";
   if (expired && !accepted) return <InvalidInvite copy="This secure invitation has expired. Ask the school to send a new request." />;
 
