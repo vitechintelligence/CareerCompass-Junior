@@ -212,3 +212,82 @@ export async function requestVerifiedCompany(formData: FormData) {
   revalidatePath("/workspace/partner/industry-connect");
   revalidatePath("/workspace/admin");
 }
+
+
+export async function resendVstJuniorInvitation(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const requestId = String(formData.get("requestId") || "");
+  if (!UUID_RE.test(requestId)) throw new Error("Invalid company invitation.");
+
+  const access = await requireVstJuniorOrganization(organizationId);
+  const sql = getDb();
+  const rows = await sql`
+    select r.id, r.company_name, r.company_email, r.collaboration_types, r.note,
+           r.company_response_status, o.name as organization_name, i.id as invitation_id
+    from industry_connection_requests r
+    join organizations o on o.id=r.organization_id
+    join vst_junior_company_invitations i on i.request_id=r.id
+    where r.id=${requestId} and r.organization_id=${organizationId}
+    limit 1
+  `;
+  const request = rows[0];
+  if (!request) throw new Error("Company invitation not found.");
+  if (!["awaiting", "more_info"].includes(String(request.company_response_status))) {
+    throw new Error("This company has already completed its response.");
+  }
+
+  const token = randomBytes(32).toString("base64url");
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  await sql`
+    update vst_junior_company_invitations
+    set token_hash=${tokenHash}, expires_at=now() + interval '14 days',
+        delivery_status='queued', delivery_error=null, provider_message_id=null,
+        sent_at=null, updated_at=now()
+    where id=${String(request.invitation_id)}
+  `;
+  await sql`
+    update industry_connection_requests
+    set delivery_status='queued', last_invited_at=now(), updated_at=now()
+    where id=${requestId}
+  `;
+
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/+$/, "");
+  const mailResult = appUrl
+    ? await sendVstJuniorInvitation({
+        to: String(request.company_email),
+        companyName: String(request.company_name),
+        institutionName: String(request.organization_name || access.organization.name),
+        inviteUrl: `${appUrl}/company-invite/${token}`,
+        collaborationTypes: Array.isArray(request.collaboration_types) ? request.collaboration_types.map(String) : [],
+        note: request.note ? String(request.note) : null,
+      })
+    : { status: "failed" as const, error: "NEXT_PUBLIC_APP_URL is not configured." };
+
+  if (mailResult.status === "sent") {
+    await sql`
+      update vst_junior_company_invitations
+      set delivery_status='sent', provider_message_id=${mailResult.providerMessageId || null},
+          delivery_error=null, sent_at=now(), updated_at=now()
+      where id=${String(request.invitation_id)}
+    `;
+    await sql`
+      update industry_connection_requests
+      set delivery_status='sent', last_invited_at=now(), updated_at=now()
+      where id=${requestId}
+    `;
+  } else {
+    await sql`
+      update vst_junior_company_invitations
+      set delivery_status='failed', delivery_error=${mailResult.error || "Email delivery failed."}, updated_at=now()
+      where id=${String(request.invitation_id)}
+    `;
+    await sql`
+      update industry_connection_requests
+      set delivery_status='failed', last_invited_at=now(), updated_at=now()
+      where id=${requestId}
+    `;
+  }
+
+  revalidatePath("/workspace/partner/industry-connect");
+  revalidatePath("/workspace/admin");
+}
