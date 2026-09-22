@@ -33,3 +33,16 @@ Use browser speech synthesis as a fallback, not as the final quality target for 
 ## Pedagogy
 
 Natural-conversation mode should keep ordinary rhythm, linking and phrasing. Slow-practice mode should reduce rate modestly without exaggerating individual words or producing unnatural syllable-by-syllable speech. The goal is intelligibility first, then transfer into realistic communication.
+
+
+## Mobile recorder compatibility
+
+The full interactive-book route injects a small MediaRecorder compatibility layer before the book scripts load.
+
+- The parent iframe explicitly permits microphone access.
+- Unsupported hard-coded recorder MIME options fall back to the browser-native recorder format.
+- On iOS/iPadOS Safari, audio chunks that are actually AAC/MP4 are no longer relabeled as `audio/webm` for replay.
+- The response sends `Permissions-Policy: microphone=(self)`.
+- Raw speaking-practice audio remains device-local in the current book flow; this compatibility patch does not add uploads.
+
+This addresses the mobile symptom where recording completes but the generated HTML audio player displays **Error** because the Blob MIME type does not match the browser's recorded container.

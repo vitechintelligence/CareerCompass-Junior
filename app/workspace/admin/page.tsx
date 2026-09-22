@@ -4,7 +4,7 @@ import { getPlatformAdminContext, platformAdminEmailsForDisplay } from "@/lib/au
 import { getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { defaultFeaturesForOrganization, PLATFORM_FEATURES } from "@/lib/platform-feature-catalog";
-import { approvePartnerRequest, createIndustryPartner, createIndustryRole, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus, updateIndustryConnectionRequest, updateIntegrationProviderRequest, updateSchoolCompanyConnection } from "./actions";
+import { approvePartnerRequest, createIndustryPartner, createIndustryRole, moderateVstJuniorSimulation, rejectPartnerRequest, runInstitutionBuild, setInstitutionSiteStatus, updateIndustryConnectionRequest, updateIntegrationProviderRequest, updateSchoolCompanyConnection, verifyVstJuniorCompany } from "./actions";
 import styles from "./admin.module.css";
 
 export const dynamic = "force-dynamic";
@@ -38,7 +38,7 @@ export default async function PlatformAdminPage() {
   }
 
   const sql = getDb();
-  const [requestRows, organizationRows, featureRows, siteRows, runRows, integrationRequestRows, industryRequestRows, schoolCompanyRows, industryPartners] = await Promise.all([
+  const [requestRows, organizationRows, featureRows, siteRows, runRows, integrationRequestRows, industryRequestRows, schoolCompanyRows, industryPartners, simulationRows] = await Promise.all([
     sql`
       select r.id, r.organization_name, r.organization_type, r.status, r.created_at,
              p.semantic_id as requester_semantic_id, p.display_name as requester_name
@@ -68,7 +68,10 @@ export default async function PlatformAdminPage() {
       limit 30
     `,
     sql`
-      select r.id, r.organization_id, r.company_name, r.company_website, r.sector, r.collaboration_types, r.note, r.status, r.created_at, o.name as organization_name
+      select r.id, r.organization_id, r.company_name, r.company_email, r.company_website, r.sector,
+             r.collaboration_types, r.note, r.target_grades, r.delivery_status,
+             r.company_response_status, r.industry_partner_id, r.status, r.created_at,
+             o.name as organization_name
       from industry_connection_requests r
       join organizations o on o.id=r.organization_id
       where r.status in ('pending','reviewing')
@@ -90,6 +93,17 @@ export default async function PlatformAdminPage() {
       from industry_partners p
       where p.status='verified'
       order by p.company_name
+    `,
+    sql`
+      select s.id, s.organization_id, s.company_name, s.title, s.summary, s.target_grades,
+             s.status, s.moderation_note, s.created_at, o.name as organization_name,
+             p.status as company_status
+      from vst_junior_simulations s
+      join organizations o on o.id=s.organization_id
+      left join industry_partners p on p.id=s.industry_partner_id
+      where s.status in ('submitted','reviewing','approved','rejected')
+      order by s.created_at asc
+      limit 40
     `,
   ]);
 
@@ -320,11 +334,16 @@ export default async function PlatformAdminPage() {
                   <div className={styles.requestCard} key={String(request.id)}>
                     <div className={styles.cardTop}><div><strong>{String(request.company_name)}</strong><div className={styles.small}>{String(request.organization_name)} · {String(request.sector || "sector not set")}</div></div><span className={styles.pill}>{String(request.status)}</span></div>
                     <p className={styles.muted}>{String(request.note || "No additional note.")}</p>
+                    <div className={styles.small}>Grade {(Array.isArray(request.target_grades) ? request.target_grades : []).map(String).join(" & ") || "—"} · {String(request.company_email || "no email")}</div>
+                    <div className={styles.small}>Invite: {String(request.delivery_status || "not sent")} · Company response: {String(request.company_response_status || "awaiting")}</div>
                     <div className={styles.small}>{(Array.isArray(request.collaboration_types) ? request.collaboration_types : []).map(String).join(" · ")}</div>
                     <form className={styles.form}>
                       <input type="hidden" name="requestId" value={String(request.id)} />
-                      <textarea className={styles.textarea} name="adminNote" maxLength={1000} placeholder="Admin coordination note" />
+                      <textarea className={styles.textarea} name="adminNote" maxLength={1000} placeholder="ViTech verification / coordination note" />
                       <div className={styles.actions}>
+                        {String(request.company_response_status) === "accepted" && request.industry_partner_id && (
+                          <button className={`${styles.button} ${styles.buttonPrimary}`} formAction={verifyVstJuniorCompany}>Verify company + activate Grade 11–12 link</button>
+                        )}
                         <button className={styles.button} formAction={updateIndustryConnectionRequest} name="status" value="reviewing">Start review</button>
                         <button className={styles.button} formAction={updateIndustryConnectionRequest} name="status" value="closed">Close request</button>
                       </div>
@@ -345,6 +364,38 @@ export default async function PlatformAdminPage() {
               </div>
             )}
           </article>
+        </section>
+        <section className={styles.panel} style={{ marginTop: 18 }}>
+          <div className={styles.eyebrow}>VinaSkillTrust Junior · moderation</div>
+          <h2>Grade 11–12 simulation review queue</h2>
+          <p className={styles.muted}>Nothing becomes learner-facing automatically. Review age appropriateness, educational value, privacy, safety and company verification before publishing.</p>
+          {simulationRows.length === 0 ? <div className={styles.empty}>No simulation proposals awaiting review.</div> : (
+            <div className={styles.requestList}>
+              {simulationRows.map((simulation) => (
+                <div className={styles.requestCard} key={String(simulation.id)}>
+                  <div className={styles.cardTop}>
+                    <div>
+                      <strong>{String(simulation.title)}</strong>
+                      <div className={styles.small}>{String(simulation.company_name)} · {String(simulation.organization_name)} · Grade {(Array.isArray(simulation.target_grades) ? simulation.target_grades : []).map(String).join(" & ")}</div>
+                    </div>
+                    <span className={styles.pill}>{String(simulation.status)}</span>
+                  </div>
+                  <p className={styles.muted}>{String(simulation.summary)}</p>
+                  <div className={styles.small}>Company verification: {String(simulation.company_status || "pending")}</div>
+                  <form className={styles.form}>
+                    <input type="hidden" name="simulationId" value={String(simulation.id)} />
+                    <textarea className={styles.textarea} name="moderationNote" maxLength={2000} defaultValue={String(simulation.moderation_note || "")} placeholder="Safety, age-appropriateness or revision note" />
+                    <div className={styles.actions}>
+                      <button className={styles.button} formAction={moderateVstJuniorSimulation} name="status" value="reviewing">Reviewing</button>
+                      <button className={styles.button} formAction={moderateVstJuniorSimulation} name="status" value="approved">Approve draft</button>
+                      <button className={`${styles.button} ${styles.buttonPrimary}`} formAction={moderateVstJuniorSimulation} name="status" value="published">Publish to approved institution</button>
+                      <button className={`${styles.button} ${styles.buttonDanger}`} formAction={moderateVstJuniorSimulation} name="status" value="rejected">Reject</button>
+                    </div>
+                  </form>
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

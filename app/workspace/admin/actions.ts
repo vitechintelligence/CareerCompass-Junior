@@ -427,3 +427,114 @@ export async function createIndustryRole(formData: FormData) {
   revalidatePath("/workspace/admin");
   revalidatePath("/workspace/partner/industry-connect");
 }
+
+
+export async function verifyVstJuniorCompany(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const requestId = textValue(formData.get("requestId"), 60);
+  const adminNote = textValue(formData.get("adminNote"), 1000);
+  assertUuid(requestId, "VinaSkillTrust Junior request");
+
+  const sql = getDb();
+  const requests = await sql`
+    select id, organization_id, industry_partner_id, company_name, target_grades,
+           terms_version, privacy_version, eligibility_version, company_response_status
+    from industry_connection_requests
+    where id=${requestId}
+    limit 1
+  `;
+  const request = requests[0];
+  if (!request) throw new Error("Company connection request not found.");
+  if (String(request.company_response_status) !== "accepted") {
+    throw new Error("The company must accept the secure invitation before ViTech verifies the relationship.");
+  }
+  const industryPartnerId = String(request.industry_partner_id || "");
+  assertUuid(industryPartnerId, "industry partner");
+
+  await sql`
+    update industry_partners
+    set status='verified', updated_at=now()
+    where id=${industryPartnerId}
+  `;
+
+  await sql`
+    insert into school_company_connections (
+      organization_id, industry_partner_id, status, requested_by, approved_by, request_note,
+      target_grades, terms_version, privacy_version, eligibility_version
+    )
+    select organization_id, industry_partner_id, 'active', requested_by, ${admin.id}, ${adminNote || null},
+           target_grades, terms_version, privacy_version, eligibility_version
+    from industry_connection_requests
+    where id=${requestId}
+    on conflict (organization_id, industry_partner_id) do update set
+      status='active', approved_by=excluded.approved_by, request_note=excluded.request_note,
+      target_grades=excluded.target_grades, terms_version=excluded.terms_version,
+      privacy_version=excluded.privacy_version, eligibility_version=excluded.eligibility_version,
+      updated_at=now()
+  `;
+
+  await sql`
+    update industry_connection_requests
+    set status='connected', admin_note=${adminNote || null}, reviewed_by=${admin.id},
+        reviewed_at=now(), updated_at=now()
+    where id=${requestId}
+  `;
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(request.organization_id)}, 'vst_junior_company_verified',
+      'industry_connection_request', ${requestId},
+      ${JSON.stringify({ companyName: String(request.company_name), targetGrades: request.target_grades, adminNote })}::jsonb
+    )
+  `;
+
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
+
+export async function moderateVstJuniorSimulation(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const simulationId = textValue(formData.get("simulationId"), 60);
+  const status = textValue(formData.get("status"), 30);
+  const moderationNote = textValue(formData.get("moderationNote"), 2000);
+  assertUuid(simulationId, "simulation");
+  if (!["reviewing","approved","rejected","published","archived"].includes(status)) {
+    throw new Error("Invalid simulation moderation status.");
+  }
+
+  const sql = getDb();
+  const rows = await sql`
+    select s.id, s.organization_id, s.industry_partner_id, s.company_name, s.title,
+           p.status as company_status
+    from vst_junior_simulations s
+    left join industry_partners p on p.id=s.industry_partner_id
+    where s.id=${simulationId}
+    limit 1
+  `;
+  const simulation = rows[0];
+  if (!simulation) throw new Error("Simulation not found.");
+  if (status === "published" && String(simulation.company_status || "") !== "verified") {
+    throw new Error("Verify the company relationship before publishing its simulation.");
+  }
+
+  await sql`
+    update vst_junior_simulations
+    set status=${status}, moderation_note=${moderationNote || null},
+        reviewed_by=${admin.id}, reviewed_at=now(),
+        published_at=case when ${status}='published' then now() else published_at end,
+        updated_at=now()
+    where id=${simulationId}
+  `;
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(simulation.organization_id)}, 'vst_junior_simulation_moderation',
+      'vst_junior_simulation', ${simulationId},
+      ${JSON.stringify({ status, moderationNote, companyName: String(simulation.company_name), title: String(simulation.title) })}::jsonb
+    )
+  `;
+
+  revalidatePath("/workspace/admin");
+}

@@ -28,11 +28,78 @@ export async function GET(
 
   const html = gunzipSync(Buffer.from(chunks.join("").trim(), "base64")).toString("utf8");
 
-  return new Response(html, {
+  // The supplied full-book editions were authored with a desktop-first MediaRecorder
+  // path. iOS Safari commonly records AAC/MP4 even when book code later labels the
+  // replay Blob as audio/webm, which produces the learner-facing "Error" player.
+  // Inject this before the book scripts so unsupported recorder options fall back to
+  // the browser-native format and audio blobs retain the format actually recorded.
+  const mediaRecorderCompat = `
+<script>
+(function () {
+  var NativeRecorder = window.MediaRecorder;
+  if (!NativeRecorder) return;
+
+  function SafeMediaRecorder(stream, options) {
+    var nextOptions = options;
+    if (nextOptions && nextOptions.mimeType && typeof NativeRecorder.isTypeSupported === "function" &&
+        !NativeRecorder.isTypeSupported(nextOptions.mimeType)) {
+      nextOptions = Object.assign({}, nextOptions);
+      delete nextOptions.mimeType;
+    }
+    try {
+      return new NativeRecorder(stream, nextOptions);
+    } catch (error) {
+      return new NativeRecorder(stream);
+    }
+  }
+
+  SafeMediaRecorder.prototype = NativeRecorder.prototype;
+  try { Object.setPrototypeOf(SafeMediaRecorder, NativeRecorder); } catch (error) {}
+  if (typeof NativeRecorder.isTypeSupported === "function") {
+    SafeMediaRecorder.isTypeSupported = NativeRecorder.isTypeSupported.bind(NativeRecorder);
+  }
+  window.MediaRecorder = SafeMediaRecorder;
+
+  var NativeBlob = window.Blob;
+  var webmSupported = typeof NativeRecorder.isTypeSupported === "function" &&
+    (NativeRecorder.isTypeSupported("audio/webm") || NativeRecorder.isTypeSupported("audio/webm;codecs=opus"));
+
+  if (!webmSupported && NativeBlob) {
+    function SafeBlob(parts, options) {
+      var nextOptions = options;
+      var requestedType = nextOptions && typeof nextOptions.type === "string" ? nextOptions.type : "";
+      if (/^audio\\/webm/i.test(requestedType)) {
+        var detectedType = "";
+        if (parts && typeof parts.length === "number") {
+          for (var i = 0; i < parts.length; i += 1) {
+            var part = parts[i];
+            if (part && typeof part.type === "string" && /^audio\\//i.test(part.type) && !/^audio\\/webm/i.test(part.type)) {
+              detectedType = part.type;
+              break;
+            }
+          }
+        }
+        nextOptions = Object.assign({}, nextOptions || {}, { type: detectedType || "audio/mp4" });
+      }
+      return new NativeBlob(parts, nextOptions);
+    }
+    SafeBlob.prototype = NativeBlob.prototype;
+    try { Object.setPrototypeOf(SafeBlob, NativeBlob); } catch (error) {}
+    window.Blob = SafeBlob;
+  }
+})();
+</script>`;
+
+  const patchedHtml = html.includes("</head>")
+    ? html.replace("</head>", `${mediaRecorderCompat}</head>`)
+    : `${mediaRecorderCompat}${html}`;
+
+  return new Response(patchedHtml, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
       "X-Content-Type-Options": "nosniff",
+      "Permissions-Policy": "microphone=(self)",
     },
   });
 }
