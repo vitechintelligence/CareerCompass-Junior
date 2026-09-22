@@ -692,3 +692,30 @@
     display: none;
   }
 }
+
+
+.authHelpBox {
+  margin-top: 18px;
+  display: grid;
+  gap: 5px;
+  padding: 14px 15px;
+  border: 1px solid #dbe6f3;
+  border-radius: 15px;
+  background: #f7faff;
+  color: #53657e;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.authHelpBox strong { color: var(--navy); }
+.authHelpBox a { width: fit-content; color: var(--blue); font-weight: 850; }
+.activityMessage[role="alert"] {
+  margin-top: 14px;
+  padding: 12px 13px;
+  border: 1px solid #efc8c8;
+  border-radius: 13px;
+  background: #fff4f4;
+  color: #8a2f2f;
+  font-size: 12px;
+  line-height: 1.45;
+}
