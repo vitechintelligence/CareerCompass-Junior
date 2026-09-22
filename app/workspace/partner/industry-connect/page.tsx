@@ -4,7 +4,7 @@ import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { VST_JUNIOR_AGREEMENT } from "@/lib/vst-junior-terms";
 import { CompanyContactFinder } from "./CompanyContactFinder";
-import { requestCompanyConnection, requestVerifiedCompany } from "./actions";
+import { requestCompanyConnection, requestVerifiedCompany, resendVstJuniorInvitation } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -163,7 +163,16 @@ export default async function IndustryConnectPage() {
                         <div className="muted">{String(item.company_email || "No email")} · Grade {(Array.isArray(item.target_grades) ? item.target_grades : []).map(String).join(" & ") || "—"}</div>
                         <div className="muted">Delivery: {String(item.delivery_status)} · Company: {String(item.company_response_status)} · {new Date(String(item.created_at)).toLocaleDateString("en-GB")}</div>
                       </div>
-                      <span className="pill">{String(item.status)}</span>
+                      <div className="actions">
+                        <span className="pill">{String(item.status)}</span>
+                        {["failed", "queued"].includes(String(item.delivery_status)) && ["awaiting", "more_info"].includes(String(item.company_response_status)) && (
+                          <form action={resendVstJuniorInvitation}>
+                            <input type="hidden" name="organizationId" value={organizationId} />
+                            <input type="hidden" name="requestId" value={String(item.id)} />
+                            <button className="button soft" type="submit">Retry invitation</button>
+                          </form>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
