@@ -6,6 +6,7 @@ import { requirePlatformAdmin } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
 import { buildInstitutionPlan } from "@/lib/langgraph/institution-builder";
 import { PLATFORM_FEATURES, sanitizeFeatureKeys } from "@/lib/platform-feature-catalog";
+import { deliverJuniorInvitation, parseJuniorAdminMeta, parseJuniorRequestPayload, stringifyJuniorAdminMeta, stringifyJuniorRequestPayload } from "@/lib/vinaskilltrust-junior";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -291,22 +292,129 @@ export async function updateIndustryConnectionRequest(formData: FormData) {
   }
 
   const sql = getDb();
-  const rows = await sql`
-    update industry_connection_requests
-    set status=${status}, admin_note=${adminNote || null}, reviewed_by=${admin.id}, reviewed_at=now(), updated_at=now()
+  const existing = await sql`
+    select id, organization_id, company_name, admin_note
+    from industry_connection_requests
     where id=${requestId}
-    returning organization_id, company_name
+    limit 1
   `;
-  if (!rows[0]) throw new Error("Industry connection request not found.");
+  const current = existing[0];
+  if (!current) throw new Error("Industry connection request not found.");
+
+  const meta = parseJuniorAdminMeta(current.admin_note);
+  if (adminNote) meta.vitechReviewNote = adminNote;
+
+  await sql`
+    update industry_connection_requests
+    set status=${status}, admin_note=${stringifyJuniorAdminMeta(meta)}, reviewed_by=${admin.id}, reviewed_at=now(), updated_at=now()
+    where id=${requestId}
+  `;
 
   await sql`
     insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
     values (
-      ${admin.id}, ${String(rows[0].organization_id)}, 'industry_connection_request_review',
+      ${admin.id}, ${String(current.organization_id)}, 'industry_connection_request_review',
       'industry_connection_request', ${requestId},
-      ${JSON.stringify({ status, adminNote, companyName: String(rows[0].company_name) })}::jsonb
+      ${JSON.stringify({ status, adminNote, companyName: String(current.company_name) })}::jsonb
     )
   `;
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
+
+export async function resendJuniorInvitation(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const requestId = textValue(formData.get("requestId"), 60);
+  assertUuid(requestId, "industry connection request");
+
+  const sql = getDb();
+  const rows = await sql`
+    select r.id, r.organization_id, r.company_name, r.note, o.name as organization_name
+    from industry_connection_requests r
+    join organizations o on o.id=r.organization_id
+    where r.id=${requestId}
+    limit 1
+  `;
+  const row = rows[0];
+  const payload = parseJuniorRequestPayload(row?.note);
+  if (!row || !payload) throw new Error("VinaSkillTrust Junior invitation data not found.");
+
+  const delivery = await deliverJuniorInvitation({
+    requestId,
+    companyEmail: payload.companyEmail,
+    contactName: payload.contactName,
+    companyName: String(row.company_name),
+    organizationName: String(row.organization_name),
+    grades: payload.grades,
+    message: payload.message,
+  });
+  payload.invitation = {
+    deliveryStatus: delivery.status,
+    sentAt: delivery.status === "sent" ? new Date().toISOString() : payload.invitation?.sentAt,
+    lastAttemptAt: new Date().toISOString(),
+  };
+
+  await sql`
+    update industry_connection_requests
+    set note=${stringifyJuniorRequestPayload(payload)}, updated_at=now()
+    where id=${requestId}
+  `;
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(row.organization_id)}, 'vstj_invitation_delivery',
+      'industry_connection_request', ${requestId},
+      ${JSON.stringify({ deliveryStatus: delivery.status, companyEmail: payload.companyEmail })}::jsonb
+    )
+  `;
+
+  revalidatePath("/workspace/admin");
+  revalidatePath("/workspace/partner/industry-connect");
+}
+
+export async function moderateJuniorSimulation(formData: FormData) {
+  const { profile: admin } = await requirePlatformAdmin();
+  const requestId = textValue(formData.get("requestId"), 60);
+  const decision = textValue(formData.get("decision"), 20);
+  const moderationNote = textValue(formData.get("moderationNote"), 1500);
+  assertUuid(requestId, "industry connection request");
+  if (!["approved", "rejected"].includes(decision)) throw new Error("Invalid simulation moderation decision.");
+
+  const sql = getDb();
+  const rows = await sql`
+    select id, organization_id, company_name, admin_note
+    from industry_connection_requests
+    where id=${requestId}
+    limit 1
+  `;
+  const row = rows[0];
+  if (!row) throw new Error("Industry connection request not found.");
+
+  const meta = parseJuniorAdminMeta(row.admin_note);
+  if (!meta.simulation) throw new Error("No simulation proposal is waiting for moderation.");
+
+  meta.simulation.status = decision as "approved" | "rejected";
+  meta.simulation.reviewedAt = new Date().toISOString();
+  meta.simulation.moderationNote = moderationNote || undefined;
+
+  await sql`
+    update industry_connection_requests
+    set admin_note=${stringifyJuniorAdminMeta(meta)},
+        status=${decision === "approved" ? "connected" : "reviewing"},
+        reviewed_by=${admin.id}, reviewed_at=now(), updated_at=now()
+    where id=${requestId}
+  `;
+
+  await sql`
+    insert into admin_audit_events (actor_profile_id, organization_id, event_type, target_type, target_id, detail)
+    values (
+      ${admin.id}, ${String(row.organization_id)}, 'vstj_simulation_moderation',
+      'industry_connection_request', ${requestId},
+      ${JSON.stringify({ decision, moderationNote, companyName: String(row.company_name) })}::jsonb
+    )
+  `;
+
   revalidatePath("/workspace/admin");
   revalidatePath("/workspace/partner/industry-connect");
 }
