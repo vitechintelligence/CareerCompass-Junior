@@ -89,16 +89,12 @@ create index if not exists idx_vst_junior_simulations_moderation
 create index if not exists idx_vst_junior_simulations_org
   on vst_junior_simulations(organization_id, status, updated_at desc);
 
-do $$
-begin
-  if not exists (select 1 from pg_trigger where tgname='vst_junior_company_invitations_set_updated_at') then
-    create trigger vst_junior_company_invitations_set_updated_at
-      before update on vst_junior_company_invitations
-      for each row execute function set_updated_at();
-  end if;
-  if not exists (select 1 from pg_trigger where tgname='vst_junior_simulations_set_updated_at') then
-    create trigger vst_junior_simulations_set_updated_at
-      before update on vst_junior_simulations
-      for each row execute function set_updated_at();
-  end if;
-end $$;
+drop trigger if exists vst_junior_company_invitations_set_updated_at on vst_junior_company_invitations;
+create trigger vst_junior_company_invitations_set_updated_at
+  before update on vst_junior_company_invitations
+  for each row execute function set_updated_at();
+
+drop trigger if exists vst_junior_simulations_set_updated_at on vst_junior_simulations;
+create trigger vst_junior_simulations_set_updated_at
+  before update on vst_junior_simulations
+  for each row execute function set_updated_at();
