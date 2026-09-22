@@ -28,7 +28,7 @@ export default async function CompanyInvitePage({ params }: { params: Promise<{ 
   if (!invitation) return <InvalidInvite copy="This secure invitation could not be found." />;
   const expired = Boolean(invitation.expired);
   const accepted = String(invitation.response_status) === "accepted";
-  if (expired && !accepted) return <InvalidInvite copy="This secure invitation has expired. Ask the school to send a new request." />;
+  if (expired) return <InvalidInvite copy="This secure invitation has expired. Ask the school to send a new request before responding or submitting another simulation." />;
 
   const simulations = accepted ? await sql`
     select id, title, target_grades, status, moderation_note, created_at
