@@ -22,7 +22,7 @@ async function invitationForToken(token: string) {
   if (token.length < 32 || token.length > 200) return null;
   const sql = getDb();
   const rows = await sql`
-    select i.id as invitation_id, i.request_id, i.expires_at, i.response_status,
+    select i.id as invitation_id, i.request_id, i.expires_at, (i.expires_at <= now()) as expired, i.response_status,
            r.organization_id, r.company_name, r.company_website, r.sector, r.industry_partner_id,
            r.target_grades, o.name as organization_name
     from vst_junior_company_invitations i
@@ -44,8 +44,7 @@ export async function respondToVstJuniorInvitation(formData: FormData) {
 
   const invitation = await invitationForToken(token);
   if (!invitation) throw new Error("Invitation not found.");
-  const expired = new Date(String(invitation.expires_at)).getTime() < Date.now();
-  if (expired && String(invitation.response_status) !== "accepted") throw new Error("This invitation has expired.");
+  if (Boolean(invitation.expired)) throw new Error("This invitation has expired. Ask the institution to send a new secure invitation.");
 
   const sql = getDb();
   let industryPartnerId = String(invitation.industry_partner_id || "");
@@ -113,6 +112,9 @@ export async function submitVstJuniorSimulation(formData: FormData) {
   const invitation = await invitationForToken(token);
   if (!invitation || String(invitation.response_status) !== "accepted") {
     throw new Error("Accept the company connection before proposing a simulation.");
+  }
+  if (Boolean(invitation.expired)) {
+    throw new Error("This invitation has expired. Ask the institution to send a new secure invitation before submitting another simulation.");
   }
   const requestedGrades = Array.isArray(invitation.target_grades) ? invitation.target_grades.map(String) : [];
   if (targetGrades.some((grade) => !requestedGrades.includes(grade))) {
