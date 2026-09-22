@@ -98,7 +98,7 @@ export default async function CompanyInvitePage({ params }: { params: Promise<{ 
                 <label><span>Simulation title</span><input name="title" maxLength={180} required placeholder="Example: Junior customer-support triage challenge" /></label>
                 <label><span>What students will learn</span><textarea name="summary" rows={4} maxLength={3000} required /></label>
                 <label><span>Student brief / instructions</span><textarea name="instructions" rows={7} maxLength={5000} required /></label>
-                <div><span className="muted" style={{ fontSize: 12 }}>Target grades</span><div className="tagRow"><label className="tag"><input type="checkbox" name="targetGrades" value="11" /> Grade 11</label><label className="tag"><input type="checkbox" name="targetGrades" value="12" /> Grade 12</label></div></div>
+                <div><span className="muted" style={{ fontSize: 12 }}>Target grades approved by the institution</span><div className="tagRow">{(Array.isArray(invitation.target_grades) ? invitation.target_grades : []).map((grade) => <label className="tag" key={String(grade)}><input type="checkbox" name="targetGrades" value={String(grade)} /> Grade {String(grade)}</label>)}</div></div>
                 <label><span>Safety / supervision notes</span><textarea name="safetyNotes" rows={3} maxLength={2000} /></label>
                 <label className="tag" style={{ alignItems: "flex-start" }}><input type="checkbox" name="companySafeguards" value="yes" required /> I understand that this simulation is limited to Grade 11-12 and must pass ViTech moderation before learners can access it.</label>
                 <button className="button primary" type="submit">Submit simulation for ViTech review</button>
