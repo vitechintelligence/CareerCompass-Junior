@@ -60,6 +60,14 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## Production URL
+
+The canonical production origin is:
+
+`https://career-compass-junior-vitech.vercel.app`
+
+The legacy `career-compass-junior-lake.vercel.app` host permanently redirects to the canonical origin. Neon Auth trusted domains must include the canonical HTTPS origin exactly.
+
 ## Environment
 
 Configure server-only deployment variables:
