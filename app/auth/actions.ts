@@ -8,7 +8,6 @@ export type SignInState = {
   error: string | null;
 };
 
-export const INITIAL_SIGN_IN_STATE: SignInState = { error: null };
 
 function friendlySignInError(message: string) {
   const normalized = message.toLowerCase();
