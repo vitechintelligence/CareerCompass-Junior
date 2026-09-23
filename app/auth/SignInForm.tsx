@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useActionState, useState } from "react";
 import { VitechMark } from "@/app/VitechMark";
 import {
-  INITIAL_SIGN_IN_STATE,
   signInWithPassword,
   type SignInState,
 } from "@/app/auth/actions";
+
+const INITIAL_SIGN_IN_STATE: SignInState = { error: null };
 
 function EyeIcon({ hidden }: { hidden: boolean }) {
   return hidden ? (
