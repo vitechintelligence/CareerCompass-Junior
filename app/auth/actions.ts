@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAuth, getAuthConfigurationStatus } from "@/lib/auth/server";
 import { safeInternalPath } from "@/lib/navigation";
+import { SITE_URL } from "@/lib/site";
 
 export type SignInState = {
   error: string | null;
@@ -72,16 +73,12 @@ function normalizeOrigin(value: string | undefined, allowLocalhost: boolean) {
 
 async function resolveAppOrigin() {
   const allowLocalhost = process.env.NODE_ENV !== "production";
-  const configured = [
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.VERCEL_PROJECT_PRODUCTION_URL,
-    process.env.VERCEL_URL,
-  ];
 
-  for (const value of configured) {
-    const origin = normalizeOrigin(value, allowLocalhost);
-    if (origin) return origin;
-  }
+  // Production auth redirects must always use the one canonical Career Compass origin.
+  // This prevents stale Vercel aliases or environment variables from creating
+  // different cookie, PWA, OAuth, or password-recovery states.
+  const canonical = normalizeOrigin(SITE_URL, allowLocalhost);
+  if (canonical) return canonical;
 
   const requestHeaders = await headers();
   const host = requestHeaders.get("x-forwarded-host") || requestHeaders.get("host");
