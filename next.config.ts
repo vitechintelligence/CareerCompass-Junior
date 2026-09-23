@@ -11,6 +11,21 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value: "career-compass-junior-lake.vercel.app",
+          },
+        ],
+        destination: "https://career-compass-junior-vitech.vercel.app/:path*",
+        permanent: true,
+      },
+    ];
+  },
   poweredByHeader: false,
   outputFileTracingIncludes: {
     "/interactive-books/*": ["./public/interactive-book-data/**/*"],
