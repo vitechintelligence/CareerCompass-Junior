@@ -1,9 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useState } from "react";
+import { useActionState, useState } from "react";
 import { VitechMark } from "@/app/VitechMark";
-import { authClient } from "@/lib/auth/client";
+import {
+  requestPasswordReset,
+  resetPasswordWithToken,
+  type RecoveryState,
+} from "@/app/auth/actions";
+
+const INITIAL_RECOVERY_STATE: RecoveryState = {
+  status: "idle",
+  code: "IDLE",
+  message: null,
+};
 
 function EyeIcon({ hidden }: { hidden: boolean }) {
   return hidden ? (
@@ -19,10 +29,12 @@ function EyeIcon({ hidden }: { hidden: boolean }) {
 }
 
 function PasswordInput({
+  name,
   value,
   onChange,
   autoComplete,
 }: {
+  name: string;
   value: string;
   onChange: (value: string) => void;
   autoComplete: string;
@@ -35,6 +47,7 @@ function PasswordInput({
         autoComplete={autoComplete}
         maxLength={128}
         minLength={8}
+        name={name}
         onChange={(event) => onChange(event.target.value)}
         required
         type={visible ? "text" : "password"}
@@ -53,38 +66,31 @@ function PasswordInput({
   );
 }
 
-export function ForgotPasswordForm({ callbackUrl }: { callbackUrl: string }) {
-  const [email, setEmail] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+function RecoveryMessage({ state }: { state: RecoveryState }) {
+  if (!state.message || state.status === "idle") return null;
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage(null);
-
-    try {
-      const redirectUrl = new URL("/auth/reset-password", window.location.origin);
-      redirectUrl.searchParams.set("callbackURL", callbackUrl);
-
-      const result = await authClient.requestPasswordReset({
-        email: email.trim().slice(0, 254),
-        redirectTo: redirectUrl.toString(),
-      });
-
-      if (result.error) {
-        setMessage("We could not start password recovery right now. Please try again in a moment.");
-        return;
-      }
-
-      setSent(true);
-    } catch {
-      setMessage("Password recovery could not reach the authentication service. Please try again.");
-    } finally {
-      setBusy(false);
-    }
+  if (state.status === "success") {
+    return (
+      <div className="authSuccessBox" role="status">
+        <strong>{state.code === "PASSWORD_RESET" ? "Password updated" : "Check your email"}</strong>
+        <p>{state.message}</p>
+      </div>
+    );
   }
+
+  return (
+    <p className="activityMessage" role="alert" data-auth-code={state.code}>
+      {state.message}
+    </p>
+  );
+}
+
+export function ForgotPasswordForm({ callbackUrl }: { callbackUrl: string }) {
+  const [state, formAction, pending] = useActionState(
+    requestPasswordReset,
+    INITIAL_RECOVERY_STATE,
+  );
+  const sent = state.status === "success" && state.code === "RECOVERY_SENT";
 
   return (
     <main className="authPage">
@@ -100,32 +106,29 @@ export function ForgotPasswordForm({ callbackUrl }: { callbackUrl: string }) {
         </p>
 
         {sent ? (
-          <div className="authSuccessBox">
-            <strong>Check your email</strong>
-            <p>
-              If an account exists for that address, a password-reset link has been sent. Check your inbox and spam folder.
-            </p>
-          </div>
+          <RecoveryMessage state={state} />
         ) : (
-          <form className="authForm" onSubmit={submit}>
-            <label>
-              <span>Email</span>
-              <input
-                autoComplete="email"
-                maxLength={254}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                type="email"
-                value={email}
-              />
-            </label>
-            <button className="button primary" disabled={busy} type="submit">
-              {busy ? "Sending…" : "Send reset link"}
-            </button>
-          </form>
+          <>
+            <form className="authForm" action={formAction}>
+              <input type="hidden" name="callbackURL" value={callbackUrl} />
+              <label>
+                <span>Email</span>
+                <input
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  maxLength={254}
+                  name="email"
+                  required
+                  type="email"
+                />
+              </label>
+              <button className="button primary" disabled={pending} type="submit">
+                {pending ? "Sending…" : "Send reset link"}
+              </button>
+            </form>
+            <RecoveryMessage state={state} />
+          </>
         )}
-
-        {message && <p className="activityMessage">{message}</p>}
 
         <p className="muted authSwitch">
           Remembered your password?{" "}
@@ -147,42 +150,13 @@ export function ResetPasswordForm({
 }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [complete, setComplete] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
+  const [state, formAction, pending] = useActionState(
+    resetPasswordWithToken,
+    INITIAL_RECOVERY_STATE,
+  );
 
   const invalidLink = !token || Boolean(resetError);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!token) return;
-
-    if (password !== confirmPassword) {
-      setMessage("The passwords do not match. Please enter the same password in both fields.");
-      return;
-    }
-
-    setBusy(true);
-    setMessage(null);
-
-    try {
-      const result = await authClient.resetPassword({
-        newPassword: password,
-        token,
-      });
-
-      if (result.error) {
-        setMessage(result.error.message || "This reset link could not be used. Please request a new one.");
-        return;
-      }
-
-      setComplete(true);
-    } catch {
-      setMessage("Password reset could not reach the authentication service. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
+  const complete = state.status === "success" && state.code === "PASSWORD_RESET";
 
   return (
     <main className="authPage">
@@ -196,10 +170,7 @@ export function ResetPasswordForm({
 
         {complete ? (
           <>
-            <div className="authSuccessBox">
-              <strong>Your new password is ready.</strong>
-              <p>You can now sign in using the new password.</p>
-            </div>
+            <RecoveryMessage state={state} />
             <div className="actions">
               <Link className="button primary" href={`/auth/sign-in?callbackURL=${encodeURIComponent(callbackUrl)}`}>
                 Sign in
@@ -208,7 +179,7 @@ export function ResetPasswordForm({
           </>
         ) : invalidLink ? (
           <>
-            <p className="muted">
+            <p className="muted" role="alert">
               This password-reset link is missing, invalid, or expired. Request a new secure link to continue.
             </p>
             <div className="actions">
@@ -220,23 +191,33 @@ export function ResetPasswordForm({
         ) : (
           <>
             <p className="muted">Use at least 8 characters. You can use the eye icon to check what you typed before saving.</p>
-            <form className="authForm" onSubmit={submit}>
+            <form className="authForm" action={formAction}>
+              <input type="hidden" name="token" value={token || ""} />
               <label>
                 <span>New password</span>
-                <PasswordInput autoComplete="new-password" onChange={setPassword} value={password} />
+                <PasswordInput
+                  autoComplete="new-password"
+                  name="password"
+                  onChange={setPassword}
+                  value={password}
+                />
               </label>
               <label>
                 <span>Confirm new password</span>
-                <PasswordInput autoComplete="new-password" onChange={setConfirmPassword} value={confirmPassword} />
+                <PasswordInput
+                  autoComplete="new-password"
+                  name="confirmPassword"
+                  onChange={setConfirmPassword}
+                  value={confirmPassword}
+                />
               </label>
-              <button className="button primary" disabled={busy} type="submit">
-                {busy ? "Updating…" : "Save new password"}
+              <button className="button primary" disabled={pending} type="submit">
+                {pending ? "Updating…" : "Save new password"}
               </button>
             </form>
+            <RecoveryMessage state={state} />
           </>
         )}
-
-        {message && <p className="activityMessage">{message}</p>}
       </section>
     </main>
   );
