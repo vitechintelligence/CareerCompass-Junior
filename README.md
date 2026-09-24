@@ -87,7 +87,7 @@ Vercel Production must declare:
 
 ```text
 NEON_PROJECT_ID=royal-queen-79814128
-NEON_BRANCH_ID=<verified production/default branch id>
+NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
 DATABASE_URL=<pooled URL from that same branch>
 NEON_AUTH_BASE_URL=<Auth URL from that same branch>
 NEON_AUTH_COOKIE_SECRET=<32+ character secret>
@@ -104,7 +104,7 @@ Configure server-only deployment variables:
 
 ```bash
 NEON_PROJECT_ID=royal-queen-79814128
-NEON_BRANCH_ID=br-...
+NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
 DATABASE_URL=postgresql://...
 NEON_AUTH_BASE_URL=https://.../neondb/auth
 NEON_AUTH_COOKIE_SECRET=<32+-character-random-secret>
