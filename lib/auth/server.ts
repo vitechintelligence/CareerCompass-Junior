@@ -54,6 +54,10 @@ export function getAuthConfigurationStatus() {
     invalid.push("NEON_PROJECT_ID");
   }
 
+  if (runtime.blockingBranchMismatch) {
+    invalid.push("NEON_BRANCH_ID");
+  }
+
   if (runtime.blockingEndpointMismatch) {
     invalid.push("NEON_BACKEND_ALIGNMENT");
   }
