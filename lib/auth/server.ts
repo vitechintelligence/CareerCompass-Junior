@@ -54,6 +54,10 @@ export function getAuthConfigurationStatus() {
     invalid.push("NEON_PROJECT_ID");
   }
 
+  if (runtime.blockingEndpointMismatch) {
+    invalid.push("NEON_BACKEND_ALIGNMENT");
+  }
+
   const configured = missing.length === 0 && invalid.length === 0;
   const baseUrlValid = isValidAuthBaseUrl(baseUrl);
   const cookieSecretValid = typeof secret === "string" && secret.length >= MIN_COOKIE_SECRET_LENGTH;
