@@ -1,4 +1,5 @@
 import { createNeonAuth } from "@neondatabase/auth/next/server";
+import { getRuntimeAlignmentStatus } from "@/lib/runtime-alignment";
 
 let cachedAuth: ReturnType<typeof createNeonAuth> | null = null;
 
@@ -45,6 +46,12 @@ export function getAuthConfigurationStatus() {
     missing.push("NEON_AUTH_COOKIE_SECRET");
   } else if (secret.length < MIN_COOKIE_SECRET_LENGTH) {
     invalid.push("NEON_AUTH_COOKIE_SECRET");
+  }
+
+  const runtime = getRuntimeAlignmentStatus();
+
+  if (runtime.blockingProjectMismatch) {
+    invalid.push("NEON_PROJECT_ID");
   }
 
   const configured = missing.length === 0 && invalid.length === 0;
