@@ -68,11 +68,43 @@ The canonical production origin is:
 
 The legacy `career-compass-junior-lake.vercel.app` host permanently redirects to the canonical origin. Neon Auth trusted domains must include the canonical HTTPS origin exactly.
 
+## Production stack alignment
+
+Career Compass Junior production must resolve through one stack:
+
+```text
+Frontend
+  https://career-compass-junior-vitech.vercel.app
+      ↓
+Next.js server actions / API routes
+      ↓
+Neon Managed Better Auth + Neon Postgres
+      ↓
+Career Compass LMS — royal-queen-79814128
+```
+
+Vercel Production must declare:
+
+```text
+NEON_PROJECT_ID=royal-queen-79814128
+NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
+DATABASE_URL=<pooled URL from that same branch>
+NEON_AUTH_BASE_URL=<Auth URL from that same branch>
+NEON_AUTH_COOKIE_SECRET=<32+ character secret>
+NEXT_PUBLIC_APP_URL=https://career-compass-junior-vitech.vercel.app
+```
+
+`/api/health` checks database reachability, core/extended schema readiness, Auth configuration and non-secret runtime identity alignment. It does not expose connection strings, passwords, cookie secrets or tokens.
+
+If `NEON_PROJECT_ID` is explicitly set to another project in production, database/Auth access is intentionally blocked rather than silently using the wrong backend.
+
 ## Environment
 
 Configure server-only deployment variables:
 
 ```bash
+NEON_PROJECT_ID=royal-queen-79814128
+NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
 DATABASE_URL=postgresql://...
 NEON_AUTH_BASE_URL=https://.../neondb/auth
 NEON_AUTH_COOKIE_SECRET=<32+-character-random-secret>
