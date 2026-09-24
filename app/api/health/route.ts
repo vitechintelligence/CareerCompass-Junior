@@ -59,10 +59,12 @@ function runtimePublicStatus() {
     projectIdentityDeclared: runtime.projectIdentityDeclared,
     projectIdentityMatches: runtime.projectIdentityMatches,
     branchIdentityDeclared: runtime.branchIdentityDeclared,
+    branchIdentityMatches: runtime.branchIdentityMatches,
     appOriginMatches: runtime.appOriginMatches,
     databaseAuthEndpointMatches: runtime.databaseAuthEndpointMatches,
     identityVerified: runtime.identityVerified,
     blockingProjectMismatch: runtime.blockingProjectMismatch,
+    blockingBranchMismatch: runtime.blockingBranchMismatch,
     blockingEndpointMismatch: runtime.blockingEndpointMismatch,
     issues: runtime.issues,
     warnings: runtime.warnings,
@@ -137,6 +139,7 @@ export async function GET() {
       auth.configured &&
       coreSchemaReady &&
       !runtime.blockingProjectMismatch &&
+      !runtime.blockingBranchMismatch &&
       !runtime.blockingEndpointMismatch;
 
     return NextResponse.json(
