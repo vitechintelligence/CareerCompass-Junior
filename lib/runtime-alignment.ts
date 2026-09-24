@@ -3,6 +3,8 @@ import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/site";
 export const EXPECTED_NEON_PROJECT = {
   name: "Career Compass LMS",
   id: "royal-queen-79814128",
+  branchId: "br-shiny-meadow-b3ibu54",
+  region: "aws-ap-southeast-1",
 } as const;
 
 function configured(name: string) {
@@ -55,9 +57,11 @@ export type RuntimeAlignmentStatus = {
   projectIdentityDeclared: boolean;
   projectIdentityMatches: boolean | null;
   branchIdentityDeclared: boolean;
+  branchIdentityMatches: boolean | null;
   appOriginMatches: boolean | null;
   databaseAuthEndpointMatches: boolean | null;
   blockingProjectMismatch: boolean;
+  blockingBranchMismatch: boolean;
   blockingEndpointMismatch: boolean;
   identityVerified: boolean;
   issues: string[];
@@ -98,6 +102,19 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
   if (production && !projectId) {
     warnings.push(
       "NEON_PROJECT_ID is not declared, so production project identity cannot be verified.",
+    );
+  }
+
+  const branchIdentityMatches = branchId
+    ? branchId === EXPECTED_NEON_PROJECT.branchId
+    : null;
+
+  const blockingBranchMismatch =
+    production && Boolean(branchId) && branchIdentityMatches === false;
+
+  if (blockingBranchMismatch) {
+    issues.push(
+      "NEON_BRANCH_ID does not match the authoritative Career Compass LMS production branch.",
     );
   }
 
@@ -148,7 +165,7 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
   const identityVerified =
     !production ||
     (projectIdentityMatches === true &&
-      Boolean(branchId) &&
+      branchIdentityMatches === true &&
       databaseAuthEndpointMatches === true &&
       (appOriginMatches === true || appOriginMatches === null));
 
@@ -161,9 +178,11 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     projectIdentityDeclared: Boolean(projectId),
     projectIdentityMatches,
     branchIdentityDeclared: Boolean(branchId),
+    branchIdentityMatches,
     appOriginMatches,
     databaseAuthEndpointMatches,
     blockingProjectMismatch,
+    blockingBranchMismatch,
     blockingEndpointMismatch,
     identityVerified,
     issues,
@@ -177,6 +196,12 @@ export function assertNoKnownProductionProjectMismatch() {
   if (status.blockingProjectMismatch) {
     throw new Error(
       "Production Neon project mismatch. Expected Career Compass LMS (royal-queen-79814128).",
+    );
+  }
+
+  if (status.blockingBranchMismatch) {
+    throw new Error(
+      "Production Neon branch mismatch. Expected br-shiny-meadow-b3ibu54 for Career Compass LMS.",
     );
   }
 
