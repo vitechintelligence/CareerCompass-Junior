@@ -59,6 +59,8 @@ Production auth must be deterministic:
 Important environment variables:
 
 ```
+NEON_PROJECT_ID=royal-queen-79814128
+NEON_BRANCH_ID=<verified production/default branch>
 DATABASE_URL
 NEON_AUTH_BASE_URL
 NEON_AUTH_COOKIE_SECRET
@@ -66,6 +68,19 @@ NEXT_PUBLIC_APP_URL
 ```
 
 Production `DATABASE_URL` and `NEON_AUTH_BASE_URL` must be checked together whenever auth or database behavior is being debugged.
+
+The runtime alignment guard compares the Neon `ep-...` endpoint identity from the database URL with the Auth URL. If those resolve to different Neon endpoints in production, database/Auth access is intentionally blocked instead of allowing split identity/data state.
+
+Use `/api/health` for non-secret verification. Important fields include:
+
+- `runtime.projectIdentityMatches`
+- `runtime.branchIdentityDeclared`
+- `runtime.databaseAuthEndpointMatches`
+- `runtime.identityVerified`
+- `schema.core`
+- `schema.extended`
+
+Do not publish or log connection strings, passwords, cookie secrets, or reset tokens.
 
 ## 4. Canonical production origin
 
