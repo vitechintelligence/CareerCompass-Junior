@@ -21,6 +21,31 @@ function normalizeOrigin(value: string | null) {
   }
 }
 
+function neonEndpointFromDatabaseUrl(value: string | null) {
+  if (!value) return null;
+
+  try {
+    const hostname = new URL(value).hostname.toLowerCase();
+    const firstLabel = hostname.split(".")[0] || "";
+    if (!firstLabel.startsWith("ep-")) return null;
+    return firstLabel.replace(/-pooler$/, "");
+  } catch {
+    return null;
+  }
+}
+
+function neonEndpointFromAuthUrl(value: string | null) {
+  if (!value) return null;
+
+  try {
+    const hostname = new URL(value).hostname.toLowerCase();
+    const firstLabel = hostname.split(".")[0] || "";
+    return firstLabel.startsWith("ep-") ? firstLabel : null;
+  } catch {
+    return null;
+  }
+}
+
 export type RuntimeAlignmentStatus = {
   production: boolean;
   canonicalOrigin: string;
@@ -31,7 +56,9 @@ export type RuntimeAlignmentStatus = {
   projectIdentityMatches: boolean | null;
   branchIdentityDeclared: boolean;
   appOriginMatches: boolean | null;
+  databaseAuthEndpointMatches: boolean | null;
   blockingProjectMismatch: boolean;
+  blockingEndpointMismatch: boolean;
   identityVerified: boolean;
   issues: string[];
   warnings: string[];
@@ -40,7 +67,8 @@ export type RuntimeAlignmentStatus = {
 export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
   const production = process.env.NODE_ENV === "production";
   const databaseUrl = configured("DATABASE_URL");
-  const authBaseUrl = configured("NEON_AUTH_BASE_URL") || configured("NEON_AUTH_URL");
+  const authBaseUrl =
+    configured("NEON_AUTH_BASE_URL") || configured("NEON_AUTH_URL");
   const cookieSecret =
     configured("NEON_AUTH_COOKIE_SECRET") || configured("BETTER_AUTH_SECRET");
   const projectId = configured("NEON_PROJECT_ID");
@@ -79,6 +107,34 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     );
   }
 
+  const databaseEndpoint = neonEndpointFromDatabaseUrl(databaseUrl);
+  const authEndpoint = neonEndpointFromAuthUrl(authBaseUrl);
+  const databaseAuthEndpointMatches =
+    databaseEndpoint && authEndpoint
+      ? databaseEndpoint === authEndpoint
+      : null;
+
+  const blockingEndpointMismatch =
+    production && databaseAuthEndpointMatches === false;
+
+  if (blockingEndpointMismatch) {
+    issues.push(
+      "DATABASE_URL and NEON_AUTH_BASE_URL point to different Neon branch endpoints.",
+    );
+  }
+
+  if (databaseUrl && !databaseEndpoint) {
+    warnings.push(
+      "DATABASE_URL does not expose a recognizable Neon endpoint identity.",
+    );
+  }
+
+  if (authBaseUrl && !authEndpoint) {
+    warnings.push(
+      "NEON_AUTH_BASE_URL does not expose a recognizable Neon endpoint identity.",
+    );
+  }
+
   const appOriginMatches = configuredAppOrigin
     ? configuredAppOrigin === CANONICAL_PRODUCTION_ORIGIN
     : null;
@@ -93,6 +149,7 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     !production ||
     (projectIdentityMatches === true &&
       Boolean(branchId) &&
+      databaseAuthEndpointMatches === true &&
       (appOriginMatches === true || appOriginMatches === null));
 
   return {
@@ -105,7 +162,9 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     projectIdentityMatches,
     branchIdentityDeclared: Boolean(branchId),
     appOriginMatches,
+    databaseAuthEndpointMatches,
     blockingProjectMismatch,
+    blockingEndpointMismatch,
     identityVerified,
     issues,
     warnings,
@@ -118,6 +177,12 @@ export function assertNoKnownProductionProjectMismatch() {
   if (status.blockingProjectMismatch) {
     throw new Error(
       "Production Neon project mismatch. Expected Career Compass LMS (royal-queen-79814128).",
+    );
+  }
+
+  if (status.blockingEndpointMismatch) {
+    throw new Error(
+      "Production Neon backend mismatch. DATABASE_URL and NEON_AUTH_BASE_URL must belong to the same Neon branch.",
     );
   }
 }
