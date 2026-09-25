@@ -1,0 +1,1521 @@
+[
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U01.L01.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U01",
+    "lessonId": "L01",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “hello”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “hello”."
+    },
+    "question": "Circle the meaning of “hello”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "tạm biệt"
+      },
+      {
+        "id": "B",
+        "label": "xin chào"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “hello” means “xin chào”.",
+        "vi": "Đúng rồi. “hello” có nghĩa là “xin chào”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U01.L04.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U01",
+    "lessonId": "L04",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “pencil”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “pencil”."
+    },
+    "question": "Circle the meaning of “pencil”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bút chì"
+      },
+      {
+        "id": "B",
+        "label": "sách"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “pencil” means “bút chì”.",
+        "vi": "Đúng rồi. “pencil” có nghĩa là “bút chì”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U01.L07.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U01",
+    "lessonId": "L07",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “hello”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “hello”."
+    },
+    "question": "Circle the meaning of “hello”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "tên"
+      },
+      {
+        "id": "B",
+        "label": "xin chào"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “hello” means “xin chào”.",
+        "vi": "Đúng rồi. “hello” có nghĩa là “xin chào”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U02.L10.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U02",
+    "lessonId": "L10",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “grandmother”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “grandmother”."
+    },
+    "question": "Circle the meaning of “grandmother”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bà"
+      },
+      {
+        "id": "B",
+        "label": "ông"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “grandmother” means “bà”.",
+        "vi": "Đúng rồi. “grandmother” có nghĩa là “bà”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U02.L13.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U02",
+    "lessonId": "L13",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “six”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “six”."
+    },
+    "question": "Circle the meaning of “six”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bảy"
+      },
+      {
+        "id": "B",
+        "label": "sáu"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “six” means “sáu”.",
+        "vi": "Đúng rồi. “six” có nghĩa là “sáu”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U02.L16.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U02",
+    "lessonId": "L16",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “who”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “who”."
+    },
+    "question": "Circle the meaning of “who”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "ai"
+      },
+      {
+        "id": "B",
+        "label": "của em"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “who” means “ai”.",
+        "vi": "Đúng rồi. “who” có nghĩa là “ai”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U03.L19.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U03",
+    "lessonId": "L19",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “dance”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “dance”."
+    },
+    "question": "Circle the meaning of “dance”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "hát"
+      },
+      {
+        "id": "B",
+        "label": "nhảy múa"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “dance” means “nhảy múa”.",
+        "vi": "Đúng rồi. “dance” có nghĩa là “nhảy múa”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U03.L22.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U03",
+    "lessonId": "L22",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “tail”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “tail”."
+    },
+    "question": "Circle the meaning of “tail”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "đuôi"
+      },
+      {
+        "id": "B",
+        "label": "chân"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “tail” means “đuôi”.",
+        "vi": "Đúng rồi. “tail” có nghĩa là “đuôi”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U04.L25.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U04",
+    "lessonId": "L25",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “ruler”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “ruler”."
+    },
+    "question": "Circle the meaning of “ruler”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "tẩy"
+      },
+      {
+        "id": "B",
+        "label": "thước"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “ruler” means “thước”.",
+        "vi": "Đúng rồi. “ruler” có nghĩa là “thước”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U04.L28.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U04",
+    "lessonId": "L28",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “next to”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “next to”."
+    },
+    "question": "Circle the meaning of “next to”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bên cạnh"
+      },
+      {
+        "id": "B",
+        "label": "trong"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “next to” means “bên cạnh”.",
+        "vi": "Đúng rồi. “next to” có nghĩa là “bên cạnh”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U04.L31.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U04",
+    "lessonId": "L31",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “welcome”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “welcome”."
+    },
+    "question": "Circle the meaning of “welcome”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bảng"
+      },
+      {
+        "id": "B",
+        "label": "chào mừng"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “welcome” means “chào mừng”.",
+        "vi": "Đúng rồi. “welcome” có nghĩa là “chào mừng”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U05.L34.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U05",
+    "lessonId": "L34",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “apple”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “apple”."
+    },
+    "question": "Circle the meaning of “apple”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "táo"
+      },
+      {
+        "id": "B",
+        "label": "chuối"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “apple” means “táo”.",
+        "vi": "Đúng rồi. “apple” có nghĩa là “táo”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U05.L37.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U05",
+    "lessonId": "L37",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “sandwich”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “sandwich”."
+    },
+    "question": "Circle the meaning of “sandwich”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bữa trưa"
+      },
+      {
+        "id": "B",
+        "label": "bánh mì kẹp"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “sandwich” means “bánh mì kẹp”.",
+        "vi": "Đúng rồi. “sandwich” có nghĩa là “bánh mì kẹp”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U05.L40.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U05",
+    "lessonId": "L40",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “food”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “food”."
+    },
+    "question": "Circle the meaning of “food”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "thức ăn"
+      },
+      {
+        "id": "B",
+        "label": "đồ uống"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “food” means “thức ăn”.",
+        "vi": "Đúng rồi. “food” có nghĩa là “thức ăn”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U06.L43.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U06",
+    "lessonId": "L43",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “get up”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “get up”."
+    },
+    "question": "Circle the meaning of “get up”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "chải"
+      },
+      {
+        "id": "B",
+        "label": "thức dậy"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “get up” means “thức dậy”.",
+        "vi": "Đúng rồi. “get up” có nghĩa là “thức dậy”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U06.L46.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U06",
+    "lessonId": "L46",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “he”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “he”."
+    },
+    "question": "Circle the meaning of “he”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "anh ấy hoặc bạn nam"
+      },
+      {
+        "id": "B",
+        "label": "cô ấy hoặc bạn nữ"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “he” means “anh ấy hoặc bạn nam”.",
+        "vi": "Đúng rồi. “he” có nghĩa là “anh ấy hoặc bạn nam”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U07.L49.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U07",
+    "lessonId": "L49",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “sunny”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “sunny”."
+    },
+    "question": "Circle the meaning of “sunny”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "có mưa"
+      },
+      {
+        "id": "B",
+        "label": "có nắng"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “sunny” means “có nắng”.",
+        "vi": "Đúng rồi. “sunny” có nghĩa là “có nắng”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U07.L52.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U07",
+    "lessonId": "L52",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “running”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “running”."
+    },
+    "question": "Circle the meaning of “running”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "đang chạy"
+      },
+      {
+        "id": "B",
+        "label": "đang đọc"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “running” means “đang chạy”.",
+        "vi": "Đúng rồi. “running” có nghĩa là “đang chạy”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U07.L55.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U07",
+    "lessonId": "L55",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “today”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “today”."
+    },
+    "question": "Circle the meaning of “today”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "mọi người"
+      },
+      {
+        "id": "B",
+        "label": "hôm nay"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “today” means “hôm nay”.",
+        "vi": "Đúng rồi. “today” có nghĩa là “hôm nay”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U08.L58.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U08",
+    "lessonId": "L58",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “between”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “between”."
+    },
+    "question": "Circle the meaning of “between”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "ở giữa"
+      },
+      {
+        "id": "B",
+        "label": "đối diện"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “between” means “ở giữa”.",
+        "vi": "Đúng rồi. “between” có nghĩa là “ở giữa”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U08.L61.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U08",
+    "lessonId": "L61",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “excuse me”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “excuse me”."
+    },
+    "question": "Circle the meaning of “excuse me”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "lại lần nữa"
+      },
+      {
+        "id": "B",
+        "label": "xin lỗi cho hỏi"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “excuse me” means “xin lỗi cho hỏi”.",
+        "vi": "Đúng rồi. “excuse me” có nghĩa là “xin lỗi cho hỏi”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U08.L64.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U08",
+    "lessonId": "L64",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “map”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “map”."
+    },
+    "question": "Circle the meaning of “map”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bản đồ"
+      },
+      {
+        "id": "B",
+        "label": "ở đâu"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “map” means “bản đồ”.",
+        "vi": "Đúng rồi. “map” có nghĩa là “bản đồ”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U09.L67.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U09",
+    "lessonId": "L67",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “choose”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “choose”."
+    },
+    "question": "Circle the meaning of “choose”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "bởi vì"
+      },
+      {
+        "id": "B",
+        "label": "chọn"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “choose” means “chọn”.",
+        "vi": "Đúng rồi. “choose” có nghĩa là “chọn”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U09.L70.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U09",
+    "lessonId": "L70",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “club”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “club”."
+    },
+    "question": "Circle the meaning of “club”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "câu lạc bộ"
+      },
+      {
+        "id": "B",
+        "label": "hãy đến"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “club” means “câu lạc bộ”.",
+        "vi": "Đúng rồi. “club” có nghĩa là “câu lạc bộ”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U10.L73.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U10",
+    "lessonId": "L73",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “story”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “story”."
+    },
+    "question": "Circle the meaning of “story”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "đầu tiên"
+      },
+      {
+        "id": "B",
+        "label": "câu chuyện"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “story” means “câu chuyện”.",
+        "vi": "Đúng rồi. “story” có nghĩa là “câu chuyện”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U10.L76.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U10",
+    "lessonId": "L76",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “played”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “played”."
+    },
+    "question": "Circle the meaning of “played”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "đã chơi"
+      },
+      {
+        "id": "B",
+        "label": "đã xem"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “played” means “đã chơi”.",
+        "vi": "Đúng rồi. “played” có nghĩa là “đã chơi”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U10.L79.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U10",
+    "lessonId": "L79",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “first”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “first”."
+    },
+    "question": "Circle the meaning of “first”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "sau đó"
+      },
+      {
+        "id": "B",
+        "label": "đầu tiên"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “first” means “đầu tiên”.",
+        "vi": "Đúng rồi. “first” có nghĩa là “đầu tiên”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U11.L82.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U11",
+    "lessonId": "L82",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “water”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “water”."
+    },
+    "question": "Circle the meaning of “water”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "nước"
+      },
+      {
+        "id": "B",
+        "label": "đất liền"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “water” means “nước”.",
+        "vi": "Đúng rồi. “water” có nghĩa là “nước”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U11.L85.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U11",
+    "lessonId": "L85",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “check”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “check”."
+    },
+    "question": "Circle the meaning of “check”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "hình ảnh"
+      },
+      {
+        "id": "B",
+        "label": "kiểm tra"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “check” means “kiểm tra”.",
+        "vi": "Đúng rồi. “check” có nghĩa là “kiểm tra”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U11.L88.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U11",
+    "lessonId": "L88",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “present”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “present”."
+    },
+    "question": "Circle the meaning of “present”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "trình bày"
+      },
+      {
+        "id": "B",
+        "label": "hỏi"
+      }
+    ],
+    "correctAnswerId": "A",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “present” means “trình bày”.",
+        "vi": "Đúng rồi. “present” có nghĩa là “trình bày”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  },
+  {
+    "activityId": "CCJ-MASTERY-BEGINNER.U12.L91.quick-try",
+    "activityVersion": 1,
+    "courseId": "CCJ-MASTERY-BEGINNER",
+    "unitId": "U12",
+    "lessonId": "L91",
+    "activityType": "single_choice",
+    "language": "en-vi",
+    "ageBand": "7-12",
+    "englishLevel": "A0-A1",
+    "objective": {
+      "en": "Identify the Vietnamese meaning of “order”.",
+      "vi": "Nhận biết nghĩa tiếng Việt của “order”."
+    },
+    "question": "Circle the meaning of “order”. / Khoanh nghĩa đúng.",
+    "options": [
+      {
+        "id": "A",
+        "label": "tuyến đường"
+      },
+      {
+        "id": "B",
+        "label": "gọi món"
+      }
+    ],
+    "correctAnswerId": "B",
+    "feedback": {
+      "correct": {
+        "en": "Correct. “order” means “gọi món”.",
+        "vi": "Đúng rồi. “order” có nghĩa là “gọi món”."
+      },
+      "incorrect": {
+        "en": "Not yet. Listen to the word and look at its meaning above, then try again.",
+        "vi": "Chưa đúng. Nghe từ và xem nghĩa ở trên, rồi thử lại nhé."
+      }
+    },
+    "retryPolicy": {
+      "mode": "unlimited",
+      "retainAttempts": true
+    },
+    "completionRule": {
+      "type": "correct_answer"
+    },
+    "evidencePolicy": {
+      "type": "objective_result",
+      "verification": "teacher_only"
+    },
+    "qaStatus": "answer_key_checked_against_source_vocabulary"
+  }
+]

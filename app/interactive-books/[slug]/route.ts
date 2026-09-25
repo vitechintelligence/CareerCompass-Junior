@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { gunzipSync } from "node:zlib";
+import { beginnerPublicActivities } from "@/lib/learning/beginner-objectives";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,15 +19,23 @@ export async function GET(
   const spec = BOOK_PARTS[slug];
   if (!spec) return new Response("Interactive book not found.", { status: 404 });
 
-  const dataDir = path.join(process.cwd(), "public", "interactive-book-data");
-  const chunks = await Promise.all(
+  let html: string;
+  if (slug === "career-compass-junior") {
+    // Readable canonical source preserves the supplied book; compressed original remains archived.
+    html = await readFile(path.join(process.cwd(), "content", "interactive-books", "career-compass-junior.html"), "utf8");
+    const activities = JSON.stringify(beginnerPublicActivities()).replaceAll("<", "\\u003c");
+    html = html.replace("<!-- CCJ_OBJECTIVE_ACTIVITIES -->", `<script id="objective-activities" type="application/json">${activities}</script>`);
+  } else {
+    const dataDir = path.join(process.cwd(), "public", "interactive-book-data");
+    const chunks = await Promise.all(
     Array.from({ length: spec.parts }, async (_, index) => {
       const suffix = String(index + 1).padStart(2, "0");
       return readFile(path.join(dataDir, `${spec.prefix}.b64.${suffix}`), "utf8");
     }),
   );
 
-  const html = gunzipSync(Buffer.from(chunks.join("").trim(), "base64")).toString("utf8");
+    html = gunzipSync(Buffer.from(chunks.join("").trim(), "base64")).toString("utf8");
+  }
 
   // The supplied full-book editions were authored with a desktop-first MediaRecorder
   // path. iOS Safari commonly records AAC/MP4 even when book code later labels the
@@ -97,7 +106,7 @@ export async function GET(
   return new Response(patchedHtml, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=300, stale-while-revalidate=3600",
+      "Cache-Control": "no-cache",
       "X-Content-Type-Options": "nosniff",
       "Permissions-Policy": "microphone=(self)",
     },
