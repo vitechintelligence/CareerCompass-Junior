@@ -34,5 +34,11 @@ jobs:
       - name: Integration adapter self-test
         run: npm run test:adapters
 
+      - name: Learning correctness regression
+        run: npm run test:learning
+
       - name: Production build
         run: npm run build
+
+      - name: Learning production HTTP regression
+        run: npm run test:learning:http

@@ -8,6 +8,7 @@ export default defineConfig([
     "out/**",
     "build/**",
     ".adapter-test/**",
+    ".learning-test/**",
     "next-env.d.ts",
   ]),
 ]);

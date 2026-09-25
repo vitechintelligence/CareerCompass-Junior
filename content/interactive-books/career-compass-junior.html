@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Career Compass Junior — Interactive Explorer</title>
+<style>
+:root{
+  --sun:#ffb703; --sun-deep:#f28c0f;
+  --sky:#3aa8e0; --sky-deep:#1d7fb8;
+  --grass:#4caf6b; --grass-deep:#358a4f;
+  --berry:#ef476f; --berry-deep:#c93257;
+  --grape:#8a63d2; --grape-deep:#6b46b8;
+  --ink:#233045; --muted:#6b7688;
+  --cream:#fffaf0; --paper:#ffffff; --line:#f0e4cc;
+  --r-sm:12px; --r-md:18px; --r-lg:26px;
+  --shadow:0 10px 26px -12px rgba(35,48,69,.25);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--cream); color:var(--ink);
+  font-family:-apple-system,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.brand-text b,.mascot-name{font-family:'Baloo 2','Comic Sans MS','Segoe UI Rounded','Arial Rounded MT Bold',-apple-system,sans-serif}
+button{font-family:inherit;cursor:pointer}
+::selection{background:var(--sun);color:#fff}
+a{color:inherit}
+
+#app{display:flex;flex-direction:column;min-height:100vh}
+header.topbar{
+  background:linear-gradient(135deg,var(--sky),var(--sky-deep));
+  color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;
+  position:sticky;top:0;z-index:40;box-shadow:var(--shadow);
+}
+.brand{display:flex;align-items:center;gap:8px;border:none;background:none;color:#fff;padding:0}
+.brand-text{display:flex;flex-direction:column;line-height:1.05}
+.brand-text b{font-size:1rem}
+.brand-text span{font-size:.62rem;color:#dff3ff;font-weight:600}
+.topbar-spacer{flex:1}
+.stat-pill{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 10px;font-size:.72rem;font-weight:700;color:#fff}
+.xp-wrap{display:flex;align-items:center;gap:6px}
+.xp-bar{width:56px;height:7px;border-radius:999px;background:rgba(255,255,255,.28);overflow:hidden}
+.xp-bar i{display:block;height:100%;background:var(--sun);border-radius:999px;transition:width .4s}
+.icon-btn-hdr{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);color:#fff;border-radius:10px;padding:7px 9px;font-size:.9rem}
+.menu-btn{display:none}
+
+.shell{display:flex;flex:1;min-height:0}
+nav.sidenav{width:280px;flex-shrink:0;background:#fff;border-right:2px solid var(--line);padding:14px 12px 80px;overflow-y:auto}
+nav.sidenav::-webkit-scrollbar{width:8px}
+nav.sidenav::-webkit-scrollbar-thumb{background:#e6dcc2;border-radius:8px}
+.unit-btn{width:100%;text-align:left;background:#fbf6e8;border:2px solid transparent;border-radius:14px;padding:10px 12px;display:flex;gap:10px;align-items:center;font-size:.82rem;margin-bottom:8px;font-weight:700;color:var(--ink)}
+.unit-btn.active{border-color:var(--sun);background:#fff3d9}
+.unit-num-badge{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:800;color:#fff}
+.unit-btn-title small{display:block;color:var(--muted);font-weight:600;font-size:.66rem;margin-top:1px}
+.unit-progress{margin-left:auto;font-size:.68rem;font-weight:800;color:var(--grass-deep)}
+
+.backdrop{display:none;position:fixed;inset:0;background:rgba(20,25,40,.5);z-index:35}
+
+main.content{flex:1;min-width:0;overflow-y:auto;padding:22px 26px 90px}
+.wrap{max-width:840px;margin:0 auto}
+
+/* mascot */
+.mascot-bar{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.mascot-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--sun),var(--berry));display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;box-shadow:var(--shadow);animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+.mascot-bubble{background:#fff;border:2px solid var(--line);border-radius:16px;padding:9px 14px;font-size:.85rem;font-weight:700;color:var(--ink);position:relative;max-width:520px}
+
+/* home */
+.hero{background:linear-gradient(135deg,var(--sky) 0%,var(--grape) 100%);color:#fff;border-radius:var(--r-lg);padding:30px 28px;margin-bottom:22px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+.hero h1{font-size:1.9rem;margin:0 0 6px}
+.hero p{margin:0 0 16px;color:#eef6ff;font-size:.95rem;max-width:480px}
+.hero .cta{background:var(--sun);color:#5a3800;border:none;border-radius:14px;padding:12px 20px;font-weight:800;font-size:.92rem;box-shadow:0 8px 18px -6px rgba(0,0,0,.3)}
+.hero .compass-mark{position:absolute;right:-20px;top:-20px;opacity:.18}
+
+.section-label{font-size:.76rem;font-weight:800;color:var(--sky-deep);letter-spacing:.02em;margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:2px;background:var(--line);border-radius:2px}
+
+.unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.unit-card{background:#fff;border:2px solid var(--line);border-radius:var(--r-md);padding:16px;cursor:pointer;transition:transform .15s}
+.unit-card:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.unit-card .badge{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;margin-bottom:8px}
+.unit-card h3{margin:0 0 3px;font-size:.98rem}
+.unit-card p{margin:0 0 8px;color:var(--muted);font-size:.78rem}
+.unit-card .prog-track{height:7px;border-radius:999px;background:#f0e9d6;overflow:hidden}
+.unit-card .prog-track i{display:block;height:100%;border-radius:999px}
+.unit-card .prog-label{font-size:.68rem;color:var(--muted);margin-top:4px;font-weight:700}
+
+/* unit view */
+.unit-hero{background:#fff;border:2px solid var(--line);border-radius:var(--r-lg);padding:22px 24px;margin-bottom:20px}
+.unit-hero .eyebrow{font-size:.72rem;font-weight:800;color:var(--sky-deep)}
+.unit-hero h2{margin:4px 0 8px;font-size:1.5rem}
+.unit-hero p{margin:0;color:var(--muted);font-size:.9rem}
+.unit-meta-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.unit-meta{background:var(--cream);border-radius:12px;padding:9px 13px;font-size:.78rem;font-weight:700}
+.unit-meta b{display:block;font-size:.66rem;color:var(--muted);font-weight:700;margin-bottom:2px}
+.lesson-path{display:flex;flex-direction:column;gap:8px}
+.lesson-row{display:flex;align-items:center;gap:12px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:11px 14px;cursor:pointer}
+.lesson-row:hover{border-color:var(--sky)}
+.lesson-row .num{width:32px;height:32px;border-radius:50%;background:var(--sky);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.82rem;flex-shrink:0}
+.lesson-row.done .num{background:var(--grass)}
+.lesson-row .titles{flex:1}
+.lesson-row .titles b{display:block;font-size:.88rem}
+.lesson-row .titles span{color:var(--muted);font-size:.76rem}
+.lesson-row .stickers{font-size:.9rem}
+
+/* lesson view */
+.crumb{font-size:.76rem;color:var(--muted);font-weight:700;margin-bottom:6px}
+.lesson-head h2{margin:0 0 4px;font-size:1.5rem}
+.lesson-head p{margin:0 0 18px;color:var(--muted);font-size:.92rem}
+
+.panel{background:#fff;border:2px solid var(--line);border-radius:var(--r-lg);padding:18px 20px;margin-bottom:18px}
+.panel h4{margin:0 0 12px;font-size:.78rem;letter-spacing:.02em;font-weight:800;display:flex;align-items:center;gap:8px}
+.panel.tint-sun{background:#fff8e6}
+.panel.tint-sky{background:#eaf6fd}
+.panel.tint-grass{background:#eef8ef}
+.panel.tint-berry{background:#fdeef2}
+
+.vocab-grid{display:flex;flex-wrap:wrap;gap:10px}
+.vocab-card{flex:1;min-width:130px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px}
+.vocab-card .en{font-weight:800;font-size:1.05rem;color:var(--ink)}
+.vocab-card .vn{font-size:.82rem;color:var(--muted);margin-bottom:8px}
+.icon-row{display:flex;gap:6px;flex-wrap:wrap}
+.icon-btn{border:none;border-radius:9px;padding:7px 10px;font-size:.74rem;display:flex;align-items:center;gap:5px;font-weight:800;color:#fff}
+.icon-btn.speak{background:var(--sky)}
+.icon-btn.rec{background:var(--berry)}
+.icon-btn.rec.recording{background:#a5223f;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+audio.playback{width:100%;height:30px;margin-top:8px;display:none}
+audio.playback.show{display:block}
+
+.model-turn{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.model-turn .who{width:38px;height:38px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#fff}
+.model-turn.compa .who{background:var(--grape)}
+.model-turn.you .who{background:var(--berry)}
+.model-bubble{background:#fff;border:2px solid var(--line);border-radius:14px;padding:11px 14px;flex:1}
+.model-turn.you .model-bubble{background:#fff0f4;border-color:#fbd3dd}
+.model-bubble .en{font-weight:800;font-size:1rem;margin-bottom:2px}
+.model-bubble .vn{font-size:.82rem;color:var(--muted);margin-bottom:8px}
+
+.pair-row{display:flex;gap:14px;flex-wrap:wrap}
+.pair-card{flex:1;min-width:150px;background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.pair-card .w{font-weight:800;font-size:1.05rem}
+.pair-card .v{font-size:.78rem;color:var(--muted);margin-bottom:8px}
+
+.try-text{font-size:.9rem;line-height:1.5;margin:0 0 12px}
+.choice-row{display:flex;gap:8px;flex-wrap:wrap}
+.choice-btn{border:2px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font-size:.86rem;font-weight:700}
+.choice-btn.ok{background:var(--grass);color:#fff;border-color:var(--grass)}
+.choice-btn.no{background:#fdeeea;color:var(--berry-deep);border-color:var(--berry)}
+.done-btn{border:2px solid var(--grass);background:#fff;color:var(--grass-deep);border-radius:999px;padding:9px 16px;font-weight:800;font-size:.86rem}
+.done-btn.on{background:var(--grass);color:#fff}
+
+.mission-box{background:#fff;border:2px dashed #d9c98a;border-radius:14px;padding:14px 16px;margin-bottom:12px}
+.mission-box p{margin:0 0 4px;font-size:.9rem;line-height:1.5}
+.practice-example{font-size:.86rem;color:var(--muted);margin:10px 0 8px}
+.blank-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.blank-input{border:2px solid var(--line);border-radius:9px;padding:8px 10px;font-family:inherit;font-size:.88rem;flex:1;min-width:120px}
+.blank-preview{font-weight:800;font-size:.98rem;color:var(--ink);background:#fff8e6;border-radius:10px;padding:9px 12px;margin-bottom:10px}
+
+.checkrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.stamp-btn{flex:1;min-width:110px;border:2px solid var(--line);background:#fff;border-radius:14px;padding:12px 10px;text-align:center;font-weight:800;font-size:.82rem}
+.stamp-btn .ic{font-size:1.5rem;display:block;margin-bottom:4px}
+.stamp-btn.on{background:var(--grass);border-color:var(--grass);color:#fff}
+.reflect-input{width:100%;border:2px solid var(--line);border-radius:10px;padding:9px 11px;font-family:inherit;font-size:.85rem;margin-top:10px}
+
+.lesson-nav{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.nav-btn{background:#fff;border:2px solid var(--line);border-radius:14px;padding:11px 18px;font-weight:800;font-size:.86rem}
+.nav-btn.primary{background:var(--sky);color:#fff;border-color:var(--sky)}
+.nav-btn:disabled{opacity:.35}
+
+/* badges overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(20,25,40,.55);z-index:60;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.overlay-card{background:#fff;border-radius:var(--r-lg);max-width:560px;width:100%;max-height:82vh;overflow-y:auto;padding:22px}
+.overlay-card h3{margin:0 0 4px}
+.overlay-card .close-x{float:right;background:none;border:none;font-size:1.2rem;color:var(--muted)}
+.badge-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:14px}
+.badge-card{background:var(--cream);border:2px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.badge-card.locked{opacity:.4;filter:grayscale(1)}
+.badge-card .ic{font-size:1.8rem;display:block;margin-bottom:4px}
+.badge-card b{display:block;font-size:.76rem}
+.badge-card span{font-size:.66rem;color:var(--muted)}
+
+.toast{position:fixed;left:50%;top:18px;transform:translateX(-50%) translateY(-40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:14px;font-weight:800;font-size:.9rem;z-index:80;opacity:0;transition:all .35s;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.confetti-piece{position:fixed;top:-12px;width:9px;height:14px;z-index:90;pointer-events:none;border-radius:2px}
+
+@media (max-width:900px){
+  nav.sidenav{position:fixed;left:0;top:0;bottom:0;z-index:36;transform:translateX(-104%);transition:transform .25s;width:270px}
+  nav.sidenav.open{transform:translateX(0)}
+  .backdrop.open{display:block}
+  .menu-btn{display:inline-flex}
+  main.content{padding:16px 14px 80px}
+  .hero{padding:22px 18px}
+  .hero h1{font-size:1.5rem}
+  .stat-pill span.wide-only{display:none}
+}
+
+/* Natural voice controls */
+.voice-tools{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:5px 7px;color:#fff}
+.voice-tools .voice-icon{font-size:.9rem}
+.voice-tools select{max-width:150px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff;border-radius:8px;padding:5px 7px;font:600 .72rem/1.2 inherit;outline:none}
+.voice-tools select option{color:#16233b;background:#fff}
+.voice-tools .voice-status{font-size:.65rem;color:rgba(255,255,255,.72);white-space:nowrap}
+@media(max-width:900px){.voice-tools .voice-picker,.voice-tools .voice-status{display:none}.voice-tools select{max-width:118px}}
+@media(max-width:640px){.voice-tools{padding:4px 5px}.voice-tools .voice-icon{display:none}.voice-tools select{max-width:105px;font-size:.68rem}}
+
+</style>
+<!-- CCJ_OBJECTIVE_ACTIVITIES -->
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="menu-btn icon-btn-hdr" id="menuBtn">☰</button>
+    <button class="brand" id="brandBtn">
+      <span style="font-size:1.5rem">🧭</span>
+      <span class="brand-text"><b>Career Compass Junior</b><span>Beginner · 7–12 tuổi</span></span>
+    </button>
+
+    <div class="voice-tools" title="English listening voice settings">
+      <span class="voice-icon" aria-hidden="true">🎧</span>
+      <select id="voiceMode" aria-label="Listening speed">
+        <option value="conversation">Natural conversation</option>
+        <option value="practice">Slow practice</option>
+      </select>
+      <select class="voice-picker" id="voicePicker" aria-label="English voice">
+        <option value="">Best available voice</option>
+      </select>
+      <span class="voice-status" id="voiceStatus">Loading voice…</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="stat-pill">🔥 <span id="streakLabel">0</span></div>
+    <div class="stat-pill xp-wrap">⭐ Lv<span id="levelLabel">1</span> <span class="xp-bar"><i id="xpBar" style="width:0%"></i></span></div>
+    <button class="icon-btn-hdr" id="badgesBtn">🏅</button>
+  </header>
+
+  <div class="shell">
+    <div class="backdrop" id="backdrop"></div>
+    <nav class="sidenav" id="sidenav"></nav>
+    <main class="content"><div class="wrap" id="content"></div></main>
+  </div>
+</div>
+
+<div class="overlay" id="badgesOverlay">
+  <div class="overlay-card">
+    <button class="close-x" id="closeBadges">✕</button>
+    <h3>🏅 Huy hiệu của em</h3>
+    <p style="color:var(--muted);font-size:.85rem;margin:0">Hoàn thành nhiệm vụ để mở khoá huy hiệu mới!</p>
+    <div class="badge-grid" id="badgeGrid"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script id="lessons-data" type="application/json">[{"unit": 1, "lesson": 1, "titleEn": "Hello team", "titleVn": "Xin chào các bạn", "vocab": [{"en": "hello", "vn": "xin chào"}, {"en": "goodbye", "vn": "tạm biệt"}, {"en": "name", "vn": "tên"}, {"en": "friend", "vn": "bạn"}], "models": [{"en": "Hello! I'm Mai.", "vn": "Xin chào! Mình là Mai."}, {"en": "What's your name?", "vn": "Bạn tên là gì?"}], "soundEn": "hello • name", "soundVn": "xin chào • tên", "quickTry": "Circle the meaning of “hello”. / Khoanh nghĩa đúng. A. tạm biệt / B. xin chào", "missionVn": "Làm thẻ tên. Chào hai bạn và hỏi tên từng bạn.", "missionEn": "Make your badge. Greet two friends. Ask their names.", "practiceEn": "Hello! I'm Mai.", "practiceVn": "Xin chào! Mình là Mai.", "practiceBlank": "Hello! I'm __________."}, {"unit": 1, "lesson": 2, "titleEn": "My age and my voice", "titleVn": "Tuổi của em", "vocab": [{"en": "seven", "vn": "bảy"}, {"en": "eight", "vn": "tám"}, {"en": "nine", "vn": "chín"}, {"en": "ten", "vn": "mười"}, {"en": "eleven", "vn": "mười một"}, {"en": "twelve", "vn": "mười hai"}], "models": [{"en": "I'm eight years old.", "vn": "Mình tám tuổi."}, {"en": "How old are you?", "vn": "Bạn bao nhiêu tuổi?"}], "soundEn": "eight • ten", "soundVn": "tám • mười", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Viết tên và tuổi lên thẻ. Hỏi tên và tuổi của hai bạn.", "missionEn": "Ask two friends their names. Show an age number and say your age.", "practiceEn": "I'm eight years old.", "practiceVn": "Mình tám tuổi.", "practiceBlank": "I'm __________ years old."}, {"unit": 1, "lesson": 3, "titleEn": "Listen and move", "titleVn": "Lắng nghe và làm theo", "vocab": [{"en": "stand up", "vn": "đứng lên"}, {"en": "sit down", "vn": "ngồi xuống"}, {"en": "listen", "vn": "lắng nghe"}, {"en": "look", "vn": "nhìn"}, {"en": "stop", "vn": "dừng lại"}], "models": [{"en": "Stand up, please.", "vn": "Mời bạn đứng lên."}, {"en": "Sit down, please.", "vn": "Mời bạn ngồi xuống."}], "soundEn": "sat • tap", "soundVn": "đã ngồi • gõ nhẹ", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Nói hai câu lệnh. Bạn làm theo. Đổi vai; có thể dùng cử động tay khi ngồi.", "missionEn": "Give two instructions. Your partner acts. Change roles.", "practiceEn": "Stand up, please.", "practiceVn": "Mời bạn đứng lên.", "practiceBlank": "__________, please."}, {"unit": 1, "lesson": 4, "titleEn": "Please help me", "titleVn": "Nhờ giúp đỡ một cách lịch sự", "vocab": [{"en": "pencil", "vn": "bút chì"}, {"en": "book", "vn": "sách"}, {"en": "bag", "vn": "cặp"}, {"en": "please", "vn": "làm ơn"}, {"en": "help", "vn": "giúp đỡ"}], "models": [{"en": "A pencil, please.", "vn": "Cho mình mượn bút chì nhé."}, {"en": "Here you are. Thank you!", "vn": "Của bạn đây. Cảm ơn bạn!"}], "soundEn": "pin • pan", "soundVn": "ghim • chảo", "quickTry": "Circle the meaning of “pencil”. / Khoanh nghĩa đúng. A. bút chì / B. sách", "missionVn": "Dùng bút chì, sách và cặp. Lần lượt hỏi mượn hai đồ vật rồi đổi vai.", "missionEn": "Use a pencil, book and bag. Ask for two things. Change roles.", "practiceEn": "A pencil, please.", "practiceVn": "Cho mình mượn bút chì nhé.", "practiceBlank": "A __________, please."}, {"unit": 1, "lesson": 5, "titleEn": "Colours around me", "titleVn": "Màu sắc quanh em", "vocab": [{"en": "red", "vn": "đỏ"}, {"en": "blue", "vn": "xanh dương"}, {"en": "green", "vn": "xanh lá"}, {"en": "yellow", "vn": "vàng"}], "models": [{"en": "It's a red book.", "vn": "Đó là một quyển sách màu đỏ."}, {"en": "It's a blue bag.", "vn": "Đó là một chiếc cặp màu xanh dương."}], "soundEn": "mat • bat", "soundVn": "tấm thảm • con dơi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ và tô màu ba đồ vật. Nói tên đồ vật và màu để bạn tìm đúng hình.", "missionEn": "Point to three colored things. Say a color and an object. Your partner finds them.", "practiceEn": "It's a red book.", "practiceVn": "Đó là một quyển sách màu đỏ.", "practiceBlank": "It's a __________ book."}, {"unit": 1, "lesson": 6, "titleEn": "Feelings and choices", "titleVn": "Cảm xúc và sở thích", "vocab": [{"en": "happy", "vn": "vui"}, {"en": "sad", "vn": "buồn"}, {"en": "tired", "vn": "mệt"}, {"en": "drawing", "vn": "vẽ"}, {"en": "games", "vn": "trò chơi"}], "models": [{"en": "I'm happy.", "vn": "Mình thấy vui."}, {"en": "I like drawing.", "vn": "Mình thích vẽ."}], "soundEn": "dad • sad", "soundVn": "bố • buồn", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ một khuôn mặt và một hoạt động em thích. Nói với bạn. Có thể dùng nhân vật tưởng tượng.", "missionEn": "Choose a face and an activity. Tell your partner. You may use an invented character.", "practiceEn": "I'm happy.", "practiceVn": "Mình thấy vui.", "practiceBlank": "I'm __________. I like __________."}, {"unit": 1, "lesson": 7, "titleEn": "My first introduction", "titleVn": "Lời giới thiệu đầu tiên", "vocab": [{"en": "hello", "vn": "xin chào"}, {"en": "name", "vn": "tên"}, {"en": "age", "vn": "tuổi"}, {"en": "like", "vn": "thích"}], "models": [{"en": "Hello! I'm Mai. I'm eight.", "vn": "Xin chào! Mình là Mai. Mình tám tuổi."}, {"en": "I like drawing.", "vn": "Mình thích vẽ."}], "soundEn": "sit • pin", "soundVn": "ngồi • ghim", "quickTry": "Circle the meaning of “hello”. / Khoanh nghĩa đúng. A. tên / B. xin chào", "missionVn": "Vẽ ba gợi ý về em: tên, tuổi và sở thích. Dùng hình để giới thiệu với hai bạn.", "missionEn": "Draw three clues about yourself. Use them to introduce yourself to two friends.", "practiceEn": "Hello! I'm Mai. I'm eight.", "practiceVn": "Xin chào! Mình là Mai. Mình tám tuổi.", "practiceBlank": "I'm __________. I'm __________ years old."}, {"unit": 1, "lesson": 8, "titleEn": "Checkpoint 1: Welcome club", "titleVn": "Trạm ôn tập một", "vocab": [{"en": "hello", "vn": "xin chào"}, {"en": "please", "vn": "làm ơn"}, {"en": "blue", "vn": "xanh dương"}, {"en": "happy", "vn": "vui"}], "models": [{"en": "Hello! What's your name?", "vn": "Xin chào! Bạn tên là gì?"}, {"en": "A book, please.", "vn": "Cho mình mượn sách nhé."}], "soundEn": "mat • sat", "soundVn": "tấm thảm • đã ngồi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Chào bạn, hỏi tên và mượn một đồ vật. Đổi vai. Thử nói mà ít nhìn mẫu hơn.", "missionEn": "Visit a friend. Greet, ask a name and request an item. Change roles.", "practiceEn": "Hello! What's your name?", "practiceVn": "Xin chào! Bạn tên là gì?", "practiceBlank": "Hello! What's your __________?"}, {"unit": 2, "lesson": 9, "titleEn": "Meet my people", "titleVn": "Những người quanh em", "vocab": [{"en": "mother", "vn": "mẹ"}, {"en": "father", "vn": "bố"}, {"en": "sister", "vn": "chị hoặc em gái"}, {"en": "brother", "vn": "anh hoặc em trai"}, {"en": "friend", "vn": "bạn"}], "models": [{"en": "This is my mother.", "vn": "Đây là mẹ mình."}, {"en": "This is my friend.", "vn": "Đây là bạn mình."}], "soundEn": "cat • kid", "soundVn": "mèo • đứa trẻ", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ hai người thật hoặc nhân vật tưởng tượng. Giới thiệu từng người với bạn.", "missionEn": "Draw real or invented people. Introduce two people to a partner.", "practiceEn": "This is my mother.", "practiceVn": "Đây là mẹ mình.", "practiceBlank": "This is my __________."}, {"unit": 2, "lesson": 10, "titleEn": "Who is this?", "titleVn": "Đây là ai", "vocab": [{"en": "grandmother", "vn": "bà"}, {"en": "grandfather", "vn": "ông"}, {"en": "baby", "vn": "em bé"}, {"en": "who", "vn": "ai"}], "models": [{"en": "Who's this?", "vn": "Đây là ai?"}, {"en": "This is my grandmother.", "vn": "Đây là bà mình."}], "soundEn": "pen • ten", "soundVn": "bút mực • mười", "quickTry": "Circle the meaning of “grandmother”. / Khoanh nghĩa đúng. A. bà / B. ông", "missionVn": "Vẽ ba người vào khung. Chỉ vào một người, hỏi và trả lời. Sau đó đổi vai.", "missionEn": "Add three people to your drawing. Ask Who's this? and answer. Change roles.", "practiceEn": "Who's this?", "practiceVn": "Đây là ai?", "practiceBlank": "Who's __________?"}, {"unit": 2, "lesson": 11, "titleEn": "My body moves", "titleVn": "Cơ thể em vận động", "vocab": [{"en": "head", "vn": "đầu"}, {"en": "hands", "vn": "hai bàn tay"}, {"en": "feet", "vn": "hai bàn chân"}, {"en": "eyes", "vn": "mắt"}, {"en": "ears", "vn": "tai"}], "models": [{"en": "Touch your head.", "vn": "Chạm vào đầu của em."}, {"en": "Clap your hands.", "vn": "Vỗ tay nào."}], "soundEn": "hat • hen", "soundVn": "mũ • gà mái", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Chọn hai động tác phù hợp với em. Hướng dẫn bạn làm theo thứ tự rồi đổi", "missionEn": "vai. Give two body instructions. Your partner follows. Make a two-step sequence.", "practiceEn": "Touch your head.", "practiceVn": "Chạm vào đầu của em.", "practiceBlank": "Touch your __________."}, {"unit": 2, "lesson": 12, "titleEn": "Faces and features", "titleVn": "Khuôn mặt vui nhộn", "vocab": [{"en": "big", "vn": "to"}, {"en": "small", "vn": "nhỏ"}, {"en": "nose", "vn": "mũi"}, {"en": "mouth", "vn": "miệng"}, {"en": "hair", "vn": "tóc"}], "models": [{"en": "I've got big eyes.", "vn": "Mình có đôi mắt to."}, {"en": "I've got a small nose.", "vn": "Mình có chiếc mũi nhỏ."}], "soundEn": "hot • hop", "soundVn": "nóng • nhảy lò cò", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ một khuôn mặt tưởng tượng. Tả mắt và mũi. Bạn vẽ theo lời em rồi cùng so sánh.", "missionEn": "Draw an invented face. Describe two features. Your partner draws what they hear.", "practiceEn": "I've got big eyes.", "practiceVn": "Mình có đôi mắt to.", "practiceBlank": "I've got __________ eyes."}, {"unit": 2, "lesson": 13, "titleEn": "How many have you got?", "titleVn": "Em có bao nhiêu", "vocab": [{"en": "six", "vn": "sáu"}, {"en": "seven", "vn": "bảy"}, {"en": "eight", "vn": "tám"}, {"en": "nine", "vn": "chín"}, {"en": "ten", "vn": "mười"}], "models": [{"en": "How many pencils?", "vn": "Có bao nhiêu bút chì?"}, {"en": "I've got six pencils.", "vn": "Mình có sáu chiếc bút chì."}], "soundEn": "cup • sun", "soundVn": "cốc • mặt trời", "quickTry": "Circle the meaning of “six”. / Khoanh nghĩa đúng. A. bảy / B. sáu", "missionVn": "Vẽ một nhóm đồ dùng. Hỏi số lượng, đếm và trả lời. Đổi vai.", "missionEn": "Draw a set of school things. Ask How many? Count and answer. Change roles.", "practiceEn": "How many pencils?", "practiceVn": "Có bao nhiêu bút chì?", "practiceBlank": "I've got __________ pencils."}, {"unit": 2, "lesson": 14, "titleEn": "Describe and guess", "titleVn": "Miêu tả và đoán", "vocab": [{"en": "eyes", "vn": "mắt"}, {"en": "legs", "vn": "chân"}, {"en": "big", "vn": "to"}, {"en": "small", "vn": "nhỏ"}, {"en": "green", "vn": "xanh lá"}], "models": [{"en": "It's got three eyes.", "vn": "Nó có ba mắt."}, {"en": "It's green.", "vn": "Nó có màu xanh lá."}], "soundEn": "fin • lip", "soundVn": "vây cá • môi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Bí mật vẽ sinh vật tưởng tượng. Nói ba gợi ý để bạn vẽ lại. So sánh hai hình.", "missionEn": "Draw a creature secretly. Give three clues. Your partner draws and compares.", "practiceEn": "It's got three eyes.", "practiceVn": "Nó có ba mắt.", "practiceBlank": "It's got __________ eyes."}, {"unit": 2, "lesson": 15, "titleEn": "My people poster", "titleVn": "Áp phích nhân vật của em", "vocab": [{"en": "mother", "vn": "mẹ"}, {"en": "friend", "vn": "bạn"}, {"en": "big", "vn": "to"}, {"en": "small", "vn": "nhỏ"}, {"en": "name", "vn": "tên"}], "models": [{"en": "This is my friend, Lan.", "vn": "Đây là bạn Lan của mình."}, {"en": "Lan has big eyes.", "vn": "Lan có đôi mắt to."}], "soundEn": "jam • van", "soundVn": "mứt • xe tải nhỏ", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ ba người hoặc nhân vật. Giới thiệu từng người. Hỏi bạn một câu về áp phích của bạn.", "missionEn": "Make a poster of three people or characters. Introduce them. Ask your partner one question.", "practiceEn": "This is my friend, Lan.", "practiceVn": "Đây là bạn Lan của mình.", "practiceBlank": "This is my friend, __________."}, {"unit": 2, "lesson": 16, "titleEn": "Checkpoint 2: People gallery", "titleVn": "Trạm ôn tập hai", "vocab": [{"en": "who", "vn": "ai"}, {"en": "my", "vn": "của em"}, {"en": "how many", "vn": "bao nhiêu"}, {"en": "eyes", "vn": "mắt"}], "models": [{"en": "Who's this?", "vn": "Đây là ai?"}, {"en": "This is my creature. It's got three eyes.", "vn": "Đây là sinh vật mình vẽ. Nó có ba mắt."}], "soundEn": "dog • cat", "soundVn": "chó • mèo", "quickTry": "Circle the meaning of “who”. / Khoanh nghĩa đúng. A. ai / B. của em", "missionVn": "Giới thiệu tranh của em. Trả lời câu hỏi về nhân vật và số lượng. Hỏi lại bạn một câu.", "missionEn": "Give your poster talk. Answer Who's this? and How many? Ask your partner a question.", "practiceEn": "Who's this?", "practiceVn": "Đây là ai?", "practiceBlank": "It's got __________ eyes."}, {"unit": 3, "lesson": 17, "titleEn": "Pets and animals", "titleVn": "Thú cưng và động vật", "vocab": [{"en": "cat", "vn": "mèo"}, {"en": "dog", "vn": "chó"}, {"en": "fish", "vn": "cá"}, {"en": "bird", "vn": "chim"}, {"en": "rabbit", "vn": "thỏ"}], "models": [{"en": "Is it a cat?", "vn": "Đó có phải là con mèo không?"}, {"en": "No. It's a dog.", "vn": "Không. Đó là con chó."}], "soundEn": "wig • yes", "soundVn": "tóc giả • có", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Bí mật chọn một con vật. Bạn hỏi để đoán. Đổi vai sau khi đoán đúng.", "missionEn": "Choose a pet secretly. Ask Is it a ...? to guess your partner's pet. Change roles.", "practiceEn": "Is it a cat?", "practiceVn": "Đó có phải là con mèo không?", "practiceBlank": "Is it a __________?"}, {"unit": 3, "lesson": 18, "titleEn": "What animals can do", "titleVn": "Động vật có thể làm gì", "vocab": [{"en": "fly", "vn": "bay"}, {"en": "swim", "vn": "bơi"}, {"en": "jump", "vn": "nhảy"}, {"en": "run", "vn": "chạy"}, {"en": "walk", "vn": "đi bộ"}], "models": [{"en": "A bird can fly.", "vn": "Chim có thể bay."}, {"en": "A fish can swim.", "vn": "Cá có thể bơi."}], "soundEn": "zip • box", "soundVn": "khóa kéo • hộp", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ hai con vật. Nói điều mỗi con có thể làm. Bạn chỉ vào hình hoặc diễn tả bằng động tác.", "missionEn": "Draw two animals. Say what each can do. Your partner acts or points.", "practiceEn": "A bird can fly.", "practiceVn": "Chim có thể bay.", "practiceBlank": "A __________ can swim."}, {"unit": 3, "lesson": 19, "titleEn": "I can do it", "titleVn": "Em có thể làm được", "vocab": [{"en": "dance", "vn": "nhảy múa"}, {"en": "sing", "vn": "hát"}, {"en": "draw", "vn": "vẽ"}, {"en": "can", "vn": "có thể"}, {"en": "can't", "vn": "không thể"}], "models": [{"en": "I can draw.", "vn": "Mình có thể vẽ."}, {"en": "I can't fly.", "vn": "Mình không thể bay."}], "soundEn": "quick • can", "soundVn": "nhanh • có thể", "quickTry": "Circle the meaning of “dance”. / Khoanh nghĩa đúng. A. hát / B. nhảy múa", "missionVn": "Vẽ một việc em làm được và một việc chưa làm được. Chia sẻ với bạn; có thể dùng nhân vật tưởng tượng.", "missionEn": "Choose two abilities. Say one can and one can't sentence. Ask a friend Can you ...?", "practiceEn": "I can draw.", "practiceVn": "Mình có thể vẽ.", "practiceBlank": "I can __________."}, {"unit": 3, "lesson": 20, "titleEn": "Can you help the team", "titleVn": "Đội của em có thể làm gì", "vocab": [{"en": "draw", "vn": "vẽ"}, {"en": "sing", "vn": "hát"}, {"en": "dance", "vn": "nhảy múa"}, {"en": "yes", "vn": "có"}, {"en": "no", "vn": "không"}], "models": [{"en": "Can you draw?", "vn": "Bạn có biết vẽ không?"}, {"en": "Yes, I can. / No, I can't.", "vn": "Có, mình biết. / Không, mình không biết."}], "soundEn": "can • can't", "soundVn": "có thể • không thể", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Hỏi hai bạn về vẽ, hát và nhảy. Ghi Có hoặc Chưa vào bảng; tôn trọng câu trả lời của bạn.", "missionEn": "Ask two friends about three actions. Put ticks in your grid. Change roles.", "practiceEn": "Can you draw?", "practiceVn": "Bạn có biết vẽ không?", "practiceBlank": "Can you __________?"}, {"unit": 3, "lesson": 21, "titleEn": "Things I like", "titleVn": "Những điều em thích", "vocab": [{"en": "like", "vn": "thích"}, {"en": "don't like", "vn": "không thích"}, {"en": "cats", "vn": "mèo"}, {"en": "dogs", "vn": "chó"}, {"en": "games", "vn": "trò chơi"}], "models": [{"en": "Do you like cats?", "vn": "Bạn có thích mèo không?"}, {"en": "Yes, I do. / No, I don't.", "vn": "Có, mình thích. / Không, mình không thích."}], "soundEn": "cat • cap", "soundVn": "mèo • mũ lưỡi trai", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Hỏi hai bạn về ba con vật hoặc hoạt động. Đánh dấu lựa chọn của từng bạn.", "missionEn": "Ask two friends Do you like ...? Use animal or activity words. Record their choices.", "practiceEn": "Do you like cats?", "practiceVn": "Bạn có thích mèo không?", "practiceBlank": "Do you like __________?"}, {"unit": 3, "lesson": 22, "titleEn": "My animal fact card", "titleVn": "Thẻ thông tin động vật", "vocab": [{"en": "tail", "vn": "đuôi"}, {"en": "legs", "vn": "chân"}, {"en": "wings", "vn": "cánh"}, {"en": "blue", "vn": "xanh dương"}, {"en": "bird", "vn": "chim"}], "models": [{"en": "It's a bird. It's blue.", "vn": "Đó là một con chim màu xanh dương."}, {"en": "It's got wings. It can fly.", "vn": "Nó có cánh. Nó có thể bay."}], "soundEn": "dog • sun", "soundVn": "chó • mặt trời", "quickTry": "Circle the meaning of “tail”. / Khoanh nghĩa đúng. A. đuôi / B. chân", "missionVn": "Làm thẻ thông tin một con vật. Nêu ba gợi ý để bạn đoán tên con vật.", "missionEn": "Make an animal fact card. Give three clues. Your partner names the animal.", "practiceEn": "It's a bird. It's blue.", "practiceVn": "Đó là một con chim màu xanh dương.", "practiceBlank": "It's a __________. It can __________."}, {"unit": 3, "lesson": 23, "titleEn": "Animal rescue mission", "titleVn": "Nhiệm vụ tìm động vật", "vocab": [{"en": "help", "vn": "giúp"}, {"en": "cat", "vn": "mèo"}, {"en": "dog", "vn": "chó"}, {"en": "white", "vn": "trắng"}, {"en": "black", "vn": "đen"}], "models": [{"en": "Is it a cat?", "vn": "Đó có phải là con mèo không?"}, {"en": "Yes. It's black. It can jump.", "vn": "Đúng. Nó màu đen. Nó có thể nhảy."}], "soundEn": "jump • cat", "soundVn": "nhảy • mèo", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ thẻ con vật đi lạc tưởng tượng. Hỏi và đáp về màu sắc, đặc điểm để tìm đúng thẻ.", "missionEn": "Draw a lost animal card. Ask and answer questions to help your partner find it.", "practiceEn": "Is it a cat?", "practiceVn": "Đó có phải là con mèo không?", "practiceBlank": "It's __________. It can jump."}, {"unit": 3, "lesson": 24, "titleEn": "Checkpoint 3: Animal club", "titleVn": "Trạm ôn tập ba", "vocab": [{"en": "name", "vn": "tên"}, {"en": "age", "vn": "tuổi"}, {"en": "like", "vn": "thích"}, {"en": "can", "vn": "có thể"}], "models": [{"en": "This is my animal card.", "vn": "Đây là thẻ con vật của mình."}, {"en": "Can it fly?", "vn": "Nó có thể bay không?"}], "soundEn": "pin • dog", "soundVn": "ghim • chó", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Trình bày thẻ con vật. Trả lời hai câu hỏi, rồi hỏi người nghe một câu.", "missionEn": "Show your animal card. Answer two questions. Ask your listener one question.", "practiceEn": "This is my animal card.", "practiceVn": "Đây là thẻ con vật của mình.", "practiceBlank": "Can it __________?"}, {"unit": 4, "lesson": 25, "titleEn": "My school bag", "titleVn": "Đồ dùng trong cặp", "vocab": [{"en": "ruler", "vn": "thước"}, {"en": "eraser", "vn": "tẩy"}, {"en": "pen", "vn": "bút mực"}, {"en": "notebook", "vn": "vở"}, {"en": "desk", "vn": "bàn học"}], "models": [{"en": "I've got a ruler.", "vn": "Mình có một chiếc thước."}, {"en": "A pen, please.", "vn": "Cho mình mượn bút mực nhé."}], "soundEn": "ship • shop", "soundVn": "tàu thủy • cửa hàng", "quickTry": "Circle the meaning of “ruler”. / Khoanh nghĩa đúng. A. tẩy / B. thước", "missionVn": "Vẽ bốn đồ dùng trong cặp. Hỏi mượn hai đồ vật một cách lịch sự rồi đổi vai.", "missionEn": "Draw four things in a bag. Ask your partner for two items politely. Change roles.", "practiceEn": "I've got a ruler.", "practiceVn": "Mình có một chiếc thước.", "practiceBlank": "I've got a __________."}, {"unit": 4, "lesson": 26, "titleEn": "Our classroom", "titleVn": "Lớp học của chúng mình", "vocab": [{"en": "chair", "vn": "ghế"}, {"en": "table", "vn": "bàn"}, {"en": "board", "vn": "bảng"}, {"en": "book", "vn": "sách"}, {"en": "two", "vn": "hai"}], "models": [{"en": "There is a table.", "vn": "Có một chiếc bàn."}, {"en": "There are two chairs.", "vn": "Có hai chiếc ghế."}], "soundEn": "chin • chip", "soundVn": "cằm • miếng khoai tây chiên", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ lớp học. Tả ba đồ vật để bạn vẽ lại. So sánh và bổ sung chi tiết còn thiếu.", "missionEn": "Draw a classroom. Describe three things. Your partner draws and compares.", "practiceEn": "There is a table.", "practiceVn": "Có một chiếc bàn.", "practiceBlank": "There are __________ chairs."}, {"unit": 4, "lesson": 27, "titleEn": "Where is my pencil?", "titleVn": "Bút chì ở đâu", "vocab": [{"en": "in", "vn": "trong"}, {"en": "on", "vn": "trên"}, {"en": "under", "vn": "dưới"}, {"en": "where", "vn": "ở đâu"}], "models": [{"en": "Where's the pencil?", "vn": "Bút chì ở đâu?"}, {"en": "It's in the bag.", "vn": "Nó ở trong cặp."}], "soundEn": "thin • this", "soundVn": "mỏng • cái này", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Đặt bút chì trong, trên hoặc dưới một đồ vật an toàn. Hỏi vị trí rồi đổi vai.", "missionEn": "Put a pencil in, on or under a safe object. Ask Where's the pencil? Change roles.", "practiceEn": "Where's the pencil?", "practiceVn": "Bút chì ở đâu?", "practiceBlank": "It's __________ the bag."}, {"unit": 4, "lesson": 28, "titleEn": "Classroom map challenge", "titleVn": "Thử thách sơ đồ lớp học", "vocab": [{"en": "next to", "vn": "bên cạnh"}, {"en": "in", "vn": "trong"}, {"en": "on", "vn": "trên"}, {"en": "under", "vn": "dưới"}], "models": [{"en": "The bag is next to the desk.", "vn": "Cặp ở cạnh bàn."}, {"en": "There are two books on the desk.", "vn": "Có hai quyển sách trên bàn."}], "soundEn": "ring • sing", "soundVn": "chiếc nhẫn • hát", "quickTry": "Circle the meaning of “next to”. / Khoanh nghĩa đúng. A. bên cạnh / B. trong", "missionVn": "Vẽ một chiếc bàn. Nói ba gợi ý về vị trí để bạn thêm đồ vật vào tranh.", "missionEn": "Draw a desk scene. Give three position clues. Your partner adds the objects.", "practiceEn": "The bag is next to the desk.", "practiceVn": "Cặp ở cạnh bàn.", "practiceBlank": "The bag is __________ the desk."}, {"unit": 4, "lesson": 29, "titleEn": "My school day", "titleVn": "Ngày học của em", "vocab": [{"en": "read", "vn": "đọc"}, {"en": "write", "vn": "viết"}, {"en": "art", "vn": "mỹ thuật"}, {"en": "music", "vn": "âm nhạc"}, {"en": "English", "vn": "tiếng Anh"}], "models": [{"en": "I read in English class.", "vn": "Mình đọc trong giờ tiếng Anh."}, {"en": "I like art.", "vn": "Mình thích môn mỹ thuật."}], "soundEn": "back • duck", "soundVn": "lưng • vịt", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Làm thời khóa biểu gồm ba tiết học em thích. Nói với bạn về môn học và hoạt động.", "missionEn": "Make a three-part dream timetable. Tell your partner what you like.", "practiceEn": "I read in English class.", "practiceVn": "Mình đọc trong giờ tiếng Anh.", "practiceBlank": "I like __________."}, {"unit": 4, "lesson": 30, "titleEn": "Our class agreement", "titleVn": "Quy ước của lớp", "vocab": [{"en": "share", "vn": "chia sẻ"}, {"en": "wait", "vn": "chờ"}, {"en": "turn", "vn": "lượt"}, {"en": "please", "vn": "làm ơn"}, {"en": "thank you", "vn": "cảm ơn"}], "models": [{"en": "Let's take turns.", "vn": "Chúng mình thay phiên nhau nhé."}, {"en": "Can I have a pen, please?", "vn": "Cho mình mượn bút mực được không?"}], "soundEn": "ship • chin", "soundVn": "tàu thủy • cằm", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Chọn và vẽ ba quy ước giúp lớp học vui hơn. Tập hỏi mượn đồ vật và chờ đến lượt.", "missionEn": "Choose three class rules. Draw them. Act out a polite request with a partner.", "practiceEn": "Let's take turns.", "practiceVn": "Chúng mình thay phiên nhau nhé.", "practiceBlank": "Can I have a __________, please?"}, {"unit": 4, "lesson": 31, "titleEn": "Welcome to our classroom", "titleVn": "Chào mừng đến lớp em", "vocab": [{"en": "welcome", "vn": "chào mừng"}, {"en": "board", "vn": "bảng"}, {"en": "desk", "vn": "bàn"}, {"en": "next to", "vn": "bên cạnh"}], "models": [{"en": "Welcome to our classroom.", "vn": "Chào mừng bạn đến lớp mình."}, {"en": "The bag is next to the desk.", "vn": "Cặp ở cạnh bàn."}], "soundEn": "board • desk", "soundVn": "bảng • bàn học", "quickTry": "Circle the meaning of “welcome”. / Khoanh nghĩa đúng. A. bảng / B. chào mừng", "missionVn": "Vẽ sơ đồ tham quan lớp với ba điểm dừng. Hướng dẫn bạn và trả lời câu hỏi về vị trí.", "missionEn": "Draw a three-stop classroom tour. Guide your partner. Answer Where's the ...?", "practiceEn": "Welcome to our classroom.", "practiceVn": "Chào mừng bạn đến lớp mình.", "practiceBlank": "Welcome to our __________."}, {"unit": 4, "lesson": 32, "titleEn": "Checkpoint 4: Classroom guide", "titleVn": "Trạm ôn tập bốn", "vocab": [{"en": "where", "vn": "ở đâu"}, {"en": "there is", "vn": "có (dùng với số ít)"}, {"en": "there are", "vn": "có (dùng với số nhiều)"}, {"en": "please", "vn": "từ dùng khi nhờ lịch"}], "models": [{"en": "Where's the book?", "vn": "Quyển sách ở đâu?"}, {"en": "It's under the bag.", "vn": "Nó ở dưới cặp."}], "soundEn": "ring • duck", "soundVn": "chiếc nhẫn • vịt", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Hướng dẫn bạn tham quan lớp. Hỏi mượn một đồ vật và chờ bạn trả lời. Đổi", "missionEn": "vai. Give a short classroom tour. Make one polite request. Let your partner respond.", "practiceEn": "Where's the book?", "practiceVn": "Quyển sách ở đâu?", "practiceBlank": "It's __________ the bag."}, {"unit": 5, "lesson": 33, "titleEn": "Food I know", "titleVn": "Món ăn em biết", "vocab": [{"en": "rice", "vn": "cơm"}, {"en": "bread", "vn": "bánh mì"}, {"en": "eggs", "vn": "trứng"}, {"en": "chicken", "vn": "thịt gà"}, {"en": "fish", "vn": "cá"}], "models": [{"en": "I like rice.", "vn": "Mình thích cơm."}, {"en": "Do you like fish?", "vn": "Bạn có thích cá không?"}], "soundEn": "stop • spin", "soundVn": "dừng • xoay", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ bữa trưa tưởng tượng. Hỏi bạn có thích ba món trong tranh không.", "missionEn": "Draw an imaginary lunch plate. Ask your partner about three foods.", "practiceEn": "I like rice.", "practiceVn": "Mình thích cơm.", "practiceBlank": "I like __________."}, {"unit": 5, "lesson": 34, "titleEn": "Fruit and choices", "titleVn": "Trái cây em chọn", "vocab": [{"en": "apple", "vn": "táo"}, {"en": "banana", "vn": "chuối"}, {"en": "orange", "vn": "cam"}, {"en": "mango", "vn": "xoài"}, {"en": "grapes", "vn": "nho"}], "models": [{"en": "Can I have an apple, please?", "vn": "Cho mình một quả táo nhé."}, {"en": "Here you are.", "vn": "Của bạn đây."}], "soundEn": "black • plum", "soundVn": "đen • mận", "quickTry": "Circle the meaning of “apple”. / Khoanh nghĩa đúng. A. táo / B. chuối", "missionVn": "Vẽ ba loại trái cây cho quầy hàng. Mua hai loại, phục vụ bạn rồi đổi vai.", "missionEn": "Draw three fruits for a stall. Order two fruits. Serve your partner and change roles.", "practiceEn": "Can I have an apple, please?", "practiceVn": "Cho mình một quả táo nhé.", "practiceBlank": "__________, please."}, {"unit": 5, "lesson": 35, "titleEn": "Drinks and containers", "titleVn": "Đồ uống và vật đựng", "vocab": [{"en": "water", "vn": "nước"}, {"en": "milk", "vn": "sữa"}, {"en": "juice", "vn": "nước ép"}, {"en": "cup", "vn": "cốc"}, {"en": "bottle", "vn": "chai"}], "models": [{"en": "A cup of water, please.", "vn": "Cho mình một cốc nước nhé."}, {"en": "A bottle of juice, please.", "vn": "Cho mình một chai nước ép nhé."}], "soundEn": "trip • drip", "soundVn": "chuyến đi • nhỏ giọt", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ một chiếc cốc và một chiếc chai. Nghe hai yêu cầu, chỉ đúng đồ uống rồi đổi vai.", "missionEn": "Draw a cup and a bottle. Take two drink orders and point to the right container.", "practiceEn": "A cup of water, please.", "practiceVn": "Cho mình một cốc nước nhé.", "practiceBlank": "A cup of __________, please."}, {"unit": 5, "lesson": 36, "titleEn": "How much is it?", "titleVn": "Giá bao nhiêu", "vocab": [{"en": "eleven", "vn": "mười một"}, {"en": "twelve", "vn": "mười hai"}, {"en": "thirteen", "vn": "mười ba"}, {"en": "fourteen", "vn": "mười bốn"}, {"en": "fifteen", "vn": "mười lăm"}], "models": [{"en": "How much is it?", "vn": "Món này giá bao nhiêu?"}, {"en": "It's twelve tokens.", "vn": "Giá là mười hai xu trò chơi."}], "soundEn": "twelve • thirteen", "soundVn": "mười hai • mười ba", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Đặt giá từ 1 đến 15 xu trò chơi cho ba món. Hỏi hai mức giá và mua một món.", "missionEn": "Give three items play prices from 1 to 15. Ask two prices and buy one item.", "practiceEn": "How much is it?", "practiceVn": "Món này giá bao nhiêu?", "practiceBlank": "It's __________ tokens."}, {"unit": 5, "lesson": 37, "titleEn": "My lunch box", "titleVn": "Hộp đồ ăn của em", "vocab": [{"en": "sandwich", "vn": "bánh mì kẹp"}, {"en": "lunch", "vn": "bữa trưa"}, {"en": "sixteen", "vn": "mười sáu"}, {"en": "seventeen", "vn": "mười bảy"}, {"en": "eighteen", "vn": "mười tám"}], "models": [{"en": "I've got two apples.", "vn": "Mình có hai quả táo."}, {"en": "I've got a sandwich.", "vn": "Mình có một chiếc bánh mì kẹp."}], "soundEn": "hand • nest", "soundVn": "bàn tay • tổ chim", "quickTry": "Circle the meaning of “sandwich”. / Khoanh nghĩa đúng. A. bữa trưa / B. bánh mì kẹp", "missionVn": "Vẽ hộp đồ ăn tưởng tượng. Tả ba món và hỏi về hộp đồ ăn của bạn.", "missionEn": "Draw an imaginary lunch box. Describe three things and ask about your partner's box.", "practiceEn": "I've got two apples.", "practiceVn": "Mình có hai quả táo.", "practiceBlank": "I've got __________ apples."}, {"unit": 5, "lesson": 38, "titleEn": "Follow a snack sequence", "titleVn": "Làm theo các bước", "vocab": [{"en": "wash", "vn": "rửa"}, {"en": "cut", "vn": "cắt"}, {"en": "put", "vn": "đặt vào"}, {"en": "first", "vn": "đầu tiên"}, {"en": "then", "vn": "sau đó"}], "models": [{"en": "First, wash the fruit.", "vn": "Đầu tiên, rửa trái cây."}, {"en": "Then, put it in a bowl.", "vn": "Sau đó, cho trái cây vào bát."}], "soundEn": "lamp • tent", "soundVn": "đèn • lều", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ ba bước làm món ăn nhẹ. Kể lại theo thứ tự. Chỉ dùng hình hoặc đồ ăn bằng giấy để đóng vai.", "missionEn": "Draw three pretend snack steps. Tell your partner the order. Use paper food only.", "practiceEn": "First, wash the fruit.", "practiceVn": "Đầu tiên, rửa trái cây.", "practiceBlank": "First, __________ the fruit."}, {"unit": 5, "lesson": 39, "titleEn": "Our mini cafe", "titleVn": "Quán nhỏ của chúng mình", "vocab": [{"en": "nineteen", "vn": "mười chín"}, {"en": "twenty", "vn": "hai mươi"}, {"en": "menu", "vn": "thực đơn"}, {"en": "tokens", "vn": "xu trò chơi"}], "models": [{"en": "Can I have juice, please?", "vn": "Cho mình nước ép nhé."}, {"en": "It's fifteen tokens. Thank you!", "vn": "Giá là mười lăm xu trò chơi. Cảm ơn bạn!"}], "soundEn": "nineteen • twenty", "soundVn": "mười chín • hai mươi", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Làm thực đơn bốn món, giá không quá 20 xu trò chơi. Gọi món, hỏi giá và nói cảm ơn.", "missionEn": "Make a four-item menu with prices up to 20 tokens. Order, ask the price and say thanks.", "practiceEn": "Can I have juice, please?", "practiceVn": "Cho mình nước ép nhé.", "practiceBlank": "Can I have __________, please?"}, {"unit": 5, "lesson": 40, "titleEn": "Checkpoint 5: Cafe day", "titleVn": "Trạm ôn tập năm", "vocab": [{"en": "food", "vn": "thức ăn"}, {"en": "drink", "vn": "đồ uống"}, {"en": "price", "vn": "giá"}, {"en": "please", "vn": "làm ơn"}], "models": [{"en": "A sandwich and water, please.", "vn": "Cho mình bánh mì kẹp và nước nhé."}, {"en": "How much is it?", "vn": "Tất cả giá bao nhiêu?"}], "soundEn": "stop • hand", "soundVn": "dừng • bàn tay", "quickTry": "Circle the meaning of “food”. / Khoanh nghĩa đúng. A. thức ăn / B. đồ uống", "missionVn": "Mở quán ăn đóng vai. Mua một món ăn và một đồ uống. Hỏi tổng giá rồi đổi", "missionEn": "vai. Open your mini cafe. Buy a food and a drink. Ask a price and change roles.", "practiceEn": "A sandwich and water, please.", "practiceVn": "Cho mình bánh mì kẹp và nước nhé.", "practiceBlank": "A __________ and water, please."}, {"unit": 6, "lesson": 41, "titleEn": "Rooms at home", "titleVn": "Các phòng trong nhà", "vocab": [{"en": "bedroom", "vn": "phòng ngủ"}, {"en": "bathroom", "vn": "phòng tắm"}, {"en": "kitchen", "vn": "bếp"}, {"en": "living room", "vn": "phòng khách"}, {"en": "home", "vn": "nhà"}], "models": [{"en": "This is my home.", "vn": "Đây là nhà của mình."}, {"en": "There is a kitchen.", "vn": "Có một căn bếp."}], "soundEn": "name • game", "soundVn": "tên • trò chơi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ ngôi nhà tưởng tượng. Ghi tên ba phòng. Giới thiệu ngôi nhà với bạn.", "missionEn": "Draw an imaginary home. Label three rooms. Give your partner a short tour.", "practiceEn": "This is my home.", "practiceVn": "Đây là nhà của mình.", "practiceBlank": "There is a __________."}, {"unit": 6, "lesson": 42, "titleEn": "Furniture and places", "titleVn": "Đồ đạc ở đâu", "vocab": [{"en": "bed", "vn": "giường"}, {"en": "sofa", "vn": "ghế sô pha"}, {"en": "lamp", "vn": "đèn"}, {"en": "desk", "vn": "bàn học"}, {"en": "next to", "vn": "bên cạnh"}], "models": [{"en": "The bed is next to the desk.", "vn": "Giường ở cạnh bàn."}, {"en": "The lamp is on the desk.", "vn": "Đèn ở trên bàn."}], "soundEn": "bike • kite", "soundVn": "xe đạp • diều", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ căn phòng mơ ước. Tả ba vị trí để bạn vẽ lại. Cùng so sánh hai tranh.", "missionEn": "Draw a dream room. Describe three positions. Your partner draws and compares.", "practiceEn": "The bed is next to the desk.", "practiceVn": "Giường ở cạnh bàn.", "practiceBlank": "The lamp is __________ the desk."}, {"unit": 6, "lesson": 43, "titleEn": "Get ready for the day", "titleVn": "Sẵn sàng cho ngày mới", "vocab": [{"en": "get up", "vn": "thức dậy"}, {"en": "brush", "vn": "chải"}, {"en": "wash", "vn": "rửa"}, {"en": "eat", "vn": "ăn"}, {"en": "go", "vn": "đi"}], "models": [{"en": "First, I get up.", "vn": "Đầu tiên, mình thức dậy."}, {"en": "Then, I brush my teeth.", "vn": "Sau đó, mình đánh răng."}], "soundEn": "home • nose", "soundVn": "nhà • mũi", "quickTry": "Circle the meaning of “get up”. / Khoanh nghĩa đúng. A. chải / B. thức dậy", "missionVn": "Vẽ ba hoạt động buổi sáng. Nói với bạn theo thứ tự, dùng First và Then.", "missionEn": "Draw three morning actions. Tell your partner using First and Then.", "practiceEn": "First, I get up.", "practiceVn": "Đầu tiên, mình thức dậy.", "practiceBlank": "First, I __________."}, {"unit": 6, "lesson": 44, "titleEn": "What time is it?", "titleVn": "Mấy giờ rồi", "vocab": [{"en": "o'clock", "vn": "giờ đúng"}, {"en": "morning", "vn": "buổi sáng"}, {"en": "night", "vn": "buổi tối"}, {"en": "at", "vn": "vào lúc"}], "models": [{"en": "What time is it?", "vn": "Mấy giờ rồi?"}, {"en": "It's seven o'clock.", "vn": "Bảy giờ đúng."}], "soundEn": "name • home", "soundVn": "tên • nhà", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ kim trên ba đồng hồ. Nói một giờ để bạn tìm đúng đồng hồ. Đổi vai.", "missionEn": "Set or draw three clock times. Say a time. Your partner finds the clock.", "practiceEn": "What time is it?", "practiceVn": "Mấy giờ rồi?", "practiceBlank": "It's __________ o'clock."}, {"unit": 6, "lesson": 45, "titleEn": "Days of the week", "titleVn": "Các ngày trong tuần", "vocab": [{"en": "Monday", "vn": "thứ Hai"}, {"en": "Tuesday", "vn": "thứ Ba"}, {"en": "Wednesday", "vn": "thứ Tư"}, {"en": "Thursday", "vn": "thứ Năm"}, {"en": "Friday", "vn": "thứ Sáu"}, {"en": "Saturday", "vn": "thứ Bảy"}, {"en": "Sunday", "vn": "Chủ nhật"}], "models": [{"en": "On Monday, I read.", "vn": "Vào thứ Hai, mình đọc sách."}, {"en": "On Sunday, I play.", "vn": "Vào Chủ nhật, mình chơi."}], "soundEn": "see • feet", "soundVn": "nhìn thấy • bàn chân", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Lập kế hoạch hoạt động cho ba ngày. Nói rõ ngày và hoạt động với bạn.", "missionEn": "Make a three-day activity plan. Tell your partner the days and activities.", "practiceEn": "On Monday, I read.", "practiceVn": "Vào thứ Hai, mình đọc sách.", "practiceBlank": "On __________, I read."}, {"unit": 6, "lesson": 46, "titleEn": "What does my character do?", "titleVn": "Một ngày của nhân vật", "vocab": [{"en": "he", "vn": "anh ấy hoặc bạn nam"}, {"en": "she", "vn": "cô ấy hoặc bạn nữ"}, {"en": "gets up", "vn": "thức dậy"}, {"en": "plays", "vn": "chơi"}], "models": [{"en": "He gets up at seven.", "vn": "Bạn ấy thức dậy lúc bảy giờ."}, {"en": "She plays on Sunday.", "vn": "Bạn ấy chơi vào Chủ nhật."}], "soundEn": "eat • read", "soundVn": "ăn • đọc", "quickTry": "Circle the meaning of “he”. / Khoanh nghĩa đúng. A. anh ấy hoặc bạn nam / B. cô ấy hoặc bạn nữ", "missionVn": "Vẽ một ngày của nhân vật tưởng tượng. Nói ba hoạt động, dùng He hoặc She theo nhân vật.", "missionEn": "Invent a character's day. Draw three actions. Tell your partner using He or She.", "practiceEn": "He gets up at seven.", "practiceVn": "Bạn ấy thức dậy lúc bảy giờ.", "practiceBlank": "He gets up at __________."}, {"unit": 6, "lesson": 47, "titleEn": "A day in my dream home", "titleVn": "Một ngày trong ngôi nhà mơ ước", "vocab": [{"en": "first", "vn": "đầu tiên"}, {"en": "then", "vn": "sau đó"}, {"en": "room", "vn": "phòng"}, {"en": "at", "vn": "vào lúc"}], "models": [{"en": "I get up at eight.", "vn": "Mình thức dậy lúc tám giờ."}, {"en": "Then, I eat in the kitchen.", "vn": "Sau đó, mình ăn trong bếp."}], "soundEn": "get up • eight", "soundVn": "thức dậy • tám", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ ba cảnh trong ngày mơ ước. Nói về phòng, hoạt động và thời gian.", "missionEn": "Draw three dream-day scenes. Tell your partner the rooms, actions and times.", "practiceEn": "I get up at eight.", "practiceVn": "Mình thức dậy lúc tám giờ.", "practiceBlank": "I get up at __________."}, {"unit": 6, "lesson": 48, "titleEn": "Checkpoint 6: My day", "titleVn": "Trạm ôn tập sáu", "vocab": [{"en": "home", "vn": "nhà"}, {"en": "day", "vn": "ngày"}, {"en": "time", "vn": "thời gian"}, {"en": "routine", "vn": "việc hằng ngày"}], "models": [{"en": "I get up at seven.", "vn": "Mình thức dậy lúc bảy giờ."}, {"en": "What do you do on Sunday?", "vn": "Bạn làm gì vào Chủ nhật?"}], "soundEn": "ship • bike", "soundVn": "tàu thủy • xe đạp", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Giới thiệu một ngày của em hoặc nhân vật. Trả lời hai câu hỏi quen thuộc rồi hỏi lại bạn.", "missionEn": "Give a short My day talk. Answer two familiar questions. Ask a question back.", "practiceEn": "I get up at seven.", "practiceVn": "Mình thức dậy lúc bảy giờ.", "practiceBlank": "On Sunday, I __________."}, {"unit": 7, "lesson": 49, "titleEn": "Weather watch", "titleVn": "Quan sát thời tiết", "vocab": [{"en": "sunny", "vn": "có nắng"}, {"en": "rainy", "vn": "có mưa"}, {"en": "windy", "vn": "có gió"}, {"en": "cloudy", "vn": "nhiều mây"}, {"en": "hot", "vn": "nóng"}], "models": [{"en": "What's the weather like?", "vn": "Thời tiết thế nào?"}, {"en": "It's sunny.", "vn": "Trời nắng."}], "soundEn": "rain • train", "soundVn": "mưa • tàu hỏa", "quickTry": "Circle the meaning of “sunny”. / Khoanh nghĩa đúng. A. có mưa / B. có nắng", "missionVn": "Chọn thời tiết cho ba ngày. Nói để bạn vẽ biểu tượng. So sánh hình rồi đổi", "missionEn": "vai. Choose weather for three days. Tell your partner. Your partner draws the symbols.", "practiceEn": "What's the weather like?", "practiceVn": "Thời tiết thế nào?", "practiceBlank": "It's __________."}, {"unit": 7, "lesson": 50, "titleEn": "What should I wear?", "titleVn": "Em nên mặc gì", "vocab": [{"en": "raincoat", "vn": "áo mưa"}, {"en": "hat", "vn": "mũ"}, {"en": "shoes", "vn": "giày"}, {"en": "coat", "vn": "áo khoác"}, {"en": "shorts", "vn": "quần đùi"}], "models": [{"en": "It's rainy. I need a raincoat.", "vn": "Trời mưa. Mình cần áo mưa."}, {"en": "It's sunny. I need a hat.", "vn": "Trời nắng. Mình cần mũ."}], "soundEn": "day • play", "soundVn": "ngày • chơi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Chọn một kiểu thời tiết. Vẽ ba món đồ phù hợp cho nhân vật và nói với bạn.", "missionEn": "Choose a weather picture. Draw clothes for a character. Tell your partner three items.", "practiceEn": "It's rainy. I need a raincoat.", "practiceVn": "Trời mưa. Mình cần áo mưa.", "practiceBlank": "It's rainy. I need a __________."}, {"unit": 7, "lesson": 51, "titleEn": "What are you wearing?", "titleVn": "Em đang mặc gì", "vocab": [{"en": "wearing", "vn": "đang mặc"}, {"en": "T-shirt", "vn": "áo thun"}, {"en": "hat", "vn": "mũ"}, {"en": "blue", "vn": "xanh dương"}, {"en": "red", "vn": "đỏ"}], "models": [{"en": "What are you wearing?", "vn": "Bạn đang mặc gì?"}, {"en": "I'm wearing a blue T-shirt.", "vn": "Mình đang mặc áo thun màu xanh dương."}], "soundEn": "coat • boat", "soundVn": "áo khoác • thuyền", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ trang phục cho nhân vật. Nói hai gợi ý về quần áo và màu sắc để bạn vẽ lại.", "missionEn": "Draw a character's outfit. Give two clothing clues. Your partner finds or draws it.", "practiceEn": "What are you wearing?", "practiceVn": "Bạn đang mặc gì?", "practiceBlank": "I'm wearing a __________ T-shirt."}, {"unit": 7, "lesson": 52, "titleEn": "What are they doing?", "titleVn": "Họ đang làm gì", "vocab": [{"en": "running", "vn": "đang chạy"}, {"en": "reading", "vn": "đang đọc"}, {"en": "eating", "vn": "đang ăn"}, {"en": "playing", "vn": "đang chơi"}, {"en": "sleeping", "vn": "đang ngủ"}], "models": [{"en": "What is Mai doing?", "vn": "Mai đang làm gì?"}, {"en": "She's reading.", "vn": "Bạn ấy đang đọc sách."}], "soundEn": "snow • grow", "soundVn": "tuyết • lớn lên", "quickTry": "Circle the meaning of “running”. / Khoanh nghĩa đúng. A. đang chạy / B. đang đọc", "missionVn": "Vẽ ba nhân vật làm ba việc khác nhau. Tả từng người để bạn chỉ hình hoặc diễn tả.", "missionEn": "Draw three characters doing different things. Describe them. Your partner points or acts.", "practiceEn": "What is Mai doing?", "practiceVn": "Mai đang làm gì?", "practiceBlank": "She's __________."}, {"unit": 7, "lesson": 53, "titleEn": "Are you playing?", "titleVn": "Bạn có đang chơi không", "vocab": [{"en": "reading", "vn": "đang đọc"}, {"en": "playing", "vn": "đang chơi"}, {"en": "yes", "vn": "có"}, {"en": "no", "vn": "không"}], "models": [{"en": "Are you playing?", "vn": "Bạn có đang chơi không?"}, {"en": "No, I'm not. I'm reading.", "vn": "Không. Mình đang đọc sách."}], "soundEn": "reading • playing", "soundVn": "đang đọc • đang chơi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Bí mật chọn một hoạt động. Bạn được hỏi tối đa ba câu để đoán. Đổi vai.", "missionEn": "Choose a secret action. Ask up to three questions to guess your partner's action.", "practiceEn": "Are you playing?", "practiceVn": "Bạn có đang chơi không?", "practiceBlank": "Are you __________?"}, {"unit": 7, "lesson": 54, "titleEn": "Our day in the park", "titleVn": "Ngày vui ở công viên", "vocab": [{"en": "park", "vn": "công viên"}, {"en": "tree", "vn": "cây"}, {"en": "sunny", "vn": "có nắng"}, {"en": "playing", "vn": "đang chơi"}], "models": [{"en": "It's sunny in the park.", "vn": "Trời nắng ở công viên."}, {"en": "Ben is playing.", "vn": "Ben đang chơi."}], "soundEn": "running • reading", "soundVn": "đang chạy • đang đọc", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ cảnh công viên. Tả thời tiết, quần áo và hoạt động của các nhân vật.", "missionEn": "Draw a park scene. Tell your partner the weather, clothes and actions.", "practiceEn": "It's sunny in the park.", "practiceVn": "Trời nắng ở công viên.", "practiceBlank": "Ben is __________."}, {"unit": 7, "lesson": 55, "titleEn": "Weather reporter rehearsal", "titleVn": "Em làm người dẫn bản tin", "vocab": [{"en": "today", "vn": "hôm nay"}, {"en": "people", "vn": "mọi người"}, {"en": "weather", "vn": "thời tiết"}, {"en": "report", "vn": "bản tin"}], "models": [{"en": "Today it's windy.", "vn": "Hôm nay trời có gió."}, {"en": "I'm wearing a jacket.", "vn": "Mình đang mặc áo khoác."}], "soundEn": "today • sunny", "soundVn": "hôm nay • có nắng", "quickTry": "Circle the meaning of “today”. / Khoanh nghĩa đúng. A. mọi người / B. hôm nay", "missionVn": "Dựa vào tranh, tập làm bản tin thời tiết ngắn. Trả lời một câu hỏi quen thuộc.", "missionEn": "Prepare a short weather report from your drawing. Answer one familiar question.", "practiceEn": "Today it's windy.", "practiceVn": "Hôm nay trời có gió.", "practiceBlank": "Today it's __________."}, {"unit": 7, "lesson": 56, "titleEn": "Checkpoint 7: Weather studio", "titleVn": "Trạm ôn tập bảy", "vocab": [{"en": "weather", "vn": "thời tiết"}, {"en": "clothes", "vn": "quần áo"}, {"en": "actions", "vn": "hoạt động"}, {"en": "today", "vn": "hôm nay"}], "models": [{"en": "It's cloudy. Mai is reading.", "vn": "Trời nhiều mây. Mai đang đọc sách."}, {"en": "She's wearing a green T-shirt.", "vn": "Bạn ấy đang mặc áo thun màu xanh lá."}], "soundEn": "rain • snow", "soundVn": "mưa • tuyết", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Giới thiệu tranh của em. Trả lời hai câu hỏi về quần áo hoặc hoạt động.", "missionEn": "Give your picture report. Answer two questions about clothes or actions.", "practiceEn": "It's cloudy. Mai is reading.", "practiceVn": "Trời nhiều mây. Mai đang đọc sách.", "practiceBlank": "She's wearing a __________ T-shirt."}, {"unit": 8, "lesson": 57, "titleEn": "Places in town", "titleVn": "Địa điểm trong thị trấn", "vocab": [{"en": "school", "vn": "trường học"}, {"en": "park", "vn": "công viên"}, {"en": "shop", "vn": "cửa hàng"}, {"en": "hospital", "vn": "bệnh viện"}, {"en": "library", "vn": "thư viện"}], "models": [{"en": "This is a library.", "vn": "Đây là thư viện."}, {"en": "There is a park.", "vn": "Có một công viên."}], "soundEn": "car • park", "soundVn": "ô tô • công viên", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ sơ đồ khu phố. Ghi tên ba địa điểm và giới thiệu với bạn.", "missionEn": "Label three places on your town map. Tell your partner what is there.", "practiceEn": "This is a library.", "practiceVn": "Đây là thư viện.", "practiceBlank": "There is a __________."}, {"unit": 8, "lesson": 58, "titleEn": "Where is the library?", "titleVn": "Thư viện ở đâu", "vocab": [{"en": "between", "vn": "ở giữa"}, {"en": "opposite", "vn": "đối diện"}, {"en": "next to", "vn": "bên cạnh"}, {"en": "where", "vn": "ở đâu"}], "models": [{"en": "Where's the library?", "vn": "Thư viện ở đâu?"}, {"en": "It's next to the school.", "vn": "Nó ở cạnh trường học."}], "soundEn": "fork • short", "soundVn": "nĩa • ngắn", "quickTry": "Circle the meaning of “between”. / Khoanh nghĩa đúng. A. ở giữa / B. đối diện", "missionVn": "Vẽ hai địa điểm cạnh nhau trên sơ đồ. Hỏi và trả lời về vị trí rồi đổi vai.", "missionEn": "Draw a town map. Describe two locations. Ask Where's the ...? and change roles.", "practiceEn": "Where's the library?", "practiceVn": "Thư viện ở đâu?", "practiceBlank": "It's next to the __________."}, {"unit": 8, "lesson": 59, "titleEn": "Go straight and turn", "titleVn": "Đi thẳng và rẽ", "vocab": [{"en": "straight", "vn": "thẳng"}, {"en": "left", "vn": "trái"}, {"en": "right", "vn": "phải"}, {"en": "turn", "vn": "rẽ"}, {"en": "stop", "vn": "dừng"}], "models": [{"en": "Go straight.", "vn": "Đi thẳng."}, {"en": "Turn left at the park.", "vn": "Rẽ trái ở công viên."}], "soundEn": "her • teacher", "soundVn": "của cô ấy • giáo viên", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Đánh dấu điểm xuất phát trên sơ đồ giấy. Nói ba chỉ dẫn để bạn di chuyển quân cờ.", "missionEn": "Mark a start on your paper map. Give three directions. Your partner moves a counter.", "practiceEn": "Go straight.", "practiceVn": "Đi thẳng.", "practiceBlank": "Turn __________ at the park."}, {"unit": 8, "lesson": 60, "titleEn": "How do you travel?", "titleVn": "Em đi bằng gì", "vocab": [{"en": "bus", "vn": "xe buýt"}, {"en": "bike", "vn": "xe đạp"}, {"en": "car", "vn": "ô tô"}, {"en": "train", "vn": "tàu hỏa"}, {"en": "walk", "vn": "đi bộ"}], "models": [{"en": "How do you go to school?", "vn": "Bạn đến trường bằng gì?"}, {"en": "I go by bus.", "vn": "Mình đi bằng xe buýt."}], "soundEn": "bird • turn", "soundVn": "chim • rẽ", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Chọn phương tiện cho hai chuyến đi tưởng tượng. Nói em đi đâu và đi bằng gì.", "missionEn": "Choose transport for two invented trips. Tell your partner where and how you go.", "practiceEn": "How do you go to school?", "practiceVn": "Bạn đến trường bằng gì?", "practiceBlank": "I go by __________."}, {"unit": 8, "lesson": 61, "titleEn": "Help me find it", "titleVn": "Giúp em tìm đường", "vocab": [{"en": "excuse me", "vn": "xin lỗi cho hỏi"}, {"en": "again", "vn": "lại lần nữa"}, {"en": "slowly", "vn": "chậm"}, {"en": "thank you", "vn": "cảm ơn"}], "models": [{"en": "Excuse me. Where's the library?", "vn": "Xin lỗi, cho mình hỏi thư viện ở đâu?"}, {"en": "Again, please.", "vn": "Bạn nói lại giúp mình nhé."}], "soundEn": "again • slowly", "soundVn": "lại lần nữa • chậm", "quickTry": "Circle the meaning of “excuse me”. / Khoanh nghĩa đúng. A. lại lần nữa / B. xin lỗi cho hỏi", "missionVn": "Hỏi đường trên sơ đồ giấy. Nhờ bạn nhắc lại một chỉ dẫn. Di chuyển quân cờ theo đường đi.", "missionEn": "Ask for a place on a paper map. Ask your partner to repeat. Follow the route.", "practiceEn": "Excuse me. Where's the library?", "practiceVn": "Xin lỗi, cho mình hỏi thư viện ở đâu?", "practiceBlank": "Where's the __________?"}, {"unit": 8, "lesson": 62, "titleEn": "Plan a town visit", "titleVn": "Lên kế hoạch tham quan", "vocab": [{"en": "let's", "vn": "chúng mình hãy"}, {"en": "first", "vn": "đầu tiên"}, {"en": "then", "vn": "sau đó"}, {"en": "visit", "vn": "ghé thăm"}], "models": [{"en": "Let's go to the park.", "vn": "Chúng mình đến công viên nhé."}, {"en": "Then, let's go to the library.", "vn": "Sau đó, chúng mình đến thư viện nhé."}], "soundEn": "next • left", "soundVn": "tiếp theo • trái", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Cùng bạn chọn hai điểm đến. Vẽ đường đi, giải thích kế hoạch và lắng nghe ý kiến của bạn.", "missionEn": "Agree on two town stops with a partner. Draw the route and explain your plan.", "practiceEn": "Let's go to the park.", "practiceVn": "Chúng mình đến công viên nhé.", "practiceBlank": "Let's go to the __________."}, {"unit": 8, "lesson": 63, "titleEn": "Tour guide rehearsal", "titleVn": "Tập làm hướng dẫn viên", "vocab": [{"en": "welcome", "vn": "chào mừng"}, {"en": "guide", "vn": "hướng dẫn viên"}, {"en": "straight", "vn": "thẳng"}, {"en": "left", "vn": "trái"}], "models": [{"en": "Welcome to our town.", "vn": "Chào mừng bạn đến khu phố của mình."}, {"en": "The library is next to the park.", "vn": "Thư viện ở cạnh công viên."}], "soundEn": "straight • left", "soundVn": "thẳng • trái", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ sơ đồ bốn địa điểm. Giới thiệu một tuyến tham quan và trả lời một câu hỏi.", "missionEn": "Make a four-place map. Give a short tour. Your visitor asks one question.", "practiceEn": "Welcome to our town.", "practiceVn": "Chào mừng bạn đến khu phố của mình.", "practiceBlank": "The library is next to the __________."}, {"unit": 8, "lesson": 64, "titleEn": "Checkpoint 8: Town mission", "titleVn": "Trạm ôn tập tám", "vocab": [{"en": "map", "vn": "bản đồ"}, {"en": "where", "vn": "ở đâu"}, {"en": "turn", "vn": "rẽ"}, {"en": "again", "vn": "lại lần nữa"}], "models": [{"en": "Where's the park?", "vn": "Công viên ở đâu?"}, {"en": "Go straight. Then, turn right.", "vn": "Đi thẳng. Sau đó rẽ phải."}], "soundEn": "car • bird", "soundVn": "ô tô • chim", "quickTry": "Circle the meaning of “map”. / Khoanh nghĩa đúng. A. bản đồ / B. ở đâu", "missionVn": "Lần lượt làm người hướng dẫn và khách. Nhờ nhắc lại một lần rồi tìm đúng điểm đến trên giấy.", "missionEn": "Be a guide, then a visitor. Ask for repetition once. Find the intended place.", "practiceEn": "Where's the park?", "practiceVn": "Công viên ở đâu?", "practiceBlank": "Go straight. Then, turn __________."}, {"unit": 9, "lesson": 65, "titleEn": "Weekend hobbies", "titleVn": "Sở thích cuối tuần", "vocab": [{"en": "football", "vn": "bóng đá"}, {"en": "swimming", "vn": "bơi"}, {"en": "drawing", "vn": "vẽ"}, {"en": "dancing", "vn": "nhảy múa"}, {"en": "reading", "vn": "đọc"}], "models": [{"en": "I like drawing.", "vn": "Mình thích vẽ."}, {"en": "Do you like swimming?", "vn": "Bạn có thích bơi không?"}], "soundEn": "moon • food", "soundVn": "mặt trăng • đồ ăn", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Hỏi hai bạn về sở thích. Ghi lại câu trả lời và chia sẻ một sở thích của em.", "missionEn": "Ask two friends about hobbies. Record their choices. Tell one of your own.", "practiceEn": "I like drawing.", "practiceVn": "Mình thích vẽ.", "practiceBlank": "I like __________."}, {"unit": 9, "lesson": 66, "titleEn": "When do we meet?", "titleVn": "Khi nào chúng mình gặp nhau", "vocab": [{"en": "meet", "vn": "gặp"}, {"en": "Saturday", "vn": "thứ Bảy"}, {"en": "Sunday", "vn": "Chủ nhật"}, {"en": "at", "vn": "vào lúc"}], "models": [{"en": "Let's play on Saturday.", "vn": "Chúng mình chơi vào thứ Bảy nhé."}, {"en": "Let's meet at three.", "vn": "Chúng mình gặp nhau lúc ba giờ nhé."}], "soundEn": "book • look", "soundVn": "sách • nhìn", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Chọn hoạt động, ngày và giờ. Mời bạn và thống nhất thời gian cả hai cùng chọn.", "missionEn": "Choose an activity, day and time. Invite a partner. Find a time you both choose.", "practiceEn": "Let's play on Saturday.", "practiceVn": "Chúng mình chơi vào thứ Bảy nhé.", "practiceBlank": "Let's meet at __________."}, {"unit": 9, "lesson": 67, "titleEn": "Which one do you choose?", "titleVn": "Em chọn hoạt động nào", "vocab": [{"en": "choose", "vn": "chọn"}, {"en": "because", "vn": "bởi vì"}, {"en": "fun", "vn": "vui"}, {"en": "easy", "vn": "dễ"}, {"en": "exciting", "vn": "thú vị"}], "models": [{"en": "I like drawing because it's fun.", "vn": "Mình thích vẽ vì hoạt động này vui."}, {"en": "Which one do you choose?", "vn": "Bạn chọn hoạt động nào?"}], "soundEn": "out • cow", "soundVn": "ở ngoài • bò", "quickTry": "Circle the meaning of “choose”. / Khoanh nghĩa đúng. A. bởi vì / B. chọn", "missionVn": "Chọn một hoạt động câu lạc bộ. Nêu một lý do, rồi lắng nghe lựa chọn của bạn.", "missionEn": "Choose a club activity. Give one reason. Listen to your partner's choice.", "practiceEn": "I like drawing because it's fun.", "practiceVn": "Mình thích vẽ vì hoạt động này vui.", "practiceBlank": "I like __________ because it's fun."}, {"unit": 9, "lesson": 68, "titleEn": "Let's solve a small problem", "titleVn": "Cùng giải quyết vấn đề nhỏ", "vocab": [{"en": "okay", "vn": "đồng ý"}, {"en": "sorry", "vn": "xin lỗi"}, {"en": "no, thanks", "vn": "thôi, cảm ơn bạn"}, {"en": "let's", "vn": "chúng mình hãy"}], "models": [{"en": "Let's play outside.", "vn": "Chúng mình ra ngoài chơi nhé."}, {"en": "It's rainy. Let's draw inside.", "vn": "Trời mưa. Chúng mình vẽ trong nhà nhé."}], "soundEn": "coin • toy", "soundVn": "đồng xu • đồ chơi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Giả vờ trời mưa. Đề xuất hoạt động trong nhà. Bạn đồng ý hoặc đưa ra ý tưởng khác.", "missionEn": "Pretend it is rainy. Suggest an indoor activity. Your partner agrees or suggests another.", "practiceEn": "Let's play outside.", "practiceVn": "Chúng mình ra ngoài chơi nhé.", "practiceBlank": "Let's __________ inside."}, {"unit": 9, "lesson": 69, "titleEn": "Game instructions", "titleVn": "Hướng dẫn trò chơi", "vocab": [{"en": "roll", "vn": "gieo xúc xắc"}, {"en": "move", "vn": "di chuyển"}, {"en": "start", "vn": "bắt đầu"}, {"en": "finish", "vn": "kết thúc"}, {"en": "card", "vn": "thẻ"}], "models": [{"en": "First, roll the die.", "vn": "Đầu tiên, tung xúc xắc."}, {"en": "Then, move and say the word.", "vn": "Sau đó, di chuyển và nói từ."}], "soundEn": "roll • move", "soundVn": "tung xúc xắc • di chuyển", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Điền sáu từ đã học vào bàn chơi. Tung xúc xắc, di chuyển và nói từ. Hướng dẫn bạn chơi.", "missionEn": "Put known words in the six game spaces. Roll, move and say. Teach your partner the rules.", "practiceEn": "First, roll the die.", "practiceVn": "Đầu tiên, tung xúc xắc.", "practiceBlank": "First, __________ the die."}, {"unit": 9, "lesson": 70, "titleEn": "Our club notice", "titleVn": "Thông báo câu lạc bộ", "vocab": [{"en": "club", "vn": "câu lạc bộ"}, {"en": "come", "vn": "hãy đến"}, {"en": "day", "vn": "ngày"}, {"en": "time", "vn": "giờ"}, {"en": "place", "vn": "địa điểm"}], "models": [{"en": "Come to our art club.", "vn": "Hãy đến câu lạc bộ mỹ thuật của chúng mình."}, {"en": "On Saturday at three.", "vn": "Vào thứ Bảy lúc ba giờ."}], "soundEn": "rain • play", "soundVn": "mưa • chơi", "quickTry": "Circle the meaning of “club”. / Khoanh nghĩa đúng. A. câu lạc bộ / B. hãy đến", "missionVn": "Làm thông báo có hoạt động, ngày, giờ và địa điểm. Mời hai bạn tham gia.", "missionEn": "Make a club notice with an activity, day, time and place. Invite two friends.", "practiceEn": "Come to our art club.", "practiceVn": "Hãy đến câu lạc bộ mỹ thuật của chúng mình.", "practiceBlank": "Come to our __________ club."}, {"unit": 9, "lesson": 71, "titleEn": "Club fair rehearsal", "titleVn": "Tập giới thiệu câu lạc bộ", "vocab": [{"en": "we", "vn": "chúng mình"}, {"en": "our", "vn": "của chúng mình"}, {"en": "because", "vn": "bởi vì"}, {"en": "fun", "vn": "vui"}], "models": [{"en": "We like drawing.", "vn": "Chúng mình thích vẽ."}, {"en": "It's fun because we draw together.", "vn": "Rất vui vì chúng mình cùng vẽ."}], "soundEn": "art • three", "soundVn": "mỹ thuật • ba", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Giới thiệu hai thông tin và một lý do về câu lạc bộ. Trả lời câu hỏi Khi nào hoặc Ở đâu.", "missionEn": "Show your club notice. Give two facts and one reason. Answer When? or Where?", "practiceEn": "We like drawing.", "practiceVn": "Chúng mình thích vẽ.", "practiceBlank": "We like __________."}, {"unit": 9, "lesson": 72, "titleEn": "Checkpoint 9: Club fair", "titleVn": "Trạm ôn tập chín", "vocab": [{"en": "hobby", "vn": "sở thích"}, {"en": "invite", "vn": "mời"}, {"en": "reason", "vn": "lý do"}, {"en": "when", "vn": "khi nào"}], "models": [{"en": "When is the art club?", "vn": "Câu lạc bộ mỹ thuật diễn ra khi nào?"}, {"en": "On Saturday at three.", "vn": "Vào thứ Bảy lúc ba giờ."}], "soundEn": "book • toy", "soundVn": "sách • đồ chơi", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Thăm câu lạc bộ của bạn. Hỏi ngày và giờ. Chọn một câu lạc bộ và nói lý do.", "missionEn": "Visit a friend's club. Ask the day and time. Choose a club and give a reason.", "practiceEn": "When is the art club?", "practiceVn": "Câu lạc bộ mỹ thuật diễn ra khi nào?", "practiceBlank": "On __________ at three."}, {"unit": 10, "lesson": 73, "titleEn": "Stories have a sequence", "titleVn": "Câu chuyện có trình tự", "vocab": [{"en": "story", "vn": "câu chuyện"}, {"en": "first", "vn": "đầu tiên"}, {"en": "then", "vn": "sau đó"}, {"en": "end", "vn": "kết thúc"}, {"en": "finds", "vn": "tìm thấy"}], "models": [{"en": "First, Ben sees a cat.", "vn": "Đầu tiên, Ben nhìn thấy một con mèo."}, {"en": "Then, the cat runs.", "vn": "Sau đó, con mèo chạy đi."}], "soundEn": "cat • box", "soundVn": "mèo • hộp", "quickTry": "Circle the meaning of “story”. / Khoanh nghĩa đúng. A. đầu tiên / B. câu chuyện", "missionVn": "Vẽ ba cảnh của câu chuyện đồ chơi bị thất lạc. Kể phần mở đầu, tiếp theo và kết thúc.", "missionEn": "Draw a three-scene lost-toy story. Tell the beginning, next event and ending.", "practiceEn": "First, Ben sees a cat.", "practiceVn": "Đầu tiên, Ben nhìn thấy một con mèo.", "practiceBlank": "First, Ben sees a __________."}, {"unit": 10, "lesson": 74, "titleEn": "Characters and feelings", "titleVn": "Nhân vật và cảm xúc", "vocab": [{"en": "scared", "vn": "sợ"}, {"en": "kind", "vn": "tốt bụng"}, {"en": "sad", "vn": "buồn"}, {"en": "happy", "vn": "vui"}, {"en": "helps", "vn": "giúp"}], "models": [{"en": "Mai is sad.", "vn": "Mai đang buồn."}, {"en": "Ben helps Mai. Now she's happy.", "vn": "Ben giúp Mai. Bây giờ bạn ấy vui rồi."}], "soundEn": "sad • kind", "soundVn": "buồn • tốt bụng", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ một câu chuyện có sự thay đổi cảm xúc. Kể nhân vật cảm thấy thế nào lúc đầu và lúc sau.", "missionEn": "Draw a story with a changing feeling. Tell your partner how the character feels.", "practiceEn": "Mai is sad.", "practiceVn": "Mai đang buồn.", "practiceBlank": "Mai is __________."}, {"unit": 10, "lesson": 75, "titleEn": "What happened yesterday?", "titleVn": "Ngày hôm qua", "vocab": [{"en": "yesterday", "vn": "hôm qua"}, {"en": "was", "vn": "đã ở / đã cảm thấy (I,"}, {"en": "were", "vn": "đã ở / đã cảm thấy"}, {"en": "today", "vn": "hôm nay"}], "models": [{"en": "Yesterday I was at the park.", "vn": "Hôm qua mình ở công viên."}, {"en": "We were happy.", "vn": "Chúng mình đã rất vui."}], "soundEn": "today • yesterday", "soundVn": "hôm nay • hôm qua", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ cảnh ngày hôm qua tưởng tượng. Nói hai nhân vật đã ở đâu và cảm thấy thế nào; dùng câu mẫu.", "missionEn": "Invent a yesterday scene. Say where two characters were and how they felt.", "practiceEn": "Yesterday I was at the park.", "practiceVn": "Hôm qua mình ở công viên.", "practiceBlank": "Yesterday I was at the __________."}, {"unit": 10, "lesson": 76, "titleEn": "Yesterday actions", "titleVn": "Hoạt động hôm qua", "vocab": [{"en": "played", "vn": "đã chơi"}, {"en": "watched", "vn": "đã xem"}, {"en": "visited", "vn": "đã đến thăm"}, {"en": "yesterday", "vn": "hôm qua"}], "models": [{"en": "Yesterday I played football.", "vn": "Hôm qua mình đã chơi bóng đá."}, {"en": "Then, I visited my grandmother.", "vn": "Sau đó, mình đến thăm bà."}], "soundEn": "played • visited", "soundVn": "đã chơi • đã đến thăm", "quickTry": "Circle the meaning of “played”. / Khoanh nghĩa đúng. A. đã chơi / B. đã xem", "missionVn": "Vẽ hai hoạt động hôm qua của nhân vật. Dựa vào mẫu để nói; chưa cần tự nhớ quy tắc quá khứ.", "missionEn": "Draw two invented yesterday actions. Tell your partner using the full past words above.", "practiceEn": "Yesterday I played football.", "practiceVn": "Hôm qua mình đã chơi bóng đá.", "practiceBlank": "Yesterday I played __________."}, {"unit": 10, "lesson": 77, "titleEn": "A little adventure", "titleVn": "Chuyến phiêu lưu nhỏ", "vocab": [{"en": "went", "vn": "đã đi"}, {"en": "saw", "vn": "đã thấy"}, {"en": "had fun", "vn": "đã rất vui"}, {"en": "fun", "vn": "niềm vui"}], "models": [{"en": "Yesterday we went to the park.", "vn": "Hôm qua chúng mình đã đến công viên."}, {"en": "We saw a cat. We had fun.", "vn": "Chúng mình thấy một con mèo. Chúng mình rất vui."}], "soundEn": "went • saw", "soundVn": "đã đi • đã thấy", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Đổi địa điểm và con vật trong mẫu. Vẽ câu chuyện mới rồi kể cho bạn.", "missionEn": "Change the place and animal in the model. Draw your new story and tell it.", "practiceEn": "Yesterday we went to the park.", "practiceVn": "Hôm qua chúng mình đã đến công viên.", "practiceBlank": "We saw a __________."}, {"unit": 10, "lesson": 78, "titleEn": "Tell the listener more", "titleVn": "Kể thêm cho người nghe", "vocab": [{"en": "who", "vn": "ai"}, {"en": "where", "vn": "ở đâu"}, {"en": "happy", "vn": "vui"}, {"en": "scared", "vn": "sợ"}], "models": [{"en": "Mai and Ben went to the park.", "vn": "Mai và Ben đã đến công viên."}, {"en": "They saw a dog. Ben was scared.", "vn": "Hai bạn thấy một con chó. Ben đã sợ."}], "soundEn": "who • where", "soundVn": "ai • ở đâu", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Thêm người, địa điểm và cảm xúc vào câu chuyện ba cảnh. Trả lời một câu hỏi của người nghe.", "missionEn": "Add a person, place and feeling to a three-scene story. Answer one listener question.", "practiceEn": "Mai and Ben went to the park.", "practiceVn": "Mai và Ben đã đến công viên.", "practiceBlank": "Ben was __________."}, {"unit": 10, "lesson": 79, "titleEn": "Story circle rehearsal", "titleVn": "Tập kể trong vòng tròn", "vocab": [{"en": "first", "vn": "đầu tiên"}, {"en": "then", "vn": "sau đó"}, {"en": "end", "vn": "kết thúc"}, {"en": "listen", "vn": "lắng nghe"}], "models": [{"en": "First, Ben sees a bird.", "vn": "Đầu tiên, Ben nhìn thấy một con chim."}, {"en": "At the end, Ben finds the bird.", "vn": "Cuối cùng, Ben tìm thấy con chim."}], "soundEn": "first • then", "soundVn": "đầu tiên • sau đó", "quickTry": "Circle the meaning of “first”. / Khoanh nghĩa đúng. A. sau đó / B. đầu tiên", "missionVn": "Vẽ câu chuyện ba cảnh. Kể hai lần, bổ sung một chi tiết sau câu hỏi của bạn.", "missionEn": "Draw a three-scene story. Tell it twice. Your listener asks about one detail.", "practiceEn": "First, Ben sees a bird.", "practiceVn": "Đầu tiên, Ben nhìn thấy một con chim.", "practiceBlank": "First, Ben sees a __________."}, {"unit": 10, "lesson": 80, "titleEn": "Checkpoint 10: Story festival", "titleVn": "Trạm ôn tập mười", "vocab": [{"en": "story", "vn": "câu chuyện"}, {"en": "character", "vn": "nhân vật"}, {"en": "place", "vn": "địa điểm"}, {"en": "feeling", "vn": "cảm xúc"}], "models": [{"en": "Yesterday we went to a shop.", "vn": "Hôm qua chúng mình đã đến cửa hàng."}, {"en": "We saw a red toy cat.", "vn": "Chúng mình thấy một con mèo đồ chơi màu đỏ."}], "soundEn": "went • happy", "soundVn": "đã đi • vui", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Kể câu chuyện bằng tranh. Nghe chuyện của bạn và hỏi một câu để hiểu rõ hơn.", "missionEn": "Tell your picture story. Listen to your partner. Ask one useful question.", "practiceEn": "Yesterday we went to a shop.", "practiceVn": "Hôm qua chúng mình đã đến cửa hàng.", "practiceBlank": "We saw a __________ toy cat."}, {"unit": 11, "lesson": 81, "titleEn": "Our environment club", "titleVn": "Câu lạc bộ môi trường", "vocab": [{"en": "paper", "vn": "giấy"}, {"en": "plastic", "vn": "nhựa"}, {"en": "bin", "vn": "thùng rác"}, {"en": "clean", "vn": "sạch"}, {"en": "pick up", "vn": "nhặt lên"}], "models": [{"en": "Pick up the paper.", "vn": "Nhặt tờ giấy lên."}, {"en": "Put it in the bin.", "vn": "Bỏ giấy vào thùng rác."}], "soundEn": "paper • bin", "soundVn": "giấy • thùng rác", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ áp phích công viên sạch. Nêu ba việc nên làm. Chỉ dùng giấy sạch để đóng vai nhặt rác.", "missionEn": "Draw a clean park poster. Give three simple instructions to your partner.", "practiceEn": "Pick up the paper.", "practiceVn": "Nhặt tờ giấy lên.", "practiceBlank": "Pick up the __________."}, {"unit": 11, "lesson": 82, "titleEn": "Animals and places", "titleVn": "Động vật và nơi sống", "vocab": [{"en": "water", "vn": "nước"}, {"en": "land", "vn": "đất liền"}, {"en": "lives", "vn": "sống"}, {"en": "fish", "vn": "cá"}, {"en": "bird", "vn": "chim"}], "models": [{"en": "A fish lives in water.", "vn": "Cá sống dưới nước."}, {"en": "A bird has wings.", "vn": "Chim có cánh."}], "soundEn": "fish • lives", "soundVn": "cá • sống", "quickTry": "Circle the meaning of “water”. / Khoanh nghĩa đúng. A. nước / B. đất liền", "missionVn": "Làm hai thẻ con vật. Nói nơi sống và khả năng để bạn đoán tên con vật.", "missionEn": "Make two animal cards. Say a place and an ability. Your partner guesses the animal.", "practiceEn": "A fish lives in water.", "practiceVn": "Cá sống dưới nước.", "practiceBlank": "A fish lives in __________."}, {"unit": 11, "lesson": 83, "titleEn": "Make a useful invention", "titleVn": "Phát minh hữu ích của em", "vocab": [{"en": "robot", "vn": "rô bốt"}, {"en": "wheels", "vn": "bánh xe"}, {"en": "carry", "vn": "mang"}, {"en": "help", "vn": "giúp"}], "models": [{"en": "This is my robot.", "vn": "Đây là rô-bốt của mình."}, {"en": "It can carry a bag.", "vn": "Nó có thể mang cặp."}], "soundEn": "robot • carry", "soundVn": "rô-bốt • mang", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ phát minh giúp ích cho người khác. Tả ba đặc điểm. Bạn hỏi về một việc nó có thể làm.", "missionEn": "Draw a helper invention. Describe three features. Your partner asks Can it ...?", "practiceEn": "This is my robot.", "practiceVn": "Đây là rô-bốt của mình.", "practiceBlank": "It can carry a __________."}, {"unit": 11, "lesson": 84, "titleEn": "Our project question", "titleVn": "Chọn dự án của nhóm", "vocab": [{"en": "poster", "vn": "áp phích"}, {"en": "model", "vn": "mô hình"}, {"en": "draw", "vn": "vẽ"}, {"en": "write", "vn": "viết"}, {"en": "make", "vn": "làm"}], "models": [{"en": "Let's make a park poster.", "vn": "Chúng mình làm áp phích công viên nhé."}, {"en": "I can draw. You can write.", "vn": "Mình có thể vẽ. Bạn có thể viết."}], "soundEn": "draw • write", "soundVn": "vẽ • viết", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Nhóm ba người chọn dự án về công viên, con vật hoặc phát minh. Mỗi bạn nhận một nhiệm vụ.", "missionEn": "Choose a park, animal or invention project in a group of three. Offer a role.", "practiceEn": "Let's make a park poster.", "practiceVn": "Chúng mình làm áp phích công viên nhé.", "practiceBlank": "I can __________."}, {"unit": 11, "lesson": 85, "titleEn": "Create and check", "titleVn": "Cùng làm và kiểm tra", "vocab": [{"en": "check", "vn": "kiểm tra"}, {"en": "picture", "vn": "hình ảnh"}, {"en": "word", "vn": "từ"}, {"en": "sentence", "vn": "câu"}], "models": [{"en": "There are two trees.", "vn": "Có hai cái cây."}, {"en": "Keep the park clean.", "vn": "Hãy giữ công viên sạch sẽ."}], "soundEn": "picture • word", "soundVn": "hình ảnh • từ", "quickTry": "Circle the meaning of “check”. / Khoanh nghĩa đúng. A. hình ảnh / B. kiểm tra", "missionVn": "Làm một phần dự án nhóm. Thêm nhãn và một câu. Nhờ bạn kiểm tra rồi sửa một điểm.", "missionEn": "Create one part of your group project. Add a label and sentence. Check a partner's work.", "practiceEn": "There are two trees.", "practiceVn": "Có hai cái cây.", "practiceBlank": "There are __________ trees."}, {"unit": 11, "lesson": 86, "titleEn": "Ask the presenter", "titleVn": "Hỏi người thuyết trình", "vocab": [{"en": "what", "vn": "cái gì"}, {"en": "where", "vn": "ở đâu"}, {"en": "can", "vn": "có thể"}, {"en": "again", "vn": "lại lần nữa"}], "models": [{"en": "What is it?", "vn": "Đó là gì?"}, {"en": "Can it carry a bag?", "vn": "Nó có thể mang cặp không?"}], "soundEn": "what • where", "soundVn": "cái gì • ở đâu", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Thăm sản phẩm của bạn. Hỏi hai câu hữu ích và trả lời về phần em đã làm.", "missionEn": "Visit a partner's project. Ask two useful questions. Answer questions about your own part.", "practiceEn": "What is it?", "practiceVn": "Đó là gì?", "practiceBlank": "Can it carry a __________?"}, {"unit": 11, "lesson": 87, "titleEn": "Project rehearsal", "titleVn": "Tập thuyết trình dự án", "vocab": [{"en": "welcome", "vn": "chào mừng"}, {"en": "our", "vn": "của chúng mình"}, {"en": "project", "vn": "dự án"}, {"en": "thank you", "vn": "cảm ơn"}], "models": [{"en": "Welcome! This is our robot.", "vn": "Chào mừng các bạn! Đây là rô-bốt của nhóm mình."}, {"en": "It can carry books. Thank you!", "vn": "Nó có thể mang sách. Cảm ơn các bạn!"}], "soundEn": "welcome • thank you", "soundVn": "chào mừng • cảm ơn", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ ba gợi ý cho phần nói của em. Trình bày, nghe góp ý và thử lại.", "missionEn": "Prepare three picture cues for your own part. Present, listen to feedback and try again.", "practiceEn": "Welcome! This is our robot.", "practiceVn": "Chào mừng các bạn! Đây là rô-bốt của nhóm mình.", "practiceBlank": "It can carry __________."}, {"unit": 11, "lesson": 88, "titleEn": "Checkpoint 11: Project expo", "titleVn": "Trạm ôn tập mười một", "vocab": [{"en": "present", "vn": "trình bày"}, {"en": "ask", "vn": "hỏi"}, {"en": "answer", "vn": "trả lời"}, {"en": "listen", "vn": "lắng nghe"}], "models": [{"en": "This is our animal poster.", "vn": "Đây là áp phích động vật của nhóm mình."}, {"en": "What animal do you like?", "vn": "Bạn thích con vật nào?"}], "soundEn": "present • listen", "soundVn": "trình bày • lắng nghe", "quickTry": "Circle the meaning of “present”. / Khoanh nghĩa đúng. A. trình bày / B. hỏi", "missionVn": "Cùng nhóm giới thiệu dự án. Mỗi người nói một phần. Thăm nhóm khác và hỏi một câu.", "missionEn": "Present with your team. Everyone speaks. Visit another project and ask a question.", "practiceEn": "This is our animal poster.", "practiceVn": "Đây là áp phích động vật của nhóm mình.", "practiceBlank": "What animal do you __________?"}, {"unit": 12, "lesson": 89, "titleEn": "My learning portfolio", "titleVn": "Hồ sơ học tập của em", "vocab": [{"en": "now", "vn": "bây giờ"}, {"en": "practise", "vn": "luyện tập"}, {"en": "read", "vn": "đọc"}, {"en": "write", "vn": "viết"}, {"en": "speak", "vn": "nói"}], "models": [{"en": "This is my map.", "vn": "Đây là sơ đồ của mình."}, {"en": "I can give directions now.", "vn": "Bây giờ mình có thể chỉ đường."}], "soundEn": "now • practise", "soundVn": "bây giờ • luyện tập", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Chọn ba trang trong sách. Nói một điều em đã tiến bộ và một điều muốn luyện thêm.", "missionEn": "Choose three pages from your book. Explain one improvement and one thing to practise.", "practiceEn": "This is my map.", "practiceVn": "Đây là sơ đồ của mình.", "practiceBlank": "This is my __________."}, {"unit": 12, "lesson": 90, "titleEn": "Review people and daily life", "titleVn": "Ôn về con người và ngày thường", "vocab": [{"en": "name", "vn": "tên"}, {"en": "age", "vn": "tuổi"}, {"en": "home", "vn": "nhà"}, {"en": "routine", "vn": "việc hằng ngày"}], "models": [{"en": "I'm Lan. I'm nine.", "vn": "Mình là Lan. Mình chín tuổi."}, {"en": "I get up at seven.", "vn": "Mình thức dậy lúc bảy giờ."}], "soundEn": "cat • home", "soundVn": "mèo • nhà", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Tạo hồ sơ học sinh tưởng tượng. Hỏi và đáp bốn câu về tên, tuổi, đồ dùng và thói quen.", "missionEn": "Invent a learner profile. Ask and answer four questions about it with a partner.", "practiceEn": "I'm Lan. I'm nine.", "practiceVn": "Mình là Lan. Mình chín tuổi.", "practiceBlank": "I'm __________. I'm __________."}, {"unit": 12, "lesson": 91, "titleEn": "Review food town and hobbies", "titleVn": "Ôn giao tiếp hằng ngày", "vocab": [{"en": "order", "vn": "gọi món"}, {"en": "route", "vn": "tuyến đường"}, {"en": "invite", "vn": "mời"}, {"en": "price", "vn": "giá"}], "models": [{"en": "A cup of water, please.", "vn": "Cho mình một cốc nước nhé."}, {"en": "Where's the library?", "vn": "Thư viện ở đâu?"}], "soundEn": "water • Sunday", "soundVn": "nước • Chủ nhật", "quickTry": "Circle the meaning of “order”. / Khoanh nghĩa đúng. A. tuyến đường / B. gọi món", "missionVn": "Đóng vai ba tình huống: quán ăn, hỏi đường và mời bạn vào câu lạc bộ. Mỗi lần đổi vai.", "missionEn": "Try three short role-plays: cafe, town and club. Change roles each time.", "practiceEn": "A cup of water, please.", "practiceVn": "Cho mình một cốc nước nhé.", "practiceBlank": "A cup of __________, please."}, {"unit": 12, "lesson": 92, "titleEn": "Review describing and storytelling", "titleVn": "Ôn miêu tả và kể chuyện", "vocab": [{"en": "weather", "vn": "thời tiết"}, {"en": "action", "vn": "hoạt động"}, {"en": "first", "vn": "đầu tiên"}, {"en": "then", "vn": "sau đó"}], "models": [{"en": "It's sunny in the park.", "vn": "Trời nắng ở công viên."}, {"en": "Mai is reading. Then, she goes home.", "vn": "Mai đang đọc sách. Sau đó, bạn ấy về nhà."}], "soundEn": "rain • toy", "soundVn": "mưa • đồ chơi", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Vẽ câu chuyện ba cảnh. Tả kỹ một cảnh và trả lời câu hỏi của bạn.", "missionEn": "Draw a three-scene story. Describe one scene in detail and answer a question.", "practiceEn": "It's sunny in the park.", "practiceVn": "Trời nắng ở công viên.", "practiceBlank": "Mai is __________."}, {"unit": 12, "lesson": 93, "titleEn": "Final task preparation", "titleVn": "Chuẩn bị phần thể hiện cuối khóa", "vocab": [{"en": "about me", "vn": "về em"}, {"en": "topic", "vn": "chủ đề"}, {"en": "question", "vn": "câu hỏi"}, {"en": "ready", "vn": "sẵn sàng"}], "models": [{"en": "Hello! I'm Mai. I like animals.", "vn": "Xin chào! Mình là Mai. Mình thích động vật."}, {"en": "A bird can fly.", "vn": "Chim có thể bay."}], "soundEn": "animals • bird", "soundVn": "động vật • chim", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Vẽ gợi ý cho bài nói ngắn. Giới thiệu bản thân, nói về chủ đề đã học và hỏi bạn hai câu.", "missionEn": "Draw your cue pictures. Practise a short talk. Ask your buddy two familiar questions.", "practiceEn": "Hello! I'm Mai. I like animals.", "practiceVn": "Xin chào! Mình là Mai. Mình thích động vật.", "practiceBlank": "I like __________."}, {"unit": 12, "lesson": 94, "titleEn": "My final skill check", "titleVn": "Thể hiện nghe đọc và viết", "vocab": [], "models": [], "soundEn": "", "soundVn": "", "quickTry": "", "special": "assessment", "listenChoice": [{"label": "Colour / Màu sắc", "a": "red", "avn": "đỏ", "b": "blue", "bvn": "xanh dương"}, {"label": "Number / Số lượng", "a": "two", "avn": "hai", "b": "three", "bvn": "ba"}, {"label": "Place / Địa điểm", "a": "on", "avn": "trên", "b": "under", "bvn": "dưới"}], "readEn": "I'm Lan. I'm nine. I like cats. I have a red bag.", "readBlanks": ["Tên / Name", "Tuổi / Age", "Con vật Lan thích / Animal", "Màu cặp / Bag colour"], "wordBank": ["Lan", "nine", "cats", "red", "blue", "books"], "writeStarters": [{"en": "I'm...", "vn": "Mình là..."}, {"en": "I'm... years old.", "vn": "Mình... tuổi."}, {"en": "I like...", "vn": "Mình thích..."}], "nextSteps": [{"en": "Listen again", "vn": "Nghe lại"}, {"en": "Read with help", "vn": "Đọc cùng người hỗ trợ"}, {"en": "Write one more sentence", "vn": "Viết thêm một câu"}]}, {"unit": 12, "lesson": 95, "titleEn": "My speaking showcase", "titleVn": "Thể hiện nói và tương tác", "vocab": [{"en": "speak", "vn": "nói"}, {"en": "listen", "vn": "lắng nghe"}, {"en": "ask", "vn": "hỏi"}, {"en": "share", "vn": "chia sẻ"}], "models": [{"en": "This is my favourite page.", "vn": "Đây là trang mình yêu thích nhất."}, {"en": "I can tell an animal story.", "vn": "Mình có thể kể chuyện về con vật."}], "soundEn": "speak • share", "soundVn": "nói • chia sẻ", "quickTry": "Say the model. Change one word to make it yours. Nói theo mẫu. Đổi một từ để nói về ý của em.", "missionVn": "Chọn một trang em tự hào. Giới thiệu, trả lời một câu hỏi và hỏi người nghe một câu.", "missionEn": "Work with a partner and use today’s language to complete a useful task.", "practiceEn": "This is my favourite page.", "practiceVn": "Đây là trang mình yêu thích nhất.", "practiceBlank": "This is my favourite __________."}, {"unit": 12, "lesson": 96, "titleEn": "Celebrate and plan the next journey", "titleVn": "Ăn mừng và lên kế hoạch tiếp theo", "vocab": [{"en": "next", "vn": "tiếp theo"}, {"en": "proud", "vn": "tự hào"}, {"en": "learn", "vn": "học"}, {"en": "practise", "vn": "luyện tập"}], "models": [{"en": "Now I can ask a question.", "vn": "Bây giờ mình có thể đặt câu hỏi."}, {"en": "Next, I want to practise speaking.", "vn": "Tiếp theo, mình muốn luyện nói."}], "soundEn": "learn • next", "soundVn": "học • tiếp theo", "quickTry": "Choose two words. Write them. Chọn hai từ và viết lại.", "missionVn": "Chia sẻ một trang yêu thích và một tiến bộ. Cảm ơn bạn học, rồi chọn bước luyện tập tiếp theo.", "missionEn": "Show a favorite page. Tell your group one success. Thank a learning partner.", "practiceEn": "Now I can ask a question.", "practiceVn": "Bây giờ mình có thể đặt câu hỏi.", "practiceBlank": "Next, I want to practise __________."}]</script>
+<script id="units-data" type="application/json">[{"unit": 1, "titleEn": "My voice & my strengths", "titleVn": "Tiếng nói và điểm mạnh của em", "projectEn": "My name badge", "projectVn": "Thẻ tên của em", "skillEn": "Confidence", "skillVn": "Tự tin"}, {"unit": 2, "titleEn": "My people & healthy habits", "titleVn": "Người thân và thói quen lành mạnh", "projectEn": "My people poster", "projectVn": "Áp phích người thân và nhân vật", "skillEn": "Care", "skillVn": "Quan tâm"}, {"unit": 3, "titleEn": "Animals & curiosity", "titleVn": "Động vật và lòng ham học hỏi", "projectEn": "My animal fact card", "projectVn": "Thẻ thông tin động vật", "skillEn": "Curiosity", "skillVn": "Ham học hỏi"}, {"unit": 4, "titleEn": "Our classroom & teamwork", "titleVn": "Lớp học và tinh thần hợp tác", "projectEn": "Our classroom guide", "projectVn": "Hướng dẫn tham quan lớp", "skillEn": "Teamwork", "skillVn": "Hợp tác"}, {"unit": 5, "titleEn": "Food & kind service", "titleVn": "Đồ ăn và cách phục vụ tử tế", "projectEn": "Our mini cafe", "projectVn": "Quán ăn nhỏ của nhóm", "skillEn": "Kindness", "skillVn": "Tử tế"}, {"unit": 6, "titleEn": "Home, time & daily routines", "titleVn": "Nhà, thời gian và sinh hoạt hằng ngày", "projectEn": "A day in my dream home", "projectVn": "Một ngày trong ngôi nhà mơ ước", "skillEn": "Planning", "skillVn": "Lập kế hoạch"}, {"unit": 7, "titleEn": "Weather, clothes & choices", "titleVn": "Thời tiết, quần áo và lựa chọn", "projectEn": "My weather report", "projectVn": "Bản tin thời tiết của em", "skillEn": "Good choices", "skillVn": "Lựa chọn phù hợp"}, {"unit": 8, "titleEn": "Town, transport & safety", "titleVn": "Khu phố, giao thông và an toàn", "projectEn": "My town map", "projectVn": "Sơ đồ khu phố của em", "skillEn": "Helping", "skillVn": "Giúp đỡ"}, {"unit": 9, "titleEn": "Hobbies, invitations & reasons", "titleVn": "Sở thích, lời mời và lý do", "projectEn": "Our club notice", "projectVn": "Thông báo câu lạc bộ", "skillEn": "Fair choices", "skillVn": "Lựa chọn công bằng"}, {"unit": 10, "titleEn": "Stories & imagination", "titleVn": "Câu chuyện và trí tưởng tượng", "projectEn": "My picture story", "projectVn": "Câu chuyện bằng tranh", "skillEn": "Imagination", "skillVn": "Tưởng tượng"}, {"unit": 11, "titleEn": "Create, solve & work together", "titleVn": "Sáng tạo, giải quyết và hợp tác", "projectEn": "Our useful project", "projectVn": "Dự án hữu ích của nhóm", "skillEn": "Problem solving", "skillVn": "Giải quyết vấn đề"}, {"unit": 12, "titleEn": "Show, reflect & next steps", "titleVn": "Chia sẻ, nhìn lại và bước tiếp theo", "projectEn": "My learning portfolio", "projectVn": "Hồ sơ học tập của em", "skillEn": "Reflection", "skillVn": "Nhìn lại việc học"}]</script>
+<script>
+const LESSONS = JSON.parse(document.getElementById('lessons-data').textContent);
+const UNITS = JSON.parse(document.getElementById('units-data').textContent);
+const UNIT_COLORS = ['#3aa8e0','#4caf6b','#ffb703','#ef476f','#8a63d2','#1d7fb8','#358a4f','#f28c0f','#c93257','#6b46b8','#3aa8e0','#4caf6b'];
+function unitColor(u){ return UNIT_COLORS[(u-1)%UNIT_COLORS.length]; }
+function lessonsOf(u){ return LESSONS.filter(l=>l.unit===u).sort((a,b)=>a.lesson-b.lesson); }
+
+const MASCOT_LINES = {
+  home: ["Chào em! Mình là Compa, la bàn nhỏ của em! 🧭","Sẵn sàng khám phá bài học hôm nay chưa?","Hôm nay mình học gì nhỉ?"],
+  lesson: ["Nghe kỹ rồi thử nói theo em nhé!","Không cần hoàn hảo đâu — cứ thử thôi!","Mình nghe em nói này! 🎙️"],
+  record: ["Tuyệt vời! Nghe lại xem nào! 🎉","Giọng của em hay lắm!","Ghi âm xong rồi, bấm nghe lại nhé!"],
+  star5: ["Xuất sắc! Em giỏi quá! 🌟","Tuyệt đỉnh! Cho em 5 sao!","Wow! Hoàn thành xuất sắc!"],
+  badge: ["Mở khoá huy hiệu mới! 🏅","Chúc mừng em!","Thêm một huy hiệu nữa rồi!"],
+};
+function mascotSay(context){
+  const arr = MASCOT_LINES[context] || MASCOT_LINES.lesson;
+  return arr[Math.floor(Math.random()*arr.length)];
+}
+
+/* ---------- storage ---------- */
+const STORE_KEY = 'ccjunior_v1';
+function loadStore(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY))||{}; }catch(e){ return {}; } }
+function saveStore(s){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(s)); }catch(e){} }
+let store = loadStore();
+function setVal(id,val){ store[id]=val; saveStore(store); }
+function getVal(id,def){ return store[id]!==undefined?store[id]:def; }
+
+function lid(n){ return 'l'+n; }
+function recordedSet(){ return new Set(getVal('recorded',[])); }
+function markRecorded(id){
+  const s = recordedSet(); s.add(id); setVal('recorded', Array.from(s));
+}
+function starsFor(n){ return getVal(lid(n)+'_stamps',[]).length; }
+function stampsFor(n){ return getVal(lid(n)+'_stamps',[]); }
+function toggleStamp(n, key){
+  const arr = new Set(stampsFor(n));
+  if(arr.has(key)) arr.delete(key); else arr.add(key);
+  setVal(lid(n)+'_stamps', Array.from(arr));
+}
+function lessonDone(n){ return stampsFor(n).length>=3; }
+function unitDoneCount(u){ return lessonsOf(u).filter(l=>lessonDone(l.lesson)).length; }
+
+/* ---------- XP / level / streak ---------- */
+function computeXP(){
+  let xp = 0;
+  LESSONS.forEach(l=> xp += stampsFor(l.lesson).length*5 );
+  xp += recordedSet().size*2;
+  xp += earnedBadges().length*15;
+  return xp;
+}
+function computeLevel(xp){ return 1+Math.floor(xp/80); }
+function touchStreak(){
+  const today = new Date().toISOString().slice(0,10);
+  const last = getVal('lastVisit', null);
+  let streak = getVal('streak',0);
+  if(last !== today){
+    if(last){
+      const d1 = new Date(last), d2 = new Date(today);
+      const diffDays = Math.round((d2-d1)/86400000);
+      streak = diffDays===1 ? streak+1 : 1;
+    } else { streak = 1; }
+    setVal('lastVisit', today); setVal('streak', streak);
+  }
+  return streak;
+}
+function updateHeaderStats(){
+  const xp = computeXP(); const lvl = computeLevel(xp);
+  const into = xp - (lvl-1)*80; const pct = Math.min(100, Math.round(into/80*100));
+  document.getElementById('levelLabel').textContent = lvl;
+  document.getElementById('xpBar').style.width = pct+'%';
+  document.getElementById('streakLabel').textContent = getVal('streak',0);
+}
+
+/* ---------- badges ---------- */
+const BADGE_DEFS = [
+  {id:'first_record', icon:'🎙️', name:'Giọng nói đầu tiên', desc:'Ghi âm lần đầu tiên', test:()=>recordedSet().size>=1},
+  {id:'record10', icon:'🎤', name:'Người kể chuyện', desc:'Ghi âm 10 lần', test:()=>recordedSet().size>=10},
+  {id:'record30', icon:'🌟', name:'Ngôi sao phát âm', desc:'Ghi âm 30 lần', test:()=>recordedSet().size>=30},
+  {id:'first_lesson', icon:'✅', name:'Bài học đầu tiên', desc:'Hoàn thành 1 bài học', test:()=>LESSONS.some(l=>lessonDone(l.lesson))},
+  {id:'unit1', icon:'🧩', name:'Nhà khám phá', desc:'Hoàn thành Unit 1', test:()=>unitDoneCount(1)>=8},
+  {id:'unit_half', icon:'🗺️', name:'Nửa hành trình', desc:'Hoàn thành 6 unit', test:()=>UNITS.filter(u=>unitDoneCount(u.unit)>=8).length>=6},
+  {id:'streak3', icon:'🔥', name:'Chuỗi 3 ngày', desc:'Học 3 ngày liên tiếp', test:()=>getVal('streak',0)>=3},
+  {id:'streak7', icon:'🔥', name:'Chuỗi 7 ngày', desc:'Học 7 ngày liên tiếp', test:()=>getVal('streak',0)>=7},
+  {id:'all_done', icon:'🏆', name:'Nhà vô địch la bàn', desc:'Hoàn thành cả 96 bài học', test:()=>LESSONS.every(l=>lessonDone(l.lesson))},
+];
+function earnedBadges(){ return BADGE_DEFS.filter(b=>b.test()); }
+function checkNewBadges(){
+  const seen = new Set(getVal('badgesSeen',[]));
+  const earned = earnedBadges();
+  const fresh = earned.filter(b=>!seen.has(b.id));
+  if(fresh.length){
+    fresh.forEach(b=>{ seen.add(b.id); });
+    setVal('badgesSeen', Array.from(seen));
+    fresh.forEach(b=> showToast('🏅 '+b.name+' — '+mascotSay('badge')) );
+    confettiBurst();
+    playChime();
+  }
+  updateHeaderStats();
+}
+function renderBadges(){
+  const grid = document.getElementById('badgeGrid');
+  const seen = new Set(getVal('badgesSeen',[]).concat(earnedBadges().map(b=>b.id)));
+  grid.innerHTML = BADGE_DEFS.map(b=>{
+    const on = seen.has(b.id) && b.test();
+    return `<div class="badge-card ${on?'':'locked'}"><span class="ic">${b.icon}</span><b>${b.name}</b><span>${b.desc}</span></div>`;
+  }).join('');
+}
+document.getElementById('badgesBtn').onclick = ()=>{ renderBadges(); document.getElementById('badgesOverlay').classList.add('open'); };
+document.getElementById('closeBadges').onclick = ()=> document.getElementById('badgesOverlay').classList.remove('open');
+
+/* ---------- toast / confetti / sound ---------- */
+let toastTimer=null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> t.classList.remove('show'), 2600);
+}
+function confettiBurst(){
+  const colors = ['#ffb703','#3aa8e0','#4caf6b','#ef476f','#8a63d2'];
+  for(let i=0;i<28;i++){
+    const el = document.createElement('div');
+    el.className='confetti-piece';
+    el.style.left = (45+Math.random()*10)+'vw';
+    el.style.background = colors[i%colors.length];
+    el.style.transform = 'rotate('+(Math.random()*360)+'deg)';
+    document.body.appendChild(el);
+    const dx = (Math.random()-0.5)*300, dur = 1100+Math.random()*700;
+    el.animate([
+      {transform:el.style.transform+' translate(0,0)', opacity:1},
+      {transform:'translate('+dx+'px, 100vh) rotate('+(Math.random()*720)+'deg)', opacity:0.9}
+    ], {duration:dur, easing:'ease-in'});
+    setTimeout(()=> el.remove(), dur+50);
+  }
+}
+let actx;
+function ac(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return actx; }
+function beep(freq, start, dur, gainVal){
+  const c = ac(); if(!c) return;
+  const o = c.createOscillator(), g = c.createGain();
+  o.type='sine'; o.frequency.value=freq;
+  g.gain.value = gainVal||0.06;
+  o.connect(g); g.connect(c.destination);
+  o.start(c.currentTime+start); o.stop(c.currentTime+start+dur);
+}
+function playDing(){ beep(880,0,0.12); beep(1180,0.08,0.14); }
+function playChime(){ beep(660,0,0.12); beep(880,0.1,0.12); beep(1100,0.2,0.18); }
+
+/* ============================= AUDIO: NATURAL ENGLISH VOICE ============================= */
+// English listening is intentionally English-only. We prefer pre-generated natural audio
+// when deployed, then the best neural/natural device voice available in the browser.
+const AUDIO_PREF_KEY = 'ccjunior_audio_pref_v2';
+let _voicesReadyPromise = null;
+let _audioPrefs = (()=>{
+  try { return JSON.parse(localStorage.getItem(AUDIO_PREF_KEY)) || {}; } catch(e) { return {}; }
+})();
+function saveAudioPrefs(){ try{ localStorage.setItem(AUDIO_PREF_KEY, JSON.stringify(_audioPrefs)); }catch(e){} }
+function loadVoices(){
+  if(_voicesReadyPromise) return _voicesReadyPromise;
+  _voicesReadyPromise = new Promise(resolve=>{
+    if(!('speechSynthesis' in window)){ resolve([]); return; }
+    const existing = window.speechSynthesis.getVoices();
+    if(existing && existing.length){ resolve(existing); return; }
+    let done = false;
+    const finish = ()=>{ if(done) return; done = true; resolve(window.speechSynthesis.getVoices()); };
+    window.speechSynthesis.onvoiceschanged = finish;
+    setTimeout(finish, 1000);
+  });
+  return _voicesReadyPromise;
+}
+loadVoices();
+const VOICE_RANK = [/natural/i, /neural/i, /online/i, /wavenet/i, /premium/i, /enhanced/i, /studio/i,
+  /google us english/i, /microsoft.*(aria|jenny|guy|ava|emma)/i, /samantha/i, /matthew/i, /zira/i];
+function englishVoices(voices){
+  return voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith('en'))
+    .sort((a,b)=>{
+      const score=v=>VOICE_RANK.reduce((best,re,i)=>re.test(v.name)?Math.max(best,VOICE_RANK.length-i):best,0)+(v.localService?0:.25);
+      return score(b)-score(a) || a.name.localeCompare(b.name);
+    });
+}
+async function bestVoice(lang){
+  const voices = await loadVoices();
+  const candidates = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith((lang||'en').slice(0,2).toLowerCase()));
+  const selected = _audioPrefs.voiceURI;
+  if(selected){
+    const exact = candidates.find(v=>v.voiceURI===selected || v.name===selected);
+    if(exact) return exact;
+  }
+  let best=null, bestScore=-1;
+  candidates.forEach(v=>{
+    let score=0;
+    VOICE_RANK.forEach((re,i)=>{ if(re.test(v.name)) score=Math.max(score,VOICE_RANK.length-i); });
+    if(v.lang.toLowerCase()===(lang||'en-US').toLowerCase()) score+=.5;
+    if(score>bestScore){ bestScore=score; best=v; }
+  });
+  return best || candidates[0] || null;
+}
+function voiceMode(){ return _audioPrefs.mode === 'practice' ? 'practice' : 'conversation'; }
+function voiceRate(){ return voiceMode()==='practice' ? 0.82 : 0.97; }
+function voicePitch(){ return voiceMode()==='practice' ? 1.0 : 1.02; }
+
+/* ---------- Optional pre-generated studio/natural audio ---------- */
+let _audioManifest = null;
+let _audioManifestPromise = fetch('./audio/manifest.json').then(r=>r.ok?r.json():{}).catch(()=>({}));
+_audioManifestPromise.then(m=>{ _audioManifest=m||{}; updateVoiceStatus(); });
+let _sharedAudioEl = null;
+function playPreGenerated(text){
+  if(!_audioManifest) return false;
+  const file = _audioManifest[text];
+  if(!file) return false;
+  if(!_sharedAudioEl) _sharedAudioEl = new Audio();
+  _sharedAudioEl.pause();
+  _sharedAudioEl.src = './audio/' + file;
+  _sharedAudioEl.currentTime = 0;
+  _sharedAudioEl.playbackRate = voiceMode()==='practice' ? .86 : 1;
+  _sharedAudioEl.play().catch(()=>{});
+  return true;
+}
+
+async function speak(text, lang){
+  lang = lang || 'en-US';
+  if(lang.startsWith('en')){
+    if(_audioManifest===null) await _audioManifestPromise;
+    if(playPreGenerated(text)) return;
+  }
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = voiceRate();
+    u.pitch = voicePitch();
+    const v = await bestVoice(lang);
+    if(v) u.voice=v;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+async function updateVoiceStatus(){
+  const status=document.getElementById('voiceStatus');
+  if(!status) return;
+  const studio = _audioManifest && Object.keys(_audioManifest).length>0;
+  if(studio){ status.textContent = voiceMode()==='practice' ? 'Studio · practice' : 'Studio audio'; return; }
+  const v=await bestVoice('en-US');
+  status.textContent = v ? (voiceMode()==='practice' ? 'Slow · '+v.name : v.name) : 'Browser voice';
+}
+async function initVoiceControls(){
+  const mode=document.getElementById('voiceMode');
+  const picker=document.getElementById('voicePicker');
+  if(!mode || !picker) return;
+  mode.value=voiceMode();
+  const voices=englishVoices(await loadVoices());
+  voices.slice(0,18).forEach(v=>{
+    const opt=document.createElement('option');
+    opt.value=v.voiceURI || v.name;
+    opt.textContent=v.name+' · '+v.lang;
+    picker.appendChild(opt);
+  });
+  if(_audioPrefs.voiceURI && [...picker.options].some(o=>o.value===_audioPrefs.voiceURI)) picker.value=_audioPrefs.voiceURI;
+  mode.onchange=()=>{ _audioPrefs.mode=mode.value; saveAudioPrefs(); updateVoiceStatus(); };
+  picker.onchange=()=>{ _audioPrefs.voiceURI=picker.value; saveAudioPrefs(); updateVoiceStatus(); };
+  await updateVoiceStatus();
+}
+initVoiceControls();
+
+
+/* ---------- recording ---------- */
+let activeRecorder=null, activeChunks=[];
+async function toggleRecord(btnEl, audioEl, recId){
+  if(btnEl.classList.contains('recording')){
+    if(activeRecorder && activeRecorder.state!=='inactive') activeRecorder.stop();
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('Trình duyệt này không hỗ trợ ghi âm.'); return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    activeChunks = [];
+    const rec = new MediaRecorder(stream);
+    activeRecorder = rec;
+    rec.ondataavailable = e=>{ if(e.data.size>0) activeChunks.push(e.data); };
+    rec.onstop = ()=>{
+      const blob = new Blob(activeChunks, {type:'audio/webm'});
+      audioEl.src = URL.createObjectURL(blob);
+      audioEl.classList.add('show');
+      btnEl.classList.remove('recording');
+      btnEl.textContent = '🎙 Ghi lại';
+      stream.getTracks().forEach(t=>t.stop());
+      markRecorded(recId);
+      playDing();
+      showToast(mascotSay('record'));
+      updateHeaderStats();
+      checkNewBadges();
+    };
+    rec.start();
+    btnEl.classList.add('recording');
+    btnEl.textContent = '⏹ Dừng lại';
+  }catch(err){
+    alert('Không thể mở micro. Hãy cho phép quyền micro nhé!');
+  }
+}
+
+/* ---------- router ---------- */
+function go(route){ location.hash = route; }
+window.addEventListener('hashchange', render);
+document.getElementById('brandBtn').onclick = ()=> go('home');
+const sidenav = document.getElementById('sidenav');
+const backdrop = document.getElementById('backdrop');
+document.getElementById('menuBtn').onclick = ()=>{ sidenav.classList.add('open'); backdrop.classList.add('open'); };
+backdrop.onclick = ()=>{ sidenav.classList.remove('open'); backdrop.classList.remove('open'); };
+
+function renderSidenav(){
+  const route = location.hash.replace('#','')||'home';
+  let html = '';
+  UNITS.forEach(u=>{
+    const active = route.startsWith('u'+u.unit);
+    const done = unitDoneCount(u.unit);
+    html += `<button class="unit-btn ${active?'active':''}" data-go="u${u.unit}">
+      <span class="unit-num-badge" style="background:${unitColor(u.unit)}">${u.unit}</span>
+      <span class="unit-btn-title">${u.titleEn}<small>${done}/8 bài</small></span>
+    </button>`;
+  });
+  sidenav.innerHTML = html;
+  sidenav.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>{ go(b.dataset.go); sidenav.classList.remove('open'); backdrop.classList.remove('open'); });
+}
+
+function mascotBar(context){
+  return `<div class="mascot-bar"><div class="mascot-avatar">🧭</div><div class="mascot-bubble">${mascotSay(context)}</div></div>`;
+}
+
+/* ---------- HOME ---------- */
+function renderHome(){
+  const c = document.getElementById('content');
+  const cards = UNITS.map(u=>{
+    const done = unitDoneCount(u.unit);
+    const pct = Math.round(done/8*100);
+    const col = unitColor(u.unit);
+    return `<div class="unit-card" data-go="u${u.unit}">
+      <div class="badge" style="background:${col}">${u.unit}</div>
+      <h3>${u.titleEn}</h3>
+      <p>${u.titleVn}</p>
+      <div class="prog-track"><i style="width:${pct}%;background:${col}"></i></div>
+      <div class="prog-label">${done}/8 bài học</div>
+    </div>`;
+  }).join('');
+  c.innerHTML = `
+    <div class="hero">
+      <span class="compass-mark" style="font-size:9rem">🧭</span>
+      <h1>Career Compass Junior</h1>
+      <p>Cùng Compa khám phá 96 bài học tiếng Anh vui nhộn — nghe, nói, ghi âm giọng của em và sưu tập huy hiệu!</p>
+      <button class="cta" data-go="u1">Bắt đầu Unit 1 →</button>
+    </div>
+    ${mascotBar('home')}
+    <div class="section-label">12 chặng hành trình</div>
+    <div class="unit-grid">${cards}</div>
+  `;
+  c.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=> go(b.dataset.go));
+}
+
+/* ---------- UNIT VIEW ---------- */
+function renderUnit(uid){
+  const u = UNITS.find(x=>x.unit===uid);
+  const c = document.getElementById('content');
+  if(!u){ renderHome(); return; }
+  const ls = lessonsOf(uid);
+  const rows = ls.map(l=>{
+    const done = lessonDone(l.lesson);
+    const stamps = stampsFor(l.lesson).length;
+    return `<div class="lesson-row ${done?'done':''}" data-go="u${uid}l${l.lesson}">
+      <div class="num">${done?'✓':l.lesson}</div>
+      <div class="titles"><b>${l.titleEn}</b><span>${l.titleVn}</span></div>
+      <div class="stickers">${'⭐'.repeat(stamps)}</div>
+    </div>`;
+  }).join('');
+  c.innerHTML = `
+    <div class="crumb">🧭 Career Compass Junior · Unit ${uid}</div>
+    <div class="unit-hero">
+      <div class="eyebrow" style="color:${unitColor(uid)}">UNIT ${uid}</div>
+      <h2>${u.titleEn}</h2>
+      <p>${u.titleVn}</p>
+      <div class="unit-meta-row">
+        <div class="unit-meta"><b>DỰ ÁN / PROJECT</b>${u.projectEn} · ${u.projectVn}</div>
+        <div class="unit-meta"><b>KỸ NĂNG / SKILL</b>${u.skillEn} · ${u.skillVn}</div>
+      </div>
+    </div>
+    ${mascotBar('home')}
+    <div class="section-label">8 bài học</div>
+    <div class="lesson-path">${rows}</div>
+  `;
+  c.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=> go(b.dataset.go));
+}
+
+/* ---------- LESSON VIEW ---------- */
+function renderLessonNav(n){
+  const idx = LESSONS.findIndex(l=>l.lesson===n);
+  const prev = idx>0?LESSONS[idx-1]:null;
+  const next = idx<LESSONS.length-1?LESSONS[idx+1]:null;
+  return {prev,next};
+}
+
+function vocabHtml(l){
+  return l.vocab.map((v,vi)=>{
+    const rid = 'v_'+l.lesson+'_'+vi;
+    return `<div class="vocab-card">
+      <div class="en">${v.en}</div>
+      <div class="vn">${v.vn}</div>
+      <div class="icon-row">
+        <button class="icon-btn speak" data-speak="${v.en.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe</button>
+        <button class="icon-btn rec" data-rec="aud_${rid}" data-recid="${rid}">🎙 Ghi lại</button>
+      </div>
+      <audio class="playback" id="aud_${rid}" controls></audio>
+    </div>`;
+  }).join('');
+}
+
+function modelHtml(l){
+  return l.models.map((m,mi)=>{
+    const rid = 'm_'+l.lesson+'_'+mi;
+    return `
+    <div class="model-turn compa">
+      <div class="who">🧭</div>
+      <div class="model-bubble">
+        <div class="en">${m.en}</div>
+        <div class="vn">${m.vn}</div>
+        <button class="icon-btn speak" data-speak="${m.en.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe Compa</button>
+      </div>
+    </div>
+    <div class="model-turn you">
+      <div class="who">🙂</div>
+      <div class="model-bubble">
+        <div class="en">Đến lượt em! Nói theo Compa nhé.</div>
+        <div class="icon-row">
+          <button class="icon-btn rec" data-rec="aud_${rid}" data-recid="${rid}">🎙 Nói theo</button>
+        </div>
+        <audio class="playback" id="aud_${rid}" controls></audio>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function objectiveForLesson(l){
+  const el = document.getElementById('objective-activities');
+  if(!el) return null;
+  try { return JSON.parse(el.textContent).find(a=>a.lessonId==='L'+String(l.lesson).padStart(2,'0')) || null; }
+  catch(e){ return null; }
+}
+function escapeActivityText(text){
+  return String(text).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function quickTryHtml(l){
+  const activity = objectiveForLesson(l);
+  if(activity){
+    return `<p class="try-text">${escapeActivityText(activity.question)}</p>
+    <div class="choice-row">${activity.options.map(option=>`<button type="button" class="choice-btn" data-choice="${escapeActivityText(option.id)}">${escapeActivityText(option.id)}. ${escapeActivityText(option.label)}</button>`).join('')}</div>
+    <p id="objectiveFeedback" role="status" aria-live="polite">Chọn một đáp án / Choose an answer.</p>
+    <small>Preview practice · Luyện tập xem trước. Results are not saved to your account / Kết quả chưa được lưu vào tài khoản.</small>`;
+  }
+  // Missing objective metadata must never fall through to a self-reported success control.
+  if(/A\.\s*.+?\s*\/\s*B\./i.test(l.quickTry)){
+    return '<p role="alert">This question is unavailable for checking. / Chưa thể kiểm tra câu hỏi này.</p>';
+  }
+  const done = getVal(lid(l.lesson)+'_qt', false);
+  return `<p class="try-text">${l.quickTry}</p>
+  <button class="done-btn ${done?'on':''}" id="qtDone">${done?'✓ Đã thử!':'Mình đã thử! ✅'}</button>`;
+}
+
+function renderAssessment(l){
+  const c = document.getElementById('content');
+  const {prev,next} = renderLessonNav(l.lesson);
+  const listenHtml = l.listenChoice.map((it,i)=>`
+    <div class="pair-card" style="text-align:left;margin-bottom:8px">
+      <b>${i+1}. ${it.label}</b>
+      <div class="choice-row" style="margin-top:8px">
+        <button class="icon-btn speak" data-speak="${it.a}" data-lang="en-US">🔊 ${it.a}</button>
+        <button class="icon-btn speak" data-speak="${it.b}" data-lang="en-US">🔊 ${it.b}</button>
+      </div>
+    </div>`).join('');
+  const starters = l.writeStarters.map((s,i)=>{
+    const rid = 'w_'+l.lesson+'_'+i;
+    return `<div class="model-bubble" style="margin-bottom:8px">
+      <div class="en">${s.en}</div><div class="vn">${s.vn}</div>
+      <div class="icon-row"><button class="icon-btn rec" data-rec="aud_${rid}" data-recid="${rid}">🎙 Nói câu của em</button></div>
+      <audio class="playback" id="aud_${rid}" controls></audio>
+    </div>`;
+  }).join('');
+  c.innerHTML = `
+    <div class="crumb">🧭 Unit ${l.unit} · Lesson ${l.lesson}/96</div>
+    <div class="lesson-head"><h2>🏁 ${l.titleEn}</h2><p>${l.titleVn}</p></div>
+    ${mascotBar('lesson')}
+    <div class="panel tint-sky"><h4>👂 LISTEN &amp; CHOOSE / NGHE VÀ CHỌN</h4>${listenHtml}</div>
+    <div class="panel tint-sun"><h4>📖 READ &amp; FIND / ĐỌC VÀ TÌM</h4>
+      <p class="try-text" style="font-weight:800">"${l.readEn}"</p>
+      <button class="icon-btn speak" data-speak="${l.readEn.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe đoạn văn</button>
+      <div style="margin-top:10px">${l.readBlanks.map(b=>`<div class="blank-row"><span style="font-size:.82rem;font-weight:700;min-width:170px">${b}</span><input class="blank-input"></div>`).join('')}</div>
+    </div>
+    <div class="panel tint-grass"><h4>✍️ WRITE ABOUT A LEARNER / VIẾT VỀ MỘT BẠN HỌC</h4>
+      <p class="try-text">Word bank: <b>${l.wordBank.join(' • ')}</b></p>
+      ${starters}
+    </div>
+    <div class="panel tint-berry"><h4>🚀 NEXT STEP / BƯỚC TIẾP THEO</h4>
+      <div class="choice-row">${l.nextSteps.map(s=>`<button class="choice-btn">${s.en} / ${s.vn}</button>`).join('')}</div>
+    </div>
+    <div class="panel"><h4>🎉 SELF-CHECK</h4>${selfCheckHtml(l)}</div>
+    <div class="lesson-nav">
+      <button class="nav-btn" id="prevBtn" ${prev?'':'disabled'}>← Bài trước</button>
+      <button class="nav-btn primary" id="nextBtn">${next?'Bài tiếp theo →':'Hoàn thành! 🎉'}</button>
+    </div>
+  `;
+  wireCommon(c, l);
+  document.getElementById('prevBtn').onclick = ()=>{ if(prev) go('u'+prev.unit+'l'+prev.lesson); };
+  document.getElementById('nextBtn').onclick = ()=>{ if(next) go('u'+next.unit+'l'+next.lesson); else go('u'+l.unit); };
+}
+
+function selfCheckHtml(l){
+  const stamps = new Set(stampsFor(l.lesson));
+  const items = [
+    {key:'tried', ic:'💪', en:'I tried', vn:'Em đã thử'},
+    {key:'listened', ic:'👂', en:'I listened', vn:'Em đã lắng nghe'},
+    {key:'shared', ic:'🗣️', en:'I shared', vn:'Em đã chia sẻ'},
+  ];
+  const reflect = getVal(lid(l.lesson)+'_reflect','');
+  return `<div class="checkrow">${items.map(it=>`
+    <button class="stamp-btn ${stamps.has(it.key)?'on':''}" data-stamp="${it.key}"><span class="ic">${it.ic}</span>${it.en}<br><small>${it.vn}</small></button>
+  `).join('')}</div>
+  <input class="reflect-input" placeholder="Một điều em muốn thử lại… / One thing to try again…" data-store="${lid(l.lesson)}_reflect" value="${reflect.replace(/"/g,'&quot;')}">`;
+}
+
+function wireCommon(c, l){
+  c.querySelectorAll('[data-speak]').forEach(b=> b.onclick = ()=> speak(b.dataset.speak, b.dataset.lang));
+  c.querySelectorAll('[data-rec]').forEach(b=>{
+    const audioEl = document.getElementById(b.dataset.rec);
+    b.onclick = ()=> toggleRecord(b, audioEl, b.dataset.recid);
+  });
+  c.querySelectorAll('[data-store]').forEach(el=> el.addEventListener('input', ()=> setVal(el.dataset.store, el.value)));
+  c.querySelectorAll('[data-stamp]').forEach(b=>{
+    b.onclick = ()=>{
+      toggleStamp(l.lesson, b.dataset.stamp);
+      const nowDone = lessonDone(l.lesson);
+      renderLesson(l.lesson);
+      updateHeaderStats();
+      if(nowDone){ confettiBurst(); playChime(); showToast(mascotSay('star5')); }
+      checkNewBadges();
+      renderSidenav();
+    };
+  });
+}
+
+function renderLesson(n){
+  const l = LESSONS.find(x=>x.lesson===n);
+  if(!l) return;
+  if(l.special==='assessment'){ renderAssessment(l); return; }
+  const c = document.getElementById('content');
+  const {prev,next} = renderLessonNav(n);
+
+  c.innerHTML = `
+    <div class="crumb">🧭 Unit ${l.unit} · Lesson ${l.lesson}/96</div>
+    <div class="lesson-head"><h2>${l.titleEn}</h2><p>${l.titleVn}</p></div>
+    ${mascotBar('lesson')}
+
+    <div class="panel tint-sky">
+      <h4>👀 LOOK, LISTEN &amp; SAY / NHÌN, NGHE VÀ NÓI</h4>
+      <div class="vocab-grid">${vocabHtml(l)}</div>
+    </div>
+
+    <div class="panel tint-sun">
+      <h4>🎭 SPEAKING MODEL — ROLE PLAY VỚI COMPA</h4>
+      ${modelHtml(l)}
+    </div>
+
+    <div class="panel">
+      <h4>🎶 SOUND &amp; RHYTHM / NGHE ÂM VÀ NHỊP</h4>
+      <div class="pair-row">
+        ${l.soundEn.split('•').map((w,i)=>{
+          const vnPart = (l.soundVn.split('•')[i]||'').trim();
+          const rid = 'sr_'+l.lesson+'_'+i;
+          return `<div class="pair-card"><div class="w">${w.trim()}</div><div class="v">${vnPart}</div>
+            <div class="icon-row" style="justify-content:center">
+              <button class="icon-btn speak" data-speak="${w.trim().replace(/"/g,'&quot;')}" data-lang="en-US">🔊</button>
+              <button class="icon-btn rec" data-rec="aud_${rid}" data-recid="${rid}">🎙</button>
+            </div>
+            <audio class="playback" id="aud_${rid}" controls></audio>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <div class="panel tint-grass">
+      <h4>⚡ A QUICK TRY / THỬ MỘT CHÚT NHÉ</h4>
+      ${quickTryHtml(l)}
+    </div>
+
+    <div class="panel tint-berry">
+      <h4>🎯 MY MINI MISSION / NHIỆM VỤ NHỎ CỦA EM</h4>
+      <div class="mission-box">
+        <p><b>${l.missionVn}</b></p>
+        <p style="color:var(--muted)">${l.missionEn}</p>
+      </div>
+      <div class="practice-example">Example: <b>${l.practiceEn}</b><br>Ví dụ: ${l.practiceVn}</div>
+      <div id="blankPreview" class="blank-preview">${l.practiceBlank}</div>
+      <div class="blank-row">
+        <input class="blank-input" id="blankInput" placeholder="Điền từ của em…">
+        <button class="icon-btn rec" data-rec="aud_mission_${l.lesson}" data-recid="mission_${l.lesson}">🎙 Ghi câu của em</button>
+      </div>
+      <audio class="playback" id="aud_mission_${l.lesson}" controls></audio>
+    </div>
+
+    <div class="panel">
+      <h4>🎉 CREATE &amp; SHARE / SÁNG TẠO VÀ CHIA SẺ</h4>
+      <p class="try-text">Dùng tranh để nói với bạn. Lắng nghe, rồi đổi vai. <br><span style="color:var(--muted)">Use your picture to tell a partner. Listen, then swap roles.</span></p>
+      ${selfCheckHtml(l)}
+    </div>
+
+    <div class="lesson-nav">
+      <button class="nav-btn" id="prevBtn" ${prev?'':'disabled'}>← Bài trước</button>
+      <button class="nav-btn primary" id="nextBtn">${next?'Bài tiếp theo →':'Hoàn thành! 🎉'}</button>
+    </div>
+  `;
+
+  wireCommon(c, l);
+  const blankInput = document.getElementById('blankInput');
+  const blankPreview = document.getElementById('blankPreview');
+  if(blankInput){
+    blankInput.addEventListener('input', ()=>{
+      blankPreview.textContent = l.practiceBlank.replace('__________', blankInput.value || '__________');
+    });
+  }
+  const qtBtn = document.getElementById('qtDone');
+  if(qtBtn){
+    qtBtn.onclick = ()=>{
+      const now = !getVal(lid(l.lesson)+'_qt', false);
+      setVal(lid(l.lesson)+'_qt', now);
+      qtBtn.classList.toggle('on', now);
+      qtBtn.textContent = now?'✓ Đã thử!':'Mình đã thử! ✅';
+      if(now){ playDing(); }
+    };
+  }
+  wireObjectiveChoices(c, l);
+  document.getElementById('prevBtn').onclick = ()=>{ if(prev) go('u'+prev.unit+'l'+prev.lesson); };
+  document.getElementById('nextBtn').onclick = ()=>{ if(next) go('u'+next.unit+'l'+next.lesson); else go('u'+l.unit); };
+
+  window.scrollTo(0,0);
+}
+
+function wireObjectiveChoices(c, l){
+  const activity = objectiveForLesson(l);
+  if(!activity) return;
+  const buttons = Array.from(c.querySelectorAll('[data-choice]'));
+  const feedback = c.querySelector('#objectiveFeedback');
+  let pending = false;
+  buttons.forEach(button=>{
+    button.onclick = async ()=>{
+      if(pending) return;
+      pending = true;
+      buttons.forEach(b=>{ b.disabled=true; b.classList.remove('ok','no'); });
+      feedback.textContent='Đang kiểm tra… / Checking…';
+      const controller = new AbortController();
+      const timeout = setTimeout(()=>controller.abort(),12000);
+      try {
+        const submissionId = crypto.randomUUID();
+        const response = await fetch('/api/learning/evaluate', {
+          method:'POST', headers:{'Content-Type':'application/json'}, signal:controller.signal,
+          body:JSON.stringify({activityId:activity.activityId,activityVersion:activity.activityVersion,selectedAnswerId:button.dataset.choice,submissionId})
+        });
+        const data = await response.json();
+        const result = data.evaluation;
+        if(!response.ok || !result || result.activityId!==activity.activityId ||
+           result.activityVersion!==activity.activityVersion || result.submissionId!==submissionId ||
+           result.selectedAnswerId!==button.dataset.choice ||
+           !['correct','incorrect'].includes(result.outcome) ||
+           (result.outcome==='correct' && result.criterionMet!==true)) throw new Error('invalid_evaluation');
+        if(!button.isConnected) return;
+        const correct = result.outcome==='correct';
+        button.classList.add(correct?'ok':'no');
+        feedback.textContent=result.feedback.vi+' / '+result.feedback.en;
+        if(correct) playDing();
+      } catch(e){
+        if(button.isConnected) feedback.textContent='Chưa kiểm tra được — thử lại khi có mạng. / Check failed — retry when connected.';
+      } finally {
+        clearTimeout(timeout);
+        pending=false;
+        buttons.forEach(b=>{ b.disabled=false; });
+      }
+    };
+  });
+}
+
+/* ---------- MAIN RENDER ---------- */
+function render(){
+  const route = location.hash.replace('#','')||'home';
+  renderSidenav();
+  updateHeaderStats();
+  if(route==='home'){ renderHome(); return; }
+  let m = route.match(/^u(\d+)l(\d+)$/);
+  if(m){ renderLesson(parseInt(m[2],10)); return; }
+  m = route.match(/^u(\d+)$/);
+  if(m){ renderUnit(parseInt(m[1],10)); return; }
+  renderHome();
+}
+touchStreak();
+render();
+checkNewBadges();
+</script>
+</body>
+</html>

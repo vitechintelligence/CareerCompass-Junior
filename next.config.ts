@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   outputFileTracingIncludes: {
-    "/interactive-books/*": ["./public/interactive-book-data/**/*"],
+    "/interactive-books/*": ["./public/interactive-book-data/**/*", "./content/interactive-books/**/*"],
   },
   async headers() {
     return [
