@@ -45,6 +45,9 @@ jobs:
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 
+      - name: LTI 1.3 Tool Provider regression
+        run: npm run test:lti
+
       - name: Production build
         run: npm run build
 
