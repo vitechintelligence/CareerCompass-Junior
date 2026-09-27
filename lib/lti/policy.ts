@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl } from "../site";
 
 const ALLOWED_TARGET_PATHS = new Set(["/api/lti/launch"]);
 
