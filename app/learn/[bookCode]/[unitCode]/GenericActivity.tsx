@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CurriculumActivity } from "@/lib/curriculum";
 
 type Props = {
@@ -16,7 +16,12 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const [text, setText] = useState("");
   const [ordered, setOrdered] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [syncState, setSyncState] = useState<"idle" | "saving" | "synced" | "failed">("idle");
+  const [resolvedEnrollmentId, setResolvedEnrollmentId] = useState(enrollmentId);
+  const [attemptCount, setAttemptCount] = useState(0);
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [syncState, setSyncState] = useState<"checking" | "idle" | "saving" | "synced" | "failed">(
+    enrollmentId ? "checking" : "idle",
+  );
   const title = locale === "vi" ? activity.titleVi : activity.titleEn;
   const instructions = locale === "vi" ? activity.instructionsVi : activity.instructionsEn;
   const content = activity.content || {};
@@ -29,6 +34,52 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const type = activity.activityType.toLowerCase();
 
   const selectedSequence = useMemo(() => ordered.length > 0 ? ordered : [], [ordered]);
+
+  useEffect(() => {
+    if (!resolvedEnrollmentId) return;
+    let cancelled = false;
+
+    async function hydrate() {
+      setSyncState("checking");
+      try {
+        const params = new URLSearchParams({
+          bookCode,
+          unitCode,
+          enrollmentId: resolvedEnrollmentId as string,
+        });
+        const response = await fetch(`/api/learning/progress?${params.toString()}`, {
+          method: "GET",
+          cache: "no-store",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!response.ok) {
+          setSyncState("failed");
+          setMessage(locale === "vi" ? "Không thể tải tiến độ đã lưu." : "Could not load saved progress.");
+          return;
+        }
+        const saved = Array.isArray(data?.activities)
+          ? data.activities.find((item: { activityCode?: string }) => item?.activityCode === activity.code)
+          : null;
+        if (saved && Number(saved.contentVersion) !== activity.contentVersion) {
+          setSyncState("failed");
+          setMessage(locale === "vi" ? "Nội dung đã được cập nhật. Hãy tải lại bài học." : "This activity was updated. Reload the lesson.");
+          return;
+        }
+        setAttemptCount(Number(saved?.attemptCount || 0));
+        setLastSavedAt(typeof saved?.lastSavedAt === "string" ? saved.lastSavedAt : null);
+        setSyncState(Number(saved?.attemptCount || 0) > 0 ? "synced" : "idle");
+      } catch {
+        if (!cancelled) {
+          setSyncState("failed");
+          setMessage(locale === "vi" ? "Không thể tải tiến độ đã lưu." : "Could not load saved progress.");
+        }
+      }
+    }
+
+    void hydrate();
+    return () => { cancelled = true; };
+  }, [activity.code, activity.contentVersion, bookCode, locale, resolvedEnrollmentId, unitCode]);
 
   function speak(value: string) {
     if (!("speechSynthesis" in window)) return;
@@ -51,13 +102,16 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
           unitCode,
           activityCode: activity.code,
           contentVersion: activity.contentVersion,
-          enrollmentId,
+          enrollmentId: resolvedEnrollmentId,
           locale,
           response,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.evaluation?.feedback) {
+        if (typeof data?.enrollmentId === "string") setResolvedEnrollmentId(data.enrollmentId);
+        setAttemptCount(Number(data?.attemptNumber || attemptCount + 1));
+        setLastSavedAt(new Date().toISOString());
         setMessage(data.evaluation.feedback[locale]);
         setSyncState("synced");
         return;
@@ -107,9 +161,10 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         <div><div className="lessonSectionLabel">{activity.code} · {activity.activityType.replaceAll("_", " ")}</div><h3>{title}</h3></div>
         <div className="tagRow">
           {activity.evidenceEligible && <span className="pill">{locale === "vi" ? "Có thể xét minh chứng" : "Eligible for review"}</span>}
+          {syncState === "checking" && <span className="pill">{locale === "vi" ? "Đang tải tiến độ…" : "Loading saved progress…"}</span>}
           {syncState === "saving" && <span className="pill">{locale === "vi" ? "Đang lưu…" : "Saving…"}</span>}
-          {syncState === "synced" && <span className="pill">{locale === "vi" ? "Đã đồng bộ" : "Synced"}</span>}
-          {syncState === "failed" && <span className="pill">{locale === "vi" ? "Lưu thất bại — thử lại" : "Save failed — retry"}</span>}
+          {syncState === "synced" && <span className="pill">{locale === "vi" ? `Đã lưu · ${attemptCount} lần` : `Saved · ${attemptCount} attempt${attemptCount === 1 ? "" : "s"}`}</span>}
+          {syncState === "failed" && <span className="pill">{locale === "vi" ? "Chưa lưu / chưa tải được — thử lại" : "Not saved / could not load — retry"}</span>}
         </div>
       </div>
       {instructions && <p className="muted">{instructions}</p>}
@@ -151,6 +206,10 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         <div className="activityFooter"><button className="button soft" type="button" disabled={syncState === "saving"} onClick={() => syncAttempt({ selfReported: true })}>{locale === "vi" ? "Tự ghi nhận đã luyện tập" : "Self-report practice"}</button></div>
       )}
       {message && <p className="activityMessage">{message}</p>}
+      {lastSavedAt && syncState === "synced" && <p className="muted" style={{ fontSize: 11 }}>
+        {locale === "vi" ? "Bản ghi máy chủ gần nhất: " : "Latest server save: "}
+        {new Date(lastSavedAt).toLocaleString(locale === "vi" ? "vi-VN" : "en-GB")}
+      </p>}
     </article>
   );
 }
