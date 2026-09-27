@@ -23,7 +23,9 @@ alter table assessment_attempts
   add column if not exists reviewed_by uuid references profiles(id) on delete set null,
   add column if not exists review_feedback text,
   add column if not exists rubric_result jsonb not null default '{}'::jsonb,
-  add column if not exists evidence_level text not null default 'practiced';
+  add column if not exists evidence_level text not null default 'practiced',
+  add column if not exists submission_id uuid,
+  add column if not exists submission_hash text;
 
 alter table assessment_attempts
   add constraint assessment_attempts_content_version_positive
@@ -32,6 +34,10 @@ alter table assessment_attempts
 alter table assessment_attempts
   add constraint assessment_attempts_evidence_level_check
   check (evidence_level in ('practiced','demonstrated','verified'));
+
+create unique index if not exists idx_assessment_attempts_submission_id
+  on assessment_attempts(submission_id)
+  where submission_id is not null;
 
 alter table learning_capsules
   drop constraint if exists learning_capsules_source_type_check;
