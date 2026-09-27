@@ -2,7 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { ensureStudentProfile, getCurrentProfile } from "@/lib/auth/profile";
+import { ensureStudentProfile } from "@/lib/auth/profile";
+import { requirePartnerClassAccess, requirePartnerOrganizationAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -13,38 +14,11 @@ function boundedText(value: FormDataEntryValue | null, max: number) {
 }
 
 async function requirePartnerOrganization(organizationId: string) {
-  if (!UUID_RE.test(organizationId)) throw new Error("Invalid organization reference.");
-
-  const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
-    throw new Error("Partner administrator access required.");
-  }
-
-  if (profile.account_type === "partner_admin") {
-    const sql = getDb();
-    const rows = await sql`
-      select 1
-      from organization_memberships
-      where organization_id = ${organizationId}
-        and profile_id = ${profile.id}
-        and role = 'partner_admin'
-        and status = 'active'
-      limit 1
-    `;
-    if (!rows[0]) throw new Error("You do not manage this organization.");
-  }
-
-  return profile;
+  return (await requirePartnerOrganizationAccess(organizationId)).profile;
 }
 
 async function requirePartnerClass(classId: string) {
-  if (!UUID_RE.test(classId)) throw new Error("Invalid class reference.");
-  const sql = getDb();
-  const rows = await sql`select organization_id from classes where id = ${classId} and status='active' limit 1`;
-  const organizationId = String(rows[0]?.organization_id || "");
-  if (!organizationId) throw new Error("Class not found.");
-  await requirePartnerOrganization(organizationId);
-  return organizationId;
+  return (await requirePartnerClassAccess(classId)).organizationId;
 }
 
 export async function requestPartnerAccess(formData: FormData) {
