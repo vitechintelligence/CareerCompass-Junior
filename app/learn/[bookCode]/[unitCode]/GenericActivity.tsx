@@ -128,7 +128,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.evaluation?.feedback) {
         if (typeof data?.enrollmentId === "string") setResolvedEnrollmentId(data.enrollmentId);
-        setAttemptCount(Number(data?.attemptNumber || attemptCount + 1));
+        setAttemptCount(Number(data?.attemptCount || data?.attemptNumber || attemptCount + 1));
         setLastSavedAt(new Date().toISOString());
         setMessage(data.evaluation.feedback[locale]);
         pendingSubmissionRef.current = null;
