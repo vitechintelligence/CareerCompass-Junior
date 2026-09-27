@@ -37,7 +37,7 @@ Do **not** use `little-shadow-12194945` for Career Compass Junior production wor
 
 Before making any Neon change:
 
-1. Use production/default branch `br-shiny-meadow-b3ibu54` for production.
+1. Use production/default branch `br-shiny-meadow-b3ibu54h` for production.
 2. Verify any branch change explicitly before changing production.
 3. Verify `DATABASE_URL` and `NEON_AUTH_BASE_URL` point to the same intended Neon project/branch.
 4. Never infer a Neon project from its display name alone.
@@ -60,7 +60,7 @@ Important environment variables:
 
 ```
 NEON_PROJECT_ID=royal-queen-79814128
-NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
+NEON_BRANCH_ID=br-shiny-meadow-b3ibu54h
 DATABASE_URL
 NEON_AUTH_BASE_URL
 NEON_AUTH_COOKIE_SECRET
