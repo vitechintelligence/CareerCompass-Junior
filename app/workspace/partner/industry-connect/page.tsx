@@ -150,7 +150,7 @@ export default async function IndustryConnectPage() {
           </article>
 
           <div style={{ display: "grid", gap: 18 }}>
-            <CompanyContactFinder />
+            <CompanyContactFinder organizationId={organizationId} />
             <article className="panel">
               <div className="eyebrow">Connection queue</div>
               <h2 className="workspaceTitle">Company requests</h2>
