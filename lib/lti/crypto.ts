@@ -83,17 +83,22 @@ export function signToolJwt(payload: JwtPayload) {
 export function signedClientAssertion(input: {
   clientId: string;
   audience: string;
+  deploymentId?: string;
   lifetimeSeconds?: number;
 }) {
   const now = Math.floor(Date.now() / 1000);
-  return signToolJwt({
+  const payload: JwtPayload = {
     iss: input.clientId,
     sub: input.clientId,
     aud: input.audience,
     iat: now,
     exp: now + Math.min(Math.max(input.lifetimeSeconds || 300, 60), 600),
     jti: randomUUID(),
-  });
+  };
+  if (input.deploymentId) {
+    payload["https://purl.imsglobal.org/spec/lti/claim/deployment_id"] = input.deploymentId;
+  }
+  return signToolJwt(payload);
 }
 
 export async function verifyPlatformJwtSignature(token: string, jwksUrl: string) {
