@@ -12,6 +12,7 @@ import {
   requireActivityContentVersion,
 } from "@/lib/learning/activity-contract";
 import { readBoundedJson } from "@/lib/learning/request-json";
+import { normalizeSubmissionId } from "@/lib/learning/idempotency";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ type AttemptPayload = {
   unitCode?: string;
   activityCode?: string;
   contentVersion?: number;
+  submissionId?: string;
   enrollmentId?: string;
   locale?: "en" | "vi";
   response?: unknown;
@@ -48,9 +50,13 @@ export async function POST(request: Request) {
   const bookCode = cleanCode(payload.bookCode);
   const unitCode = cleanCode(payload.unitCode);
   const activityCode = cleanCode(payload.activityCode);
+  const submissionId = normalizeSubmissionId(payload.submissionId);
   const requestedEnrollmentId = payload.enrollmentId == null ? null : (isUuidReference(payload.enrollmentId) ? payload.enrollmentId : null);
   if (!bookCode || !unitCode || !activityCode) {
     return jsonError("Book, unit and activity codes are required.", 400);
+  }
+  if (!submissionId) {
+    return jsonError("A valid submissionId is required.", 400);
   }
   if (payload.enrollmentId != null && !requestedEnrollmentId) {
     return jsonError("Invalid enrollment reference.", 400);
