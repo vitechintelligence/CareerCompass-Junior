@@ -136,10 +136,21 @@ export async function setCommunityStudentAccess(formData: FormData) {
       and p.status='active'
       and exists (
         select 1
+        from organization_memberships om
+        join organizations o on o.id=om.organization_id
+        where om.profile_id=p.id
+          and om.organization_id=${organizationId}
+          and om.role='student'
+          and om.status='active'
+          and o.status='active'
+      )
+      and exists (
+        select 1
         from class_memberships cm
         join classes c on c.id=cm.class_id
         where cm.student_id=p.id
           and cm.status='active'
+          and c.status='active'
           and c.organization_id=${organizationId}
       )
     limit 1
