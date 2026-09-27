@@ -23,7 +23,7 @@ export async function getPlatformAdminContext() {
 
   let profile = await getCurrentProfile();
   if (!profile) profile = await ensureStudentProfile("en");
-  if (!profile) return null;
+  if (!profile || profile.status !== "active") return null;
 
   if (profile.account_type === "platform_admin") {
     return { user, profile, email: userEmail(user) };
@@ -37,6 +37,7 @@ export async function getPlatformAdminContext() {
     update profiles
     set account_type = 'platform_admin', updated_at = now()
     where id = ${profile.id}
+      and status = 'active'
     returning id, semantic_id, auth_subject, display_name, account_type, preferred_locale, status
   `;
 
