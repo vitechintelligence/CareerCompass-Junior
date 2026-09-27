@@ -21,9 +21,12 @@ async function platformAccessToken(session: Record<string, unknown>, scopes: str
   if (!clientId || !tokenUrl) throw new Error("lti_service_registration_incomplete");
 
   const safeUrl = await assertSafeExternalHttpsUrl(tokenUrl);
+  const configuredAudience = typeof session.auth_token_audience === "string"
+    ? session.auth_token_audience.trim().slice(0, 1000)
+    : "";
   const assertion = signedClientAssertion({
     clientId,
-    audience: safeUrl.toString(),
+    audience: configuredAudience || safeUrl.toString(),
     deploymentId: String(session.deployment_id || "") || undefined,
   });
   const body = new URLSearchParams({
