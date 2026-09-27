@@ -24,6 +24,7 @@ async function platformAccessToken(session: Record<string, unknown>, scopes: str
   const assertion = signedClientAssertion({
     clientId,
     audience: safeUrl.toString(),
+    deploymentId: String(session.deployment_id || "") || undefined,
   });
   const body = new URLSearchParams({
     grant_type: "client_credentials",
