@@ -45,6 +45,9 @@ jobs:
       - name: Versioned activity contract regression
         run: npm run test:activity-contract
 
+      - name: Durable learner progress regression
+        run: npm run test:progress
+
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 

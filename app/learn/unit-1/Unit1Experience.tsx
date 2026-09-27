@@ -3,19 +3,19 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { unit1Lessons, unit1Meta, type LessonActivity, type UnitLocale } from "@/lib/unit1";
+import { practiceStorageKey } from "@/lib/learning/progress-policy";
 
 type Props = {
   locale: UnitLocale;
+  enrollmentId?: string;
+  storageNamespace: string;
 };
-
-const completedStorageKey = "ccj-unit1-completed";
-const reflectionStorageKey = (lessonId: number) => `ccj-unit1-reflection-${lessonId}`;
 
 function sameOrder(left: string[], right: string[]) {
   return left.length === right.length && left.every((item, index) => item === right[index]);
 }
 
-export default function Unit1Experience({ locale }: Props) {
+export default function Unit1Experience({ locale, enrollmentId, storageNamespace }: Props) {
   const [activeId, setActiveId] = useState(1);
   const [completedIds, setCompletedIds] = useState<number[]>([]);
   const [reflection, setReflection] = useState("");
@@ -47,7 +47,7 @@ export default function Unit1Experience({ locale }: Props) {
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       try {
-        const stored = window.localStorage.getItem(completedStorageKey);
+        const stored = window.localStorage.getItem(practiceStorageKey(storageNamespace, "completed"));
         if (stored) {
           const parsed = JSON.parse(stored) as number[];
           if (Array.isArray(parsed)) setCompletedIds(parsed.filter((value) => Number.isInteger(value)));
@@ -58,7 +58,7 @@ export default function Unit1Experience({ locale }: Props) {
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, []);
+  }, [storageNamespace]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -72,14 +72,14 @@ export default function Unit1Experience({ locale }: Props) {
       setRecorderError(null);
 
       try {
-        setReflection(window.localStorage.getItem(reflectionStorageKey(activeId)) ?? "");
+        setReflection(window.localStorage.getItem(practiceStorageKey(storageNamespace, "reflection", activeId)) ?? "");
       } catch {
         setReflection("");
       }
     });
 
     return () => window.cancelAnimationFrame(frame);
-  }, [activeId]);
+  }, [activeId, storageNamespace]);
 
   useEffect(() => {
     return () => {
@@ -100,7 +100,7 @@ export default function Unit1Experience({ locale }: Props) {
   function persistCompleted(next: number[]) {
     setCompletedIds(next);
     try {
-      window.localStorage.setItem(completedStorageKey, JSON.stringify(next));
+      window.localStorage.setItem(practiceStorageKey(storageNamespace, "completed"), JSON.stringify(next));
     } catch {
       // Completion remains usable in this session even if storage is blocked.
     }
@@ -120,7 +120,7 @@ export default function Unit1Experience({ locale }: Props) {
   function saveReflection(value: string) {
     setReflection(value);
     try {
-      window.localStorage.setItem(reflectionStorageKey(lesson.id), value);
+      window.localStorage.setItem(practiceStorageKey(storageNamespace, "reflection", lesson.id), value);
     } catch {
       // Reflection remains visible for the current session.
     }
@@ -235,7 +235,7 @@ export default function Unit1Experience({ locale }: Props) {
           <Link className="pill" href={`/portal/student?lang=${locale}`}>
             {locale === "vi" ? "Cổng học sinh" : "Student Portal"}
           </Link>
-          <Link className="pill" href={`/learn/unit-1?lang=${otherLocale}`}>
+          <Link className="pill" href={`/learn/unit-1?lang=${otherLocale}${enrollmentId ? `&enrollmentId=${encodeURIComponent(enrollmentId)}` : ""}`}>
             {locale === "en" ? "Tiếng Việt" : "English"}
           </Link>
         </div>
@@ -249,8 +249,8 @@ export default function Unit1Experience({ locale }: Props) {
           </h2>
           <p className="muted lessonSmallCopy">
             {locale === "vi"
-              ? "4 tuần · 8 bài học tương tác · dấu luyện tập trên thiết bị"
-              : "4 weeks · 8 interactive lessons · on-device practice markers"}
+              ? "4 tuần · 8 bài học tương tác · dấu luyện tập theo hồ sơ học"
+              : "4 weeks · 8 interactive lessons · enrollment-scoped practice markers"}
           </p>
           <div className="lessonProgressLabel">
             <strong>{progressPercent}%</strong>

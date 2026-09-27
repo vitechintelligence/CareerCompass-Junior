@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { practiceStorageKey } from "@/lib/learning/progress-policy";
 
 type Props = {
   locale: "en" | "vi";
   enrollmentId?: string;
+  storageNamespace: string;
 };
 
-const storageKey = "ccj-unit1-completed";
-
-function readCompleted() {
+function readCompleted(storageNamespace: string) {
   try {
-    const parsed = JSON.parse(window.localStorage.getItem(storageKey) || "[]") as number[];
+    const parsed = JSON.parse(window.localStorage.getItem(practiceStorageKey(storageNamespace, "completed")) || "[]") as number[];
     return Array.isArray(parsed)
       ? parsed.filter((value) => Number.isInteger(value) && value >= 1 && value <= 8)
       : [];
@@ -20,18 +20,22 @@ function readCompleted() {
   }
 }
 
-export default function ProgressSyncBridge({ locale, enrollmentId }: Props) {
+export default function ProgressSyncBridge({ locale, enrollmentId, storageNamespace }: Props) {
   const syncedRef = useRef<Set<number>>(new Set());
-  const [status, setStatus] = useState<"checking" | "synced" | "local" | "failed">("checking");
+  const [status, setStatus] = useState<"checking" | "synced" | "local" | "failed">(
+    enrollmentId ? "checking" : "local",
+  );
 
   useEffect(() => {
     let cancelled = false;
     let syncing = false;
     let anonymous = false;
 
+    if (!enrollmentId) return () => { cancelled = true; };
+
     async function sync() {
       if (syncing || anonymous || cancelled) return;
-      const completed = readCompleted();
+      const completed = readCompleted(storageNamespace);
       const pending = completed.filter((lessonId) => !syncedRef.current.has(lessonId));
       if (pending.length === 0) {
         if (completed.length > 0) setStatus("synced");
@@ -77,7 +81,7 @@ export default function ProgressSyncBridge({ locale, enrollmentId }: Props) {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [locale, enrollmentId]);
+  }, [locale, enrollmentId, storageNamespace]);
 
   return (
     <div className="syncBadge" role="status" aria-live="polite">

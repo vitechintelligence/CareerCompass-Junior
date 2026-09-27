@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import Unit1Experience from "./Unit1Experience";
 import ProgressSyncBridge from "./ProgressSyncBridge";
 import type { UnitLocale } from "@/lib/unit1";
@@ -14,10 +15,22 @@ export default async function Unit1Page({
     ? enrollmentId
     : undefined;
 
+  const storageNamespace = learningEnrollmentId
+    ? `enrollment:${learningEnrollmentId}`
+    : `guest:${randomUUID()}`;
+
   return (
     <>
-      <ProgressSyncBridge locale={locale} enrollmentId={learningEnrollmentId} />
-      <Unit1Experience locale={locale} />
+      <ProgressSyncBridge
+        locale={locale}
+        enrollmentId={learningEnrollmentId}
+        storageNamespace={storageNamespace}
+      />
+      <Unit1Experience
+        locale={locale}
+        enrollmentId={learningEnrollmentId}
+        storageNamespace={storageNamespace}
+      />
     </>
   );
 }
