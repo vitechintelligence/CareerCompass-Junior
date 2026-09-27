@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { reuseOrCreateSubmission, type PendingSubmission } from "@/lib/learning/idempotency";
 import type { CurriculumActivity } from "@/lib/curriculum";
 
 type Props = {
@@ -19,6 +20,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const [resolvedEnrollmentId, setResolvedEnrollmentId] = useState(enrollmentId);
   const [attemptCount, setAttemptCount] = useState(0);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const pendingSubmissionRef = useRef<PendingSubmission | null>(null);
   const [syncState, setSyncState] = useState<"checking" | "idle" | "saving" | "synced" | "failed">(
     enrollmentId ? "checking" : "idle",
   );
@@ -92,6 +94,21 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
 
   async function syncAttempt(response: Record<string, unknown>) {
     if (syncState === "saving") return;
+    const signature = JSON.stringify(response);
+    let pending: PendingSubmission;
+    try {
+      pending = reuseOrCreateSubmission(
+        pendingSubmissionRef.current,
+        signature,
+        () => crypto.randomUUID(),
+      );
+      pendingSubmissionRef.current = pending;
+    } catch {
+      setMessage(locale === "vi" ? "Không thể tạo mã gửi bài an toàn." : "Could not create a safe submission ID.");
+      setSyncState("failed");
+      return;
+    }
+
     setSyncState("saving");
     try {
       const res = await fetch("/api/learning/attempt", {
@@ -102,6 +119,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
           unitCode,
           activityCode: activity.code,
           contentVersion: activity.contentVersion,
+          submissionId: pending.submissionId,
           enrollmentId: resolvedEnrollmentId,
           locale,
           response,
@@ -113,6 +131,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         setAttemptCount(Number(data?.attemptNumber || attemptCount + 1));
         setLastSavedAt(new Date().toISOString());
         setMessage(data.evaluation.feedback[locale]);
+        pendingSubmissionRef.current = null;
         setSyncState("synced");
         return;
       }
