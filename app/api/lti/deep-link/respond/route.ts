@@ -50,6 +50,16 @@ export async function POST(request: Request) {
   const returnUrl = typeof settings.deep_link_return_url === "string" ? settings.deep_link_return_url : "";
   if (!returnUrl) return new Response("The LMS did not provide a deep-link return URL.", { status: 409 });
 
+  const acceptedTypes = Array.isArray(settings.accept_types)
+    ? settings.accept_types.map((value) => String(value))
+    : [];
+  if (!acceptedTypes.includes("ltiResourceLink")) {
+    return new Response(
+      "This LMS deep-link request does not accept LTI Resource Link content.",
+      { status: 409 },
+    );
+  }
+
   const acceptedTargets = Array.isArray(settings.accept_presentation_document_targets)
     ? settings.accept_presentation_document_targets.map((value) => String(value).toLowerCase())
     : [];
@@ -62,8 +72,9 @@ export async function POST(request: Request) {
     );
   }
 
+  let safeReturnUrl: URL;
   try {
-    await assertSafeExternalHttpsUrl(returnUrl);
+    safeReturnUrl = await assertSafeExternalHttpsUrl(returnUrl);
   } catch {
     return new Response("The LMS deep-link return URL is not allowed.", { status: 400 });
   }
@@ -102,6 +113,7 @@ export async function POST(request: Request) {
 
   const payload: Record<string, unknown> = {
     iss: String(session.client_id),
+    sub: String(session.client_id),
     aud: String(session.issuer),
     azp: String(session.client_id),
     nonce: String(session.launch_nonce),
@@ -143,7 +155,7 @@ export async function POST(request: Request) {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
-      "Content-Security-Policy": "default-src 'none'; script-src 'unsafe-inline'; form-action https:; base-uri 'none'",
+      "Content-Security-Policy": `default-src 'none'; script-src 'unsafe-inline'; form-action ${safeReturnUrl.origin}; base-uri 'none'`,
     },
   });
 }
