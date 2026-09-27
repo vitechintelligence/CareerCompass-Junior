@@ -13,6 +13,7 @@ export type LtiPlatformRegistration = {
   deploymentId: string;
   authLoginUrl: string;
   authTokenUrl: string;
+  authTokenAudience: string | null;
   jwksUrl: string;
   status: string;
 };
@@ -28,6 +29,7 @@ function registrationFromRow(row: Record<string, unknown>): LtiPlatformRegistrat
     deploymentId: String(row.deployment_id),
     authLoginUrl: String(row.auth_login_url),
     authTokenUrl: String(row.auth_token_url),
+    authTokenAudience: row.auth_token_audience ? String(row.auth_token_audience) : null,
     jwksUrl: String(row.jwks_url),
     status: String(row.status),
   };
