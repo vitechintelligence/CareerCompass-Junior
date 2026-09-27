@@ -112,6 +112,10 @@ export async function validateLtiLaunch(input: {
       frameAncestorHost = null;
     }
   }
+  if (["frame", "iframe"].includes(documentTarget) && !frameAncestorHost) {
+    throw new Error("lti_frame_ancestor_unavailable");
+  }
+
   const ags = record(payload[LTI_CLAIMS.agsEndpoint]);
   const nrps = record(payload[LTI_CLAIMS.nrps]);
   const deepLinkSettings = record(payload[LTI_CLAIMS.deepLinkSettings]);
