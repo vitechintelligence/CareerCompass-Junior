@@ -51,8 +51,8 @@ LTI_TOOL_PRIVATE_KEY_PEM
 LTI_TOOL_KEY_ID
 ```
 
-`LTI_TOOL_PRIVATE_KEY_PEM` must contain a server-side RSA private key suitable for RS256 signing.
-`LTI_TOOL_KEY_ID` identifies the matching key published by the Tool JWKS endpoint.
+`LTI_TOOL_PRIVATE_KEY_PEM` must contain a server-side RSA private key suitable for RS256 signing; the runtime rejects RSA keys below 2048 bits.
+`LTI_TOOL_KEY_ID` identifies the matching key published by the Tool JWKS endpoint and should rotate when the signing key rotates.
 
 The private key must never be:
 - stored in Neon application tables;
@@ -67,11 +67,12 @@ Prepared migration:
 
 `db/migrations/008_lti_1_3_tool_provider.sql`
 
-It creates:
-- `lti_platform_registrations`
+It upgrades the existing `lti_registrations` table as the single platform-registration source of truth and creates:
 - `lti_oidc_states`
 - `lti_context_links`
 - `lti_launch_sessions`
+
+The existing registration table is reused deliberately; do not introduce a parallel LTI registration store.
 
 The migration is additive but must still be reviewed and explicitly approved before applying to production Neon.
 
@@ -104,9 +105,11 @@ The configuration declares:
 - Tool JWKS URL
 - AGS line-item, result and score scopes
 - NRPS membership scope
-- Course Navigation placement
+- Course Navigation placement in a new browser tab
 - Link Selection Deep Linking placement
 - Assignment Selection Deep Linking placement
+
+Career Compass keeps a default `frame-ancestors 'self'` policy. A verified LTI launch may temporarily add only the signed, public LMS host as an allowed frame ancestor. Framed launches fail closed when no safe signed platform host can be established.
 
 After Canvas creates/enables the LTI Developer Key and deploys the Tool, copy the resulting Canvas client ID and deployment ID plus the Canvas platform endpoints into the Career Compass Partner Integration Hub.
 
@@ -152,7 +155,7 @@ The same existing Career Compass tenant/class authorization checks remain author
 
 Instructor Deep Linking requests open the Career Compass content selector.
 
-Published books can be returned as `ltiResourceLink` content items. When the Platform accepts line items, Career Compass includes a 100-point line item so book completion can be reported as a percentage.
+Published books can be returned as `ltiResourceLink` content items only when the Platform's signed Deep Linking settings accept that content type. Career Compass returns the supported `window` and/or `iframe` presentation options that the Platform declares it accepts. When the Platform accepts line items, Career Compass includes a 100-point line item so book completion can be reported as a percentage.
 
 The Deep Linking response is RS256 signed and returned to the Platform's signed deep-link return URL.
 
@@ -187,6 +190,8 @@ Pagination is restricted to the same origin as the signed `context_memberships_u
 - localhost/private network blocking for outbound platform URLs
 - hashed LTI session tokens
 - SameSite=None, Secure, HttpOnly, partitioned launch session cookie
+- signed launch-derived frame-host trust with fail-closed iframe handling
+- LTI logout revokes the server session and clears both session and frame-trust cookies
 - disabling the integration installation invalidates LTI sessions
 - no raw LTI access token or private signing key stored in application tables
 - organization/class authorization remains server-enforced
