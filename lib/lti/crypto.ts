@@ -42,7 +42,12 @@ export function decodeJwt(token: string) {
 function toolPrivateKey() {
   const raw = process.env.LTI_TOOL_PRIVATE_KEY_PEM?.trim();
   if (!raw) throw new Error("lti_tool_private_key_missing");
-  return createPrivateKey(raw.replace(/\\n/g, "\n"));
+  const key = createPrivateKey(raw.replace(/\\n/g, "\n"));
+  const modulusLength = key.asymmetricKeyDetails?.modulusLength;
+  if (key.asymmetricKeyType !== "rsa" || !modulusLength || modulusLength < 2048) {
+    throw new Error("lti_tool_private_key_requires_rsa_2048");
+  }
+  return key;
 }
 
 export function ltiToolKeyId() {
