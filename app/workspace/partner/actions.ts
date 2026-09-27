@@ -180,6 +180,40 @@ export async function assignTeacher(formData: FormData) {
   revalidatePath("/workspace/partner");
 }
 
+export async function inviteStudentToOrganization(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
+  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId)) {
+    throw new Error("Organization and valid learner ID are required.");
+  }
+
+  await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const learner = await sql`
+    select id
+    from profiles
+    where semantic_id=${semanticId}
+      and account_type='student'
+      and status='active'
+    limit 1
+  `;
+  const studentId = String(learner[0]?.id || "");
+  if (!studentId) throw new Error("Active learner profile not found.");
+
+  await sql`
+    insert into organization_memberships (organization_id, profile_id, role, status)
+    values (${organizationId}, ${studentId}, 'student', 'invited')
+    on conflict (organization_id, profile_id, role) do update set
+      status = case
+        when organization_memberships.status='active' then 'active'
+        else 'invited'
+      end
+  `;
+
+  revalidatePath("/workspace/partner");
+  revalidatePath("/workspace/student");
+}
+
 export async function enrollStudent(formData: FormData) {
   const classId = String(formData.get("classId") || "");
   const semanticId = boundedText(formData.get("studentSemanticId"), 100);
@@ -188,41 +222,39 @@ export async function enrollStudent(formData: FormData) {
   const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
   const learner = await sql`
-    select p.id
+    select p.id,
+      exists (
+        select 1 from organization_memberships existing
+        where existing.profile_id=p.id
+          and existing.organization_id=${organizationId}
+          and existing.role='student'
+          and existing.status='active'
+      ) as has_active_membership,
+      exists (
+        select 1 from student_credentials sc
+        where sc.student_id=p.id and sc.organization_id=${organizationId}
+      ) as has_org_credential
     from profiles p
     where p.semantic_id = ${semanticId}
       and p.account_type = 'student'
       and p.status = 'active'
-      and (
-        exists (
-          select 1 from organization_memberships existing
-          where existing.profile_id=p.id
-            and existing.organization_id=${organizationId}
-            and existing.role='student'
-            and existing.status='active'
-        )
-        or exists (
-          select 1 from student_credentials sc
-          where sc.student_id=p.id and sc.organization_id=${organizationId}
-        )
-        or not exists (
-          select 1 from organization_memberships other
-          where other.profile_id=p.id
-            and other.role='student'
-            and other.status='active'
-            and other.organization_id <> ${organizationId}
-        )
-      )
     limit 1
   `;
   const studentId = String(learner[0]?.id || "");
   if (!studentId) throw new Error("Active learner profile not found.");
+  const hasActiveMembership = Boolean(learner[0]?.has_active_membership);
+  const hasOrgCredential = Boolean(learner[0]?.has_org_credential);
+  if (!hasActiveMembership && !hasOrgCredential) {
+    throw new Error("This learner must accept the institution invitation before class enrollment.");
+  }
 
-  await sql`
-    insert into organization_memberships (organization_id, profile_id, role, status)
-    values (${organizationId}, ${studentId}, 'student', 'active')
-    on conflict (organization_id, profile_id, role) do update set status = 'active'
-  `;
+  if (!hasActiveMembership && hasOrgCredential) {
+    await sql`
+      insert into organization_memberships (organization_id, profile_id, role, status)
+      values (${organizationId}, ${studentId}, 'student', 'active')
+      on conflict (organization_id, profile_id, role) do update set status='active'
+    `;
+  }
 
   await sql`
     insert into class_memberships (class_id, student_id, status)
