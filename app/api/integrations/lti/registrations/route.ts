@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     const rows = await sql`
       select id, platform_name, issuer, client_id, deployment_id,
              auth_login_url, auth_token_url, jwks_url, status, created_at, updated_at
-      from lti_platform_registrations
+      from lti_registrations
       where installation_id=${installationId}
         and organization_id=${access.organization.id}
       limit 1
@@ -128,7 +128,7 @@ export async function POST(request: Request) {
   try {
     const sql = getDb();
     const rows = await sql`
-      insert into lti_platform_registrations (
+      insert into lti_registrations (
         installation_id, organization_id, platform_name, issuer, client_id, deployment_id,
         auth_login_url, auth_token_url, jwks_url, status, created_by
       ) values (
@@ -178,7 +178,7 @@ export async function POST(request: Request) {
       note: "No platform secret was stored. LTI 1.3 uses asymmetric keys and the registered platform JWKS.",
     }, { status: 201 });
   } catch (error) {
-    const code = error instanceof Error && error.message.includes("lti_platform_registrations")
+    const code = error instanceof Error && error.message.includes("lti_registrations")
       ? "lti_schema_not_ready"
       : "lti_registration_conflict";
     return NextResponse.json({
