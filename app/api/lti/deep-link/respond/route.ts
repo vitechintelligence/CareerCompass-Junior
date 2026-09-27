@@ -91,6 +91,8 @@ export async function POST(request: Request) {
   const payload: Record<string, unknown> = {
     iss: String(session.client_id),
     aud: String(session.issuer),
+    azp: String(session.client_id),
+    nonce: String(session.launch_nonce),
     iat: now,
     exp: now + 300,
     jti: randomUUID(),
