@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { practiceStorageKey } from "@/lib/learning/progress-policy";
+import { normalizeSubmissionId, unitLessonSubmissionStorageKey } from "@/lib/learning/idempotency";
 
 type Props = {
   locale: "en" | "vi";
@@ -17,6 +18,19 @@ function readCompleted(storageNamespace: string) {
       : [];
   } catch {
     return [];
+  }
+}
+
+function submissionIdFor(storageNamespace: string, lessonId: number) {
+  const key = unitLessonSubmissionStorageKey(storageNamespace, lessonId);
+  try {
+    const existing = normalizeSubmissionId(window.localStorage.getItem(key));
+    if (existing) return existing;
+    const created = crypto.randomUUID();
+    window.localStorage.setItem(key, created);
+    return created;
+  } catch {
+    return crypto.randomUUID();
   }
 }
 
@@ -51,6 +65,7 @@ export default function ProgressSyncBridge({ locale, enrollmentId, storageNamesp
             headers: { "content-type": "application/json" },
             body: JSON.stringify({
               lessonId,
+              submissionId: submissionIdFor(storageNamespace, lessonId),
               completed: true,
               enrollmentId,
               locale,
