@@ -143,7 +143,7 @@ export async function reviewSubmission(formData: FormData) {
 
   const sql = getDb();
   const submission = await sql`
-    select s.id, s.status, s.current_revision, a.class_id
+    select s.id, s.assignment_id, s.status, s.current_revision, a.class_id
     from submissions s
     join assignments a on a.id=s.assignment_id
     where s.id=${submissionId}
