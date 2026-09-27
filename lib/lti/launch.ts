@@ -6,6 +6,7 @@ import { absoluteUrl } from "@/lib/site";
 import { LTI_CLAIMS, LTI_MESSAGE_TYPES, LTI_VERSION } from "@/lib/lti/constants";
 import { audienceAllowsClient, normalizeExternalId, safeCareerCompassTargetPath, stableHash } from "@/lib/lti/policy";
 import { verifyPlatformJwtSignature, type JwtPayload } from "@/lib/lti/crypto";
+import { assertSafeExternalHttpsUrl } from "@/lib/lti/url-security";
 import { getLtiRegistrationById, type LtiPlatformRegistration } from "@/lib/lti/runtime";
 
 function record(value: unknown) {
@@ -103,6 +104,15 @@ export async function validateLtiLaunch(input: {
 
   const resourceLink = record(payload[LTI_CLAIMS.resourceLink]);
   const custom = record(payload[LTI_CLAIMS.custom]);
+  const launchPresentation = record(payload[LTI_CLAIMS.launchPresentation]);
+  let frameAncestorHost: string | null = null;
+  if (typeof launchPresentation.return_url === "string" && launchPresentation.return_url) {
+    try {
+      frameAncestorHost = (await assertSafeExternalHttpsUrl(launchPresentation.return_url)).hostname;
+    } catch {
+      frameAncestorHost = null;
+    }
+  }
   const ags = record(payload[LTI_CLAIMS.agsEndpoint]);
   const nrps = record(payload[LTI_CLAIMS.nrps]);
   const deepLinkSettings = record(payload[LTI_CLAIMS.deepLinkSettings]);
@@ -112,6 +122,8 @@ export async function validateLtiLaunch(input: {
     payload,
     messageType: messageType as "LtiResourceLinkRequest" | "LtiDeepLinkingRequest",
     externalResourceLinkId: normalizeExternalId(resourceLink.id, 500) || null,
+    launchNonce: nonce,
+    frameAncestorHost,
     targetPath: safeCareerCompassTargetPath(custom.ccj_target),
     serviceClaims: {
       ags,
