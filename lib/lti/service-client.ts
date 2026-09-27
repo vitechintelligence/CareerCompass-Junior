@@ -68,12 +68,15 @@ export async function fetchNrpsMembers(session: Record<string, unknown>) {
   }
 
   const token = await platformAccessToken(session, [LTI_SCOPES.nrpsContextMembershipReadonly]);
+  const initialUrl = await assertSafeExternalHttpsUrl(membershipUrl);
+  const allowedOrigin = initialUrl.origin;
   const members: Record<string, unknown>[] = [];
-  let next: string | null = membershipUrl;
+  let next: string | null = initialUrl.toString();
   let pages = 0;
 
   while (next && pages < 20) {
     const url = await assertSafeExternalHttpsUrl(next);
+    if (url.origin !== allowedOrigin) throw new Error("lti_nrps_pagination_origin_mismatch");
     const response = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
