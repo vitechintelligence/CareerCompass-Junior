@@ -299,3 +299,21 @@ Institution BYOK:
 - Never copy a platform OpenAI key into organization policy rows or label a platform key as school BYOK.
 
 If OpenAI credit is unavailable, the test lane must fall back to deterministic mock mode instead of breaking the platform or retrying without a cap.
+
+
+## 16. LTI 1.3 / LTI Advantage Tool Provider
+
+Career Compass Junior has an LTI Tool Provider implementation on the dedicated LTI branch/PR.
+
+Operational rules:
+- Read `docs/LTI_1_3_TOOL_PROVIDER.md` before modifying LTI code.
+- LTI launches must map into the existing Career Compass profile, organization and class authorization model; never build a parallel LMS authorization system.
+- Never commit `LTI_TOOL_PRIVATE_KEY_PEM` or any external LMS access token.
+- Tool public JWKS is `/api/lti/.well-known/jwks.json`.
+- OIDC initiation is `/api/lti/oidc/login`.
+- Launch/redirection endpoint is `/api/lti/launch`.
+- Canvas JSON configuration is `/api/lti/config/canvas`.
+- Migration 008 is prepared only until production application is explicitly approved.
+- A passing local/CI LTI regression means protocol code passed its tests; it does not mean a Canvas/Moodle connector is live.
+- Do not mark a connector `live_verified` until a real sandbox/institution launch, Deep Linking, NRPS and applicable AGS paths pass end to end.
+- 1EdTech certification is an external process and must never be inferred from implementation alone.
