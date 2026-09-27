@@ -18,7 +18,7 @@ export default async function PartnerWorkspacePage() {
   const profile = await getCurrentProfile();
   const sql = getDb();
 
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
     const learnerProfile = profile;
     const request = learnerProfile
       ? await sql`
