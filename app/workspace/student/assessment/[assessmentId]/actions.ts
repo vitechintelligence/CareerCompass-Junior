@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireActiveProfile, requireStudentClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -14,8 +14,7 @@ export async function submitAssessment(formData: FormData) {
   const assessmentId = String(formData.get("assessmentId") || "");
   if (!UUID_RE.test(assessmentId)) throw new Error("Invalid assessment.");
 
-  const profile = await getCurrentProfile();
-  if (!profile || profile.account_type !== "student") throw new Error("Student access required.");
+  const profile = await requireActiveProfile(["student"]);
   const sql = getDb();
 
   const assessments = await sql`
@@ -30,6 +29,7 @@ export async function submitAssessment(formData: FormData) {
   `;
   const assessment = assessments[0];
   if (!assessment) throw new Error("Assessment is not available to this learner.");
+  await requireStudentClassAccess(String(assessment.class_id), profile);
 
   const previous = await sql`select count(*)::int as count from assessment_attempts where assessment_id=${assessmentId} and student_id=${profile.id}`;
   const attemptNumber = Number(previous[0]?.count || 0) + 1;
