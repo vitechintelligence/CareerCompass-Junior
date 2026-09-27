@@ -55,7 +55,7 @@ export async function GET(request: Request) {
     const sql = getDb();
     const rows = await sql`
       select id, platform_name, issuer, client_id, deployment_id,
-             auth_login_url, auth_token_url, jwks_url, status, created_at, updated_at
+             auth_login_url, auth_token_url, auth_token_audience, jwks_url, status, created_at, updated_at
       from lti_registrations
       where installation_id=${installationId}
         and organization_id=${access.organization.id}
@@ -105,6 +105,7 @@ export async function POST(request: Request) {
   const deploymentId = normalizeExternalId(payload.deploymentId, 500);
   const authLoginUrl = normalizeExternalId(payload.authLoginUrl, 2000);
   const authTokenUrl = normalizeExternalId(payload.authTokenUrl, 2000);
+  const authTokenAudience = normalizeExternalId(payload.authTokenAudience, 1000);
   const jwksUrl = normalizeExternalId(payload.jwksUrl, 2000);
 
   if (!platformName || !issuer || !clientId || !deploymentId || !authLoginUrl || !authTokenUrl || !jwksUrl) {
@@ -130,15 +131,17 @@ export async function POST(request: Request) {
     const rows = await sql`
       insert into lti_registrations (
         installation_id, organization_id, platform_name, issuer, client_id, deployment_id,
-        auth_login_url, auth_token_url, jwks_url, status, created_by
+        auth_login_url, auth_token_url, auth_token_audience, jwks_url, status, created_by
       ) values (
         ${installationId}, ${access.organization.id}, ${platformName}, ${issuer}, ${clientId},
-        ${deploymentId}, ${authLoginUrl}, ${authTokenUrl}, ${jwksUrl}, 'active', ${access.profile.id}
+        ${deploymentId}, ${authLoginUrl}, ${authTokenUrl}, ${authTokenAudience || null},
+        ${jwksUrl}, 'active', ${access.profile.id}
       )
       on conflict (issuer, client_id, deployment_id) do update set
         platform_name=excluded.platform_name,
         auth_login_url=excluded.auth_login_url,
         auth_token_url=excluded.auth_token_url,
+        auth_token_audience=excluded.auth_token_audience,
         jwks_url=excluded.jwks_url,
         status='active',
         updated_at=now()
