@@ -4,6 +4,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { ensureStudentProfile, getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
+import { acceptOrganizationInvitation, declineOrganizationInvitation } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,15 @@ export default async function StudentWorkspacePage() {
   if (!profile || profile.account_type !== "student" || profile.status !== "active") return <StudentGate signedIn />;
 
   const sql = getDb();
+  const invitations = await sql`
+    select om.organization_id, o.name
+    from organization_memberships om
+    join organizations o on o.id=om.organization_id and o.status='active'
+    where om.profile_id=${profile.id}
+      and om.role='student'
+      and om.status='invited'
+    order by om.joined_at desc
+  `;
   const enrollments = await sql`
     select se.id, se.status, b.code, b.title_en, b.title_vi, b.level_label, b.age_band,
       c.name as class_name,
@@ -29,6 +39,23 @@ export default async function StudentWorkspacePage() {
     left join book_progress bp on bp.enrollment_id = se.id
     where se.student_id = ${profile.id}
       and se.status in ('active','completed')
+      and (
+        se.class_id is null
+        or exists (
+          select 1
+          from class_memberships cmx
+          join classes cx on cx.id=cmx.class_id and cx.status='active'
+          join organizations ox on ox.id=cx.organization_id and ox.status='active'
+          join organization_memberships omx
+            on omx.organization_id=cx.organization_id
+           and omx.profile_id=cmx.student_id
+           and omx.role='student'
+           and omx.status='active'
+          where cmx.class_id=se.class_id
+            and cmx.student_id=${profile.id}
+            and cmx.status='active'
+        )
+      )
     group by se.id, b.id, c.name
     order by se.enrolled_at desc
   `;
@@ -38,6 +65,12 @@ export default async function StudentWorkspacePage() {
       coalesce(s.status, 'not_started') as submission_status
     from class_memberships cm
     join classes c on c.id = cm.class_id
+    join organizations o on o.id=c.organization_id and o.status='active'
+    join organization_memberships om
+      on om.organization_id=c.organization_id
+     and om.profile_id=cm.student_id
+     and om.role='student'
+     and om.status='active'
     join assignments a on a.class_id = c.id and a.status = 'published'
     left join submissions s on s.assignment_id = a.id and s.student_id = ${profile.id}
     where cm.student_id = ${profile.id}
@@ -54,6 +87,12 @@ export default async function StudentWorkspacePage() {
            (select max(aa.max_score) from assessment_attempts aa where aa.assessment_id=a.id and aa.student_id=${profile.id}) as max_score
     from class_memberships cm
     join classes c on c.id=cm.class_id
+    join organizations o on o.id=c.organization_id and o.status='active'
+    join organization_memberships om
+      on om.organization_id=c.organization_id
+     and om.profile_id=cm.student_id
+     and om.role='student'
+     and om.status='active'
     join assessments a on a.class_id=c.id and a.status='published'
     where cm.student_id=${profile.id}
       and cm.status='active'
@@ -159,6 +198,13 @@ export default async function StudentWorkspacePage() {
           </div>
           <span className="pill">{String(profile.semantic_id)}</span>
         </section>
+
+        {invitations.length > 0 && <section className="panel">
+          <div className="eyebrow">Institution invitation</div>
+          <h2 className="workspaceTitle">Choose whether to join.</h2>
+          <p className="muted">An institution invitation does not grant access until you accept it.</p>
+          <div className="workspaceList">{invitations.map((invite) => <div className="workspaceRow" key={String(invite.organization_id)}><strong>{String(invite.name)}</strong><div className="actions"><form action={acceptOrganizationInvitation}><input type="hidden" name="organizationId" value={String(invite.organization_id)} /><button className="button primary" type="submit">Accept</button></form><form action={declineOrganizationInvitation}><input type="hidden" name="organizationId" value={String(invite.organization_id)} /><button className="button" type="submit">Decline</button></form></div></div>)}</div>
+        </section>}
 
         <section className="metricGrid">
           <Metric label="Book progress" value={`${averageProgress}%`} detail={`${enrollments.length} active book${enrollments.length === 1 ? "" : "s"}`} />
