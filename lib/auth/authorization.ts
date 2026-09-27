@@ -202,29 +202,45 @@ function normalizeEnrollmentRow(row: Record<string, unknown>): LearningEnrollmen
 
 async function fetchEnrollment(profile: LmsProfile, bookId: string, enrollmentId?: string | null) {
   const sql = getDb();
-  const rows = await sql`
-    select
-      se.id, se.student_id, se.book_id, se.status, se.class_id,
-      c.organization_id,
-      c.status as class_status,
-      o.status as organization_status,
-      cm.status as class_membership_status,
-      om.status as organization_membership_status,
-      om.role as organization_membership_role
-    from student_enrollments se
-    left join classes c on c.id=se.class_id
-    left join organizations o on o.id=c.organization_id
-    left join class_memberships cm on cm.class_id=se.class_id and cm.student_id=se.student_id
-    left join organization_memberships om
-      on om.organization_id=c.organization_id
-     and om.profile_id=se.student_id
-     and om.role='student'
-    where se.student_id=${profile.id}
-      and se.book_id=${bookId}
-      and (${enrollmentId || null}::uuid is null or se.id=${enrollmentId || null}::uuid)
-      and (se.class_id is not null or ${enrollmentId || null}::uuid is null or se.id=${enrollmentId || null}::uuid)
-    order by se.enrolled_at desc
-  `;
+  const rows = enrollmentId
+    ? await sql`
+        select
+          se.id, se.student_id, se.book_id, se.status, se.class_id,
+          c.organization_id,
+          c.status as class_status,
+          o.status as organization_status,
+          cm.status as class_membership_status,
+          om.status as organization_membership_status,
+          om.role as organization_membership_role
+        from student_enrollments se
+        left join classes c on c.id=se.class_id
+        left join organizations o on o.id=c.organization_id
+        left join class_memberships cm on cm.class_id=se.class_id and cm.student_id=se.student_id
+        left join organization_memberships om
+          on om.organization_id=c.organization_id
+         and om.profile_id=se.student_id
+         and om.role='student'
+        where se.id=${enrollmentId}
+          and se.student_id=${profile.id}
+          and se.book_id=${bookId}
+        limit 1
+      `
+    : await sql`
+        select
+          se.id, se.student_id, se.book_id, se.status, se.class_id,
+          null::uuid as organization_id,
+          null::text as class_status,
+          null::text as organization_status,
+          null::text as class_membership_status,
+          null::text as organization_membership_status,
+          null::text as organization_membership_role
+        from student_enrollments se
+        where se.student_id=${profile.id}
+          and se.book_id=${bookId}
+          and se.class_id is null
+        order by se.enrolled_at desc
+        limit 1
+      `;
 
   for (const raw of rows) {
     const row = normalizeEnrollmentRow(raw as Record<string, unknown>);
