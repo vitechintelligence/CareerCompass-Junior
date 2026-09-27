@@ -9,12 +9,13 @@ export default async function StudentIndustryPage() {
   const user = await getSessionUser();
   if (!user) return <Gate />;
   const profile = await getCurrentProfile();
-  if (!profile || profile.account_type !== "student") return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || profile.account_type !== "student") return <Gate signedIn />;
 
   const sql = getDb();
   const companies = await sql`
     select distinct p.id, p.company_name, p.website, p.sector, p.overview_en, p.overview_vi
     from organization_memberships om
+    join organizations o on o.id=om.organization_id and o.status='active'
     join school_company_connections c on c.organization_id=om.organization_id and c.status='active'
     join industry_partners p on p.id=c.industry_partner_id and p.status='verified'
     where om.profile_id=${profile.id}
@@ -51,6 +52,7 @@ export default async function StudentIndustryPage() {
       s.id, s.industry_partner_id, s.company_name, s.title, s.summary, s.instructions,
       s.target_grades, s.safety_notes, s.published_at, s.created_at
     from organization_memberships om
+    join organizations o on o.id=om.organization_id and o.status='active'
     join school_company_connections c
       on c.organization_id=om.organization_id
      and c.status='active'
