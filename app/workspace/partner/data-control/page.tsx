@@ -3,6 +3,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { updateOrganizationDataPolicy } from "@/app/workspace/community/actions";
+import OpenAITestPanel from "./OpenAITestPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -140,6 +141,8 @@ export default async function PartnerDataControlPage() {
             </div>
           </article>
         </section>
+
+        {profile.account_type === "platform_admin" && <OpenAITestPanel />}
 
         <section className="panel">
           <div className="eyebrow">When CTAs appear</div>
