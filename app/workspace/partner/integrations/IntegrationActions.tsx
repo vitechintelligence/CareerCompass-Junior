@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import LtiRegistrationForm from "./LtiRegistrationForm";
 
 type ActionState = "idle" | "testing" | "preparing" | "ready" | "error";
 
@@ -9,15 +10,18 @@ export default function IntegrationActions({
   providerSlug,
   providerName,
   capabilities,
+  protocol,
 }: {
   organizationId: string;
   providerSlug: string;
   providerName: string;
   capabilities: string[];
+  protocol: string;
 }) {
   const [state, setState] = useState<ActionState>("idle");
   const [message, setMessage] = useState("");
   const [diagnosticMode, setDiagnosticMode] = useState<string | null>(null);
+  const [installationId, setInstallationId] = useState<string | null>(null);
 
   async function testAdapter() {
     setState("testing");
@@ -63,6 +67,7 @@ export default function IntegrationActions({
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data?.error || "Unable to prepare integration.");
+      if (typeof data?.installationId === "string") setInstallationId(data.installationId);
       setState("ready");
       setMessage(
         data?.existing
@@ -96,6 +101,13 @@ export default function IntegrationActions({
         <p className="muted" style={{ fontSize: 12, marginTop: 8 }}>
           {message}
         </p>
+      )}
+      {protocol === "lti_1_3" && installationId && (
+        <LtiRegistrationForm
+          organizationId={organizationId}
+          installationId={installationId}
+          providerName={providerName}
+        />
       )}
     </div>
   );
