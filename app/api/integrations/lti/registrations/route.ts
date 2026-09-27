@@ -136,16 +136,23 @@ export async function POST(request: Request) {
         ${deploymentId}, ${authLoginUrl}, ${authTokenUrl}, ${jwksUrl}, 'active', ${access.profile.id}
       )
       on conflict (issuer, client_id, deployment_id) do update set
-        installation_id=excluded.installation_id,
-        organization_id=excluded.organization_id,
         platform_name=excluded.platform_name,
         auth_login_url=excluded.auth_login_url,
         auth_token_url=excluded.auth_token_url,
         jwks_url=excluded.jwks_url,
         status='active',
         updated_at=now()
+      where lti_registrations.installation_id=excluded.installation_id
+        and lti_registrations.organization_id=excluded.organization_id
       returning id, status, created_at, updated_at
     `;
+
+    if (!rows[0]) {
+      return NextResponse.json({
+        error: "This LTI deployment is already owned by another Career Compass installation.",
+        code: "lti_registration_tenant_conflict",
+      }, { status: 409 });
+    }
 
     await sql`
       update integration_installations
