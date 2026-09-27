@@ -30,6 +30,7 @@ export default function LtiRegistrationForm({
           deploymentId: String(formData.get("deploymentId") || ""),
           authLoginUrl: String(formData.get("authLoginUrl") || ""),
           authTokenUrl: String(formData.get("authTokenUrl") || ""),
+          authTokenAudience: String(formData.get("authTokenAudience") || ""),
           jwksUrl: String(formData.get("jwksUrl") || ""),
         }),
       });
@@ -63,6 +64,7 @@ export default function LtiRegistrationForm({
         <label><span>Deployment ID</span><input name="deploymentId" required maxLength={500} autoComplete="off" /></label>
         <label><span>Authentication request / OIDC authorization URL</span><input name="authLoginUrl" type="url" required maxLength={2000} placeholder="https://…" /></label>
         <label><span>Access token URL</span><input name="authTokenUrl" type="url" required maxLength={2000} placeholder="https://…" /></label>
+        <label><span>OAuth token audience (optional)</span><input name="authTokenAudience" maxLength={1000} placeholder="Leave blank to use the access token URL" /></label>
         <label><span>Platform public keyset / JWKS URL</span><input name="jwksUrl" type="url" required maxLength={2000} placeholder="https://…" /></label>
         <button className="button primary" type="submit" disabled={state === "saving"}>
           {state === "saving" ? "Saving LTI registration…" : "Save LTI registration"}
