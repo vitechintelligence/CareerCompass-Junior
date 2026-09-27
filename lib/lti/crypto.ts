@@ -22,6 +22,7 @@ function base64UrlDecode(input: string) {
 }
 
 export function decodeJwt(token: string) {
+  if (token.length > 200_000) throw new Error("lti_jwt_too_large");
   const parts = token.split(".");
   if (parts.length !== 3) throw new Error("lti_jwt_malformed");
   try {
@@ -100,6 +101,7 @@ export async function verifyPlatformJwtSignature(token: string, jwksUrl: string)
   const response = await fetch(safeUrl, {
     headers: { Accept: "application/json" },
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.timeout(7000),
   });
   if (!response.ok) throw new Error("lti_platform_jwks_unavailable");
@@ -107,7 +109,13 @@ export async function verifyPlatformJwtSignature(token: string, jwksUrl: string)
   const keys = Array.isArray(payload.keys) ? payload.keys : [];
   const jwk = keys.find((candidate) => {
     if (!candidate || typeof candidate !== "object") return false;
-    return String((candidate as Record<string, unknown>).kid || "") === kid;
+    const key = candidate as Record<string, unknown>;
+    const alg = String(key.alg || "");
+    const use = String(key.use || "");
+    return String(key.kid || "") === kid &&
+      String(key.kty || "") === "RSA" &&
+      (!alg || alg === "RS256") &&
+      (!use || use === "sig");
   }) as Record<string, unknown> | undefined;
   if (!jwk) throw new Error("lti_platform_jwk_not_found");
 
