@@ -71,25 +71,72 @@ export default async function StudentWorkspacePage() {
   `;
 
   const announcements = await sql`
-    select distinct a.id, a.title_en, a.body_en, a.published_at
+    select a.id, a.title_en, a.body_en, a.published_at
     from announcements a
-    left join class_memberships cm on cm.class_id = a.class_id and cm.student_id = ${profile.id} and cm.status='active'
-    left join organization_memberships om on om.organization_id = a.organization_id and om.profile_id = ${profile.id} and om.status='active'
     where a.audience in ('all','students')
-      and (cm.student_id is not null or om.profile_id is not null)
       and (a.expires_at is null or a.expires_at > now())
+      and (
+        (a.class_id is not null and exists (
+          select 1
+          from class_memberships cm
+          join classes c on c.id=cm.class_id and c.status='active'
+          join organizations o on o.id=c.organization_id and o.status='active'
+          where cm.class_id=a.class_id
+            and cm.student_id=${profile.id}
+            and cm.status='active'
+        ))
+        or
+        (a.class_id is null and a.organization_id is not null and exists (
+          select 1
+          from organization_memberships om
+          join organizations o on o.id=om.organization_id and o.status='active'
+          where om.organization_id=a.organization_id
+            and om.profile_id=${profile.id}
+            and om.role='student'
+            and om.status='active'
+        ))
+        or
+        (a.class_id is null and a.organization_id is null)
+      )
     order by a.published_at desc
     limit 5
   `;
 
   const resources = await sql`
-    select distinct r.id, r.title_en, r.resource_type, r.resource_url
+    select r.id, r.title_en, r.resource_type, r.resource_url
     from resources r
-    left join class_memberships cm on cm.class_id = r.class_id and cm.student_id = ${profile.id} and cm.status='active'
-    left join student_enrollments se on se.book_id = r.book_id and se.student_id = ${profile.id} and se.status in ('active','completed')
-    left join organization_memberships om on om.organization_id = r.organization_id and om.profile_id = ${profile.id} and om.status='active'
     where r.visibility in ('all','students')
-      and ((r.class_id is null and r.book_id is null and r.organization_id is null) or cm.student_id is not null or se.student_id is not null or om.profile_id is not null)
+      and (
+        (r.class_id is not null and exists (
+          select 1
+          from class_memberships cm
+          join classes c on c.id=cm.class_id and c.status='active'
+          join organizations o on o.id=c.organization_id and o.status='active'
+          where cm.class_id=r.class_id
+            and cm.student_id=${profile.id}
+            and cm.status='active'
+        ))
+        or
+        (r.class_id is null and r.organization_id is not null and exists (
+          select 1
+          from organization_memberships om
+          join organizations o on o.id=om.organization_id and o.status='active'
+          where om.organization_id=r.organization_id
+            and om.profile_id=${profile.id}
+            and om.role='student'
+            and om.status='active'
+        ))
+        or
+        (r.class_id is null and r.organization_id is null and r.book_id is not null and exists (
+          select 1
+          from student_enrollments se
+          where se.book_id=r.book_id
+            and se.student_id=${profile.id}
+            and se.status in ('active','completed')
+        ))
+        or
+        (r.class_id is null and r.organization_id is null and r.book_id is null)
+      )
     order by r.created_at desc
     limit 6
   `;
