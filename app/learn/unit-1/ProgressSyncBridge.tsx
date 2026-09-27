@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 type Props = {
   locale: "en" | "vi";
+  enrollmentId?: string;
 };
 
 const storageKey = "ccj-unit1-completed";
@@ -19,7 +20,7 @@ function readCompleted() {
   }
 }
 
-export default function ProgressSyncBridge({ locale }: Props) {
+export default function ProgressSyncBridge({ locale, enrollmentId }: Props) {
   const syncedRef = useRef<Set<number>>(new Set());
   const [status, setStatus] = useState<"checking" | "synced" | "local" | "failed">("checking");
 
@@ -46,6 +47,7 @@ export default function ProgressSyncBridge({ locale }: Props) {
             body: JSON.stringify({
               lessonId,
               completed: true,
+              enrollmentId,
               locale,
               response: { source: "interactive-unit-1" },
             }),
@@ -75,7 +77,7 @@ export default function ProgressSyncBridge({ locale }: Props) {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [locale]);
+  }, [locale, enrollmentId]);
 
   return (
     <div className="syncBadge" role="status" aria-live="polite">
