@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { EvaluationError } from "@/lib/learning/objective-evaluation";
 import { EvidencePolicyError, evaluateActivityEvidence } from "@/lib/learning/evidence-policy";
 import { readBoundedJson } from "@/lib/learning/request-json";
+import { tryLtiBookProgressPassback } from "@/lib/lti/learning-passback";
 
 export const dynamic = "force-dynamic";
 
@@ -202,6 +203,15 @@ export async function POST(request: Request) {
     }
   }
 
+  const ltiGradePassback = completed
+    ? await tryLtiBookProgressPassback({
+        profileId: profile.id,
+        bookId: String(ref.book_id),
+        bookCode,
+        enrollmentId,
+      })
+    : { attempted: false as const, reason: "learning_not_completed" };
+
   return NextResponse.json({
     ok: true,
     synced: true,
@@ -210,6 +220,7 @@ export async function POST(request: Request) {
     evaluation: decision,
     progressPercent,
     capsuleCreated,
+    ltiGradePassback,
     classScoped: Boolean(enrollment.class_id),
     enrollmentId,
   }, { headers: { "Cache-Control": "no-store" } });
