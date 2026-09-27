@@ -21,6 +21,10 @@ export async function POST(request: Request) {
 
   const lessonId = payload.lessonId;
   const enrollmentId = payload.enrollmentId;
+  const submissionId = payload.submissionId;
+  if (submissionId != null && typeof submissionId !== "string") {
+    return NextResponse.json({ error: "invalid_submission_reference" }, { status: 400 });
+  }
   if (enrollmentId != null && typeof enrollmentId !== "string") {
     return NextResponse.json({ error: "invalid_enrollment_reference" }, { status: 400 });
   }
@@ -36,6 +40,7 @@ export async function POST(request: Request) {
       bookCode: "CCJ-MASTERY-BEGINNER", unitCode: "U01",
       activityCode: `U01-L${String(lessonId).padStart(2, "0")}`,
       enrollmentId: typeof enrollmentId === "string" ? enrollmentId : undefined,
+      submissionId: typeof submissionId === "string" ? submissionId : undefined,
       locale: payload.locale === "en" ? "en" : "vi",
       response: { selfReported: true, source: "interactive-unit-1" },
     }),

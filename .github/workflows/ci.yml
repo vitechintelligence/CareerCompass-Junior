@@ -48,6 +48,9 @@ jobs:
       - name: Durable learner progress regression
         run: npm run test:progress
 
+      - name: Duplicate-safe learning event regression
+        run: npm run test:idempotency
+
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 

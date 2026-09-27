@@ -78,6 +78,7 @@ try {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({
       bookCode: "CCJ-MASTERY-BEGINNER", unitCode: "U01", activityCode: "U01-L01",
+      submissionId: randomUUID(),
       enrollmentId: "../other-class", response: { selected: "hello" },
     }),
   });
@@ -87,6 +88,7 @@ try {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({
       bookCode: "CCJ-MASTERY-BEGINNER", unitCode: "U01", activityCode: "U01-L01",
+      submissionId: randomUUID(),
       response: { selected: "hello" },
     }),
   });

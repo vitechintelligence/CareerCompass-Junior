@@ -178,10 +178,24 @@ create table if not exists activity_attempts (
   contract_version integer not null default 1 check (contract_version >= 1),
   activity_contract jsonb not null default '{}'::jsonb,
   contract_hash text,
+  submission_id uuid,
+  submission_hash text,
   started_at timestamptz not null default now(),
   submitted_at timestamptz,
   reviewed_at timestamptz,
   unique (activity_id, student_id, attempt_number)
+);
+
+create unique index if not exists idx_activity_attempts_submission_id
+  on activity_attempts(submission_id)
+  where submission_id is not null;
+
+create table if not exists learning_attempt_counters (
+  activity_id uuid not null references activities(id) on delete cascade,
+  student_id uuid not null references profiles(id) on delete cascade,
+  next_attempt integer not null check (next_attempt >= 1),
+  updated_at timestamptz not null default now(),
+  primary key (activity_id, student_id)
 );
 
 create table if not exists attendance (
