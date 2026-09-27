@@ -318,7 +318,7 @@ create table if not exists learning_capsules (
   learner_id uuid not null references profiles(id) on delete cascade,
   organization_id uuid references organizations(id) on delete set null,
   class_id uuid references classes(id) on delete set null,
-  source_type text not null check (source_type in ('activity_attempt','submission','teacher_observation','project','milestone')),
+  source_type text not null check (source_type in ('activity_attempt','submission','assessment_attempt','teacher_observation','project','milestone')),
   source_id uuid,
   title_en text not null,
   title_vi text not null,
