@@ -3,7 +3,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { getDb } from "@/lib/db";
-import { LTI_SESSION_COOKIE } from "@/lib/lti/constants";
+import { LTI_FRAME_HOST_COOKIE, LTI_SESSION_COOKIE } from "@/lib/lti/constants";
 import { stableHash } from "@/lib/lti/policy";
 import type { LtiPlatformRegistration } from "@/lib/lti/runtime";
 
@@ -16,6 +16,13 @@ export const ltiSessionCookieOptions = {
   partitioned: true,
 };
 
+export const ltiFrameCookieOptions = {
+  ...ltiSessionCookieOptions,
+  maxAge: 60 * 60 * 8,
+};
+
+export { LTI_FRAME_HOST_COOKIE };
+
 export async function createLtiLaunchSession(input: {
   registration: LtiPlatformRegistration;
   profileId: string;
@@ -23,6 +30,7 @@ export async function createLtiLaunchSession(input: {
   messageType: "LtiResourceLinkRequest" | "LtiDeepLinkingRequest";
   externalContextId: string | null;
   externalResourceLinkId: string | null;
+  launchNonce: string;
   serviceClaims: Record<string, unknown>;
   deepLinkSettings: Record<string, unknown>;
   targetPath: string;
@@ -32,12 +40,12 @@ export async function createLtiLaunchSession(input: {
   const rows = await sql`
     insert into lti_launch_sessions (
       registration_id, organization_id, profile_id, class_id, message_type,
-      external_context_id, external_resource_link_id, session_token_hash,
+      external_context_id, external_resource_link_id, launch_nonce, session_token_hash,
       service_claims, deep_link_settings, target_path, expires_at
     ) values (
       ${input.registration.id}, ${input.registration.organizationId}, ${input.profileId},
       ${input.classId}, ${input.messageType}, ${input.externalContextId},
-      ${input.externalResourceLinkId}, ${stableHash(token)},
+      ${input.externalResourceLinkId}, ${input.launchNonce}, ${stableHash(token)},
       ${JSON.stringify(input.serviceClaims)}::jsonb,
       ${JSON.stringify(input.deepLinkSettings)}::jsonb,
       ${input.targetPath}, now() + interval '8 hours'
@@ -56,7 +64,7 @@ export async function getCurrentLtiSession() {
   const rows = await sql`
     select
       s.id, s.registration_id, s.organization_id, s.profile_id, s.class_id,
-      s.message_type, s.external_context_id, s.external_resource_link_id,
+      s.message_type, s.external_context_id, s.external_resource_link_id, s.launch_nonce,
       s.service_claims, s.deep_link_settings, s.target_path, s.expires_at,
       r.installation_id, r.platform_name, r.issuer, r.client_id, r.deployment_id,
       r.auth_login_url, r.auth_token_url, r.jwks_url,
