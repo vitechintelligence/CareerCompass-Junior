@@ -64,6 +64,9 @@ export async function getCurrentLtiSession() {
       o.status as organization_status
     from lti_launch_sessions s
     join lti_platform_registrations r on r.id=s.registration_id and r.status='active'
+    join integration_installations i on i.id=r.installation_id
+      and i.organization_id=s.organization_id
+      and i.status in ('configured','active')
     join profiles p on p.id=s.profile_id
     join organizations o on o.id=s.organization_id
     where s.session_token_hash=${stableHash(token)}
