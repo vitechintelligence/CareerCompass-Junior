@@ -37,7 +37,7 @@ export async function getLtiRegistrationById(id: string) {
   const sql = getDb();
   const rows = await sql`
     select r.*
-    from lti_platform_registrations r
+    from lti_registrations r
     join organizations o on o.id=r.organization_id
     join integration_installations i on i.id=r.installation_id
     where r.id=${id}
@@ -63,7 +63,7 @@ export async function resolveLtiRegistrationForLogin(
   const rows = clientId
     ? await sql`
         select r.*
-        from lti_platform_registrations r
+        from lti_registrations r
         join organizations o on o.id=r.organization_id
         join integration_installations i on i.id=r.installation_id
         where r.issuer=${issuer}
@@ -77,7 +77,7 @@ export async function resolveLtiRegistrationForLogin(
       `
     : await sql`
         select r.*
-        from lti_platform_registrations r
+        from lti_registrations r
         join organizations o on o.id=r.organization_id
         join integration_installations i on i.id=r.installation_id
         where r.issuer=${issuer}
