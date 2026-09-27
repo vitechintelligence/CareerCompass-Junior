@@ -82,6 +82,7 @@ export default async function TeacherAssessmentsPage() {
                 <label><span>English instructions</span><textarea name="instructionsEn" maxLength={3000} rows={2} /></label>
                 <label><span>Vietnamese instructions</span><textarea name="instructionsVi" maxLength={3000} rows={2} /></label>
                 <div className="inlineFields"><label><span>Due</span><input name="dueAt" type="datetime-local" /></label><label><span>Time limit (min)</span><input name="timeLimitMinutes" type="number" min="1" max="300" /></label></div>
+                <label><span>Demonstrated threshold (%)</span><input name="demonstratedThreshold" type="number" min="0" max="100" step="1" defaultValue="70" /></label>
 
                 {[1,2,3,4,5].map((index) => (
                   <fieldset className="feedbackCard" key={index}>
@@ -90,6 +91,9 @@ export default async function TeacherAssessmentsPage() {
                     <label><span>English prompt</span><textarea name={`q${index}PromptEn`} rows={2} maxLength={1200} /></label>
                     <label><span>Vietnamese prompt</span><textarea name={`q${index}PromptVi`} rows={2} maxLength={1200} /></label>
                     <label><span>Options, separated by |</span><input name={`q${index}Options`} maxLength={2000} placeholder="A | B | C | D" /></label>
+                    <label><span>Learning objective (EN)</span><input name={`q${index}ObjectiveEn`} maxLength={800} /></label>
+                    <label><span>Learning objective (VI)</span><input name={`q${index}ObjectiveVi`} maxLength={800} /></label>
+                    <label><span>Rubric / review guidance</span><textarea name={`q${index}Rubric`} rows={2} maxLength={1600} placeholder="What should a strong answer show?" /></label>
                     <div className="inlineFields"><label><span>Correct answer</span><input name={`q${index}Correct`} maxLength={500} /></label><label><span>Points</span><input name={`q${index}Points`} type="number" min="0" max="1000" step="0.5" defaultValue="1" /></label></div>
                   </fieldset>
                 ))}
