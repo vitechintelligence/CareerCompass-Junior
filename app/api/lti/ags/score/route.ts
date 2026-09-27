@@ -10,8 +10,8 @@ const GRADING = new Set(["NotReady","Failed","Pending","PendingManual","FullyGra
 export async function POST(request: Request) {
   const session = await getCurrentLtiSession();
   if (!session) return NextResponse.json({ error: "Active LTI session required." }, { status: 401 });
-  if (String(session.account_type) !== "student") {
-    return NextResponse.json({ error: "Learner LTI session required for score passback." }, { status: 403 });
+  if (!["teacher","platform_admin"].includes(String(session.account_type))) {
+    return NextResponse.json({ error: "Instructor LTI session required for grade passback." }, { status: 403 });
   }
 
   const body = await request.json().catch(() => ({})) as Record<string, unknown>;
