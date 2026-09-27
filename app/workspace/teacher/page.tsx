@@ -18,7 +18,7 @@ export default async function TeacherWorkspacePage() {
   if (admin) redirect("/workspace/admin");
 
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["teacher", "platform_admin"].includes(profile.account_type)) {
     return <WorkspaceGate title="Teacher Workspace" copy="This signed-in account does not have teacher access. Teacher roles are assigned by an approved partner or platform administrator." signedIn />;
   }
 
