@@ -4,7 +4,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
-import { activateTeacher, assignTeacher, createClass, enrollStudent, recordLearnerConsent, requestPartnerAccess, revokeLearnerConsent } from "./actions";
+import { activateTeacher, assignTeacher, createClass, enrollStudent, inviteStudentToOrganization, recordLearnerConsent, requestPartnerAccess, revokeLearnerConsent } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -196,8 +196,14 @@ export default async function PartnerWorkspacePage() {
 
         <section className="workspaceGrid">
           <article className="panel">
-            <div className="eyebrow">Learners</div><h2 className="workspaceTitle">Enroll activated student</h2>
-            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={enrollStudent} className="workspaceForm"><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label><button className="button soft" type="submit">Enroll learner</button></form>}
+            <div className="eyebrow">Learners</div><h2 className="workspaceTitle">Invite, then enroll</h2>
+            <p className="muted">Invite an existing learner account to this institution first. The learner must accept before a partner can attach that account to a class, unless the institution already issued the learner credential.</p>
+            <form action={inviteStudentToOrganization} className="workspaceForm">
+              <input type="hidden" name="organizationId" value={organizationId} />
+              <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
+              <button className="button" type="submit">Send institution invitation</button>
+            </form>
+            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={enrollStudent} className="workspaceForm" style={{ marginTop: 16 }}><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Accepted learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label><button className="button soft" type="submit">Enroll accepted learner</button></form>}
           </article>
 
           <article className="panel">
