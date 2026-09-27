@@ -147,7 +147,7 @@ export default async function PartnerIntegrationsPage() {
                     <p className="muted" style={{ fontSize: 12 }}><strong>Readiness:</strong> {readiness.summary}</p>
                     <div className="tagRow">{provider.capabilities.map((capability) => <span className="tag" key={capability}>{capability.replaceAll("_", " ")}</span>)}</div>
                     {readiness.missing.length > 0 && <p className="muted" style={{ fontSize: 11 }}>Before live use: {readiness.missing.join(" · ")}</p>}
-                    <IntegrationActions organizationId={organizationId} providerSlug={provider.slug} providerName={provider.displayName} capabilities={provider.capabilities} />
+                    <IntegrationActions organizationId={organizationId} providerSlug={provider.slug} providerName={provider.displayName} capabilities={provider.capabilities} protocol={String(provider.protocol)} />
                     <p className="muted" style={{ fontSize: 12 }}>Secrets are never collected by this browser action. OAuth, LTI keys and API credentials remain part of provider-specific server authorization.</p>
                   </article>
                 );
