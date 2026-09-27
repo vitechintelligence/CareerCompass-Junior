@@ -124,40 +124,79 @@ export async function createAssignment(formData: FormData) {
   revalidatePath("/workspace/teacher");
 }
 
-export async function saveFeedback(formData: FormData) {
+export async function reviewSubmission(formData: FormData) {
   const submissionId = String(formData.get("submissionId") || "");
   const feedbackText = boundedText(formData.get("feedbackText"), 4000);
   const rawScore = boundedText(formData.get("score"), 16);
   const score = rawScore ? Number(rawScore) : null;
+  const decision = String(formData.get("decision") || "");
+  const nextStatus = decision === "verify" ? "accepted" : decision === "return" ? "returned" : null;
 
-  if (!UUID_RE.test(submissionId) || !feedbackText || (score !== null && (!Number.isFinite(score) || score < 0 || score > 100))) {
-    throw new Error("Valid feedback and a score between 0 and 100 are required.");
+  if (
+    !UUID_RE.test(submissionId) ||
+    !feedbackText ||
+    !nextStatus ||
+    (score !== null && (!Number.isFinite(score) || score < 0 || score > 100))
+  ) {
+    throw new Error("Valid feedback, review decision and a score between 0 and 100 are required.");
   }
 
   const sql = getDb();
   const submission = await sql`
-    select s.id, a.class_id
+    select s.id, s.status, s.current_revision, a.class_id
     from submissions s
-    join assignments a on a.id = s.assignment_id
-    where s.id = ${submissionId}
+    join assignments a on a.id=s.assignment_id
+    where s.id=${submissionId}
     limit 1
   `;
   const classId = String(submission[0]?.class_id || "");
   if (!classId) throw new Error("Submission not found.");
+  if (String(submission[0]?.status || "") !== "submitted") {
+    throw new Error("This revision is no longer waiting for review.");
+  }
   const profile = await requireTeacherForClass(classId);
 
-  await sql`
-    insert into teacher_feedback (
-      submission_id, teacher_id, feedback_text, score, visibility
+  const reviewed = await sql`
+    with updated as (
+      update submissions
+      set status=${nextStatus}, updated_at=now()
+      where id=${submissionId}
+        and status='submitted'
+      returning id, current_revision
+    ),
+    revision as (
+      select sr.id
+      from submission_revisions sr
+      join updated u
+        on u.id=sr.submission_id
+       and u.current_revision=sr.revision_number
+      limit 1
+    ),
+    feedback as (
+      insert into teacher_feedback (
+        submission_id, submission_revision_id, teacher_id,
+        feedback_text, score, visibility
+      )
+      select
+        ${submissionId}, revision.id, ${profile.id},
+        ${feedbackText}, ${score}, 'student'
+      from revision
+      on conflict (submission_revision_id, teacher_id)
+        where submission_revision_id is not null and teacher_id is not null
+      do update set
+        feedback_text=excluded.feedback_text,
+        score=excluded.score,
+        visibility='student',
+        updated_at=now()
+      returning id
     )
-    values (${submissionId}, ${profile.id}, ${feedbackText}, ${score}, 'student')
+    select updated.id, updated.current_revision, feedback.id as feedback_id
+    from updated
+    join feedback on true
   `;
-
-  await sql`
-    update submissions
-    set status = 'returned', updated_at = now()
-    where id = ${submissionId}
-  `;
+  if (!reviewed[0]) throw new Error("The learner submission changed before review. Refresh and try again.");
 
   revalidatePath("/workspace/teacher");
+  revalidatePath(`/workspace/student/assignment/${String(submission[0]?.assignment_id || "")}`);
+  revalidatePath("/workspace/student");
 }
