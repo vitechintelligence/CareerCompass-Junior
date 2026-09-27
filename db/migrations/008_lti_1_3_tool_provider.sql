@@ -75,6 +75,7 @@ create table if not exists lti_launch_sessions (
   message_type text not null check (message_type in ('LtiResourceLinkRequest','LtiDeepLinkingRequest')),
   external_context_id text,
   external_resource_link_id text,
+  launch_nonce text not null,
   session_token_hash text not null unique,
   service_claims jsonb not null default '{}'::jsonb,
   deep_link_settings jsonb not null default '{}'::jsonb,
