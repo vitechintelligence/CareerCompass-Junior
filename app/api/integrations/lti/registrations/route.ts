@@ -59,7 +59,7 @@ export async function GET(request: Request) {
       from lti_registrations
       where installation_id=${installationId}
         and organization_id=${access.organization.id}
-      limit 1
+      order by updated_at desc
     `;
     return NextResponse.json({
       organization: access.organization,
@@ -68,7 +68,7 @@ export async function GET(request: Request) {
         providerSlug: String(installation.slug),
         providerName: String(installation.display_name),
       },
-      registration: rows[0] || null,
+      registrations: rows,
       tool: toolConfiguration(),
     });
   } catch {
@@ -135,11 +135,10 @@ export async function POST(request: Request) {
         ${installationId}, ${access.organization.id}, ${platformName}, ${issuer}, ${clientId},
         ${deploymentId}, ${authLoginUrl}, ${authTokenUrl}, ${jwksUrl}, 'active', ${access.profile.id}
       )
-      on conflict (installation_id) do update set
+      on conflict (issuer, client_id, deployment_id) do update set
+        installation_id=excluded.installation_id,
+        organization_id=excluded.organization_id,
         platform_name=excluded.platform_name,
-        issuer=excluded.issuer,
-        client_id=excluded.client_id,
-        deployment_id=excluded.deployment_id,
         auth_login_url=excluded.auth_login_url,
         auth_token_url=excluded.auth_token_url,
         jwks_url=excluded.jwks_url,
