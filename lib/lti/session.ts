@@ -67,7 +67,7 @@ export async function getCurrentLtiSession() {
       s.message_type, s.external_context_id, s.external_resource_link_id, s.launch_nonce,
       s.service_claims, s.deep_link_settings, s.target_path, s.expires_at,
       r.installation_id, r.platform_name, r.issuer, r.client_id, r.deployment_id,
-      r.auth_login_url, r.auth_token_url, r.jwks_url,
+      r.auth_login_url, r.auth_token_url, r.auth_token_audience, r.jwks_url,
       p.auth_subject, p.display_name, p.account_type, p.status as profile_status,
       o.status as organization_status
     from lti_launch_sessions s
