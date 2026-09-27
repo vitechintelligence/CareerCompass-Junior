@@ -8,7 +8,6 @@ export const LTI_CLAIMS = {
   resourceLink: "https://purl.imsglobal.org/spec/lti/claim/resource_link",
   launchPresentation: "https://purl.imsglobal.org/spec/lti/claim/launch_presentation",
   custom: "https://purl.imsglobal.org/spec/lti/claim/custom",
-  launchPresentation: "https://purl.imsglobal.org/spec/lti/claim/launch_presentation",
   agsEndpoint: "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint",
   nrps: "https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice",
   deepLinkSettings: "https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings",
