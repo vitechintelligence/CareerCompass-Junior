@@ -6,7 +6,7 @@ export type ManagedOrganization = { id: string; name: string };
 
 export async function getManagedOrganization(requestedOrganizationId?: string | null) {
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) return null;
+  if (!profile || profile.status !== "active" || !["partner_admin", "platform_admin"].includes(profile.account_type)) return null;
 
   const sql = getDb();
   if (profile.account_type === "platform_admin") {
