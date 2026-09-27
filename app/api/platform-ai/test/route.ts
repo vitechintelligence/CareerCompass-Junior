@@ -6,7 +6,12 @@ import { platformAiRuntime, runPlatformOpenAiConnectivityTest } from "@/lib/plat
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const admin = await requirePlatformAdmin();
+  let admin;
+  try {
+    admin = await requirePlatformAdmin();
+  } catch {
+    return NextResponse.json({ error: "Platform administrator access required." }, { status: 403 });
+  }
   const sql = getDb();
   const runtime = platformAiRuntime();
 
