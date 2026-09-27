@@ -16,7 +16,7 @@ export default async function TeacherAssessmentsPage() {
   const classes = profile.account_type === "platform_admin"
     ? await sql`
         select c.id, c.name, c.class_scope, c.subject_label, o.name as organization_name
-        from classes c join organizations o on o.id=c.organization_id
+        from classes c join organizations o on o.id=c.organization_id and o.status='active'
         where c.status='active'
         order by c.class_scope desc, c.name
       `
@@ -24,7 +24,12 @@ export default async function TeacherAssessmentsPage() {
         select c.id, c.name, c.class_scope, c.subject_label, o.name as organization_name
         from teacher_assignments ta
         join classes c on c.id=ta.class_id
-        join organizations o on o.id=c.organization_id
+        join organizations o on o.id=c.organization_id and o.status='active'
+        join organization_memberships om
+          on om.organization_id=c.organization_id
+         and om.profile_id=ta.teacher_id
+         and om.role='teacher'
+         and om.status='active'
         where ta.teacher_id=${profile.id}
           and c.status='active'
         order by c.class_scope desc, c.name
