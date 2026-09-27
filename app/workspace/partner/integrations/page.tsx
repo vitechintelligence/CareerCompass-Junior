@@ -13,7 +13,7 @@ export default async function PartnerIntegrationsPage() {
   if (!user) return <Gate title="Sign in required" copy="Sign in with an approved partner account to manage integrations." />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
     return <Gate title="Partner access required" copy="Integrations are organization-scoped and are available only to approved partner administrators." />;
   }
 
