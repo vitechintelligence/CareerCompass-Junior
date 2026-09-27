@@ -95,6 +95,12 @@ export async function validateLtiLaunch(input: {
   `;
   if (!consumed[0]) throw new Error("lti_state_replayed");
 
+  const launchPresentation = record(payload[LTI_CLAIMS.launchPresentation]);
+  const documentTarget = normalizeExternalId(launchPresentation.document_target, 80).toLowerCase();
+  if (documentTarget && documentTarget !== "window") {
+    throw new Error("lti_document_target_requires_window");
+  }
+
   const resourceLink = record(payload[LTI_CLAIMS.resourceLink]);
   const custom = record(payload[LTI_CLAIMS.custom]);
   const ags = record(payload[LTI_CLAIMS.agsEndpoint]);
