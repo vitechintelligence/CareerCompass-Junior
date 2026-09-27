@@ -30,9 +30,9 @@ export default async function StudentIndustryPage() {
         where cm.student_id=${profile.id}
           and cm.status='active'
           and (
-            ('11'=any(c.target_grades) and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])11([^0-9]|$)')
+            ('11'=any(c.target_grades) and cl.grade_level='11')
             or
-            ('12'=any(c.target_grades) and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])12([^0-9]|$)')
+            ('12'=any(c.target_grades) and cl.grade_level='12')
           )
       )
     order by p.company_name
@@ -79,13 +79,13 @@ export default async function StudentIndustryPage() {
             (
               '11'=any(c.target_grades)
               and '11'=any(s.target_grades)
-              and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])11([^0-9]|$)'
+              and cl.grade_level='11'
             )
             or
             (
               '12'=any(c.target_grades)
               and '12'=any(s.target_grades)
-              and concat_ws(' ', cl.name, cl.level_label) ~* '(^|[^0-9])12([^0-9]|$)'
+              and cl.grade_level='12'
             )
           )
       )

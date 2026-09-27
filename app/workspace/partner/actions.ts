@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { ensureStudentProfile } from "@/lib/auth/profile";
 import { requirePartnerClassAccess, requirePartnerOrganizationAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { explicitClassLearningContext } from "@/lib/learning/learner-context";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -96,18 +97,31 @@ export async function createClass(formData: FormData) {
   const name = boundedText(formData.get("name"), 120);
   const levelLabel = boundedText(formData.get("levelLabel"), 80);
   const academicCycle = boundedText(formData.get("academicCycle"), 40);
+  const rawGradeLevel = boundedText(formData.get("gradeLevel"), 10);
+  const rawAgeBand = boundedText(formData.get("learnerAgeBand"), 20);
+  const rawEnglishLevel = boundedText(formData.get("englishLevel"), 80);
+  const learningContext = explicitClassLearningContext({
+    gradeLevel: rawGradeLevel,
+    learnerAgeBand: rawAgeBand,
+    englishLevel: rawEnglishLevel,
+  });
   if (!UUID_RE.test(organizationId) || name.length < 2) throw new Error("Organization and class name are required.");
+  if (rawGradeLevel && !learningContext.gradeLevel) throw new Error("Grade must be an explicit value from 1 to 12.");
+  if (rawAgeBand && !learningContext.learnerAgeBand) throw new Error("Age band must use an explicit range such as 14-16.");
 
   await requirePartnerOrganization(organizationId);
   const sql = getDb();
   const suffix = randomUUID().slice(0, 8);
   await sql`
     insert into classes (
-      organization_id, semantic_id, name, level_label, academic_cycle, status
+      organization_id, semantic_id, name, level_label, academic_cycle,
+      grade_level, learner_age_band, english_level, status
     )
     values (
       ${organizationId}, ${`vn-class-${suffix}`}, ${name},
-      ${levelLabel || null}, ${academicCycle || null}, 'active'
+      ${levelLabel || null}, ${academicCycle || null},
+      ${learningContext.gradeLevel}, ${learningContext.learnerAgeBand},
+      ${learningContext.englishLevel}, 'active'
     )
   `;
 

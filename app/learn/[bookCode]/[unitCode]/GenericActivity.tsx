@@ -46,7 +46,15 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
       const res = await fetch("/api/learning/attempt", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ bookCode, unitCode, activityCode: activity.code, enrollmentId, locale, response }),
+        body: JSON.stringify({
+          bookCode,
+          unitCode,
+          activityCode: activity.code,
+          contentVersion: activity.contentVersion,
+          enrollmentId,
+          locale,
+          response,
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.evaluation?.feedback) {

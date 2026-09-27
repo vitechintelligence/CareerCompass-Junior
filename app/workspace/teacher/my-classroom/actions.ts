@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireOwnedTeacherClassroom, requireTeacherOrganizationAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { explicitClassLearningContext } from "@/lib/learning/learner-context";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -27,18 +28,30 @@ export async function createTeacherClassroom(formData: FormData) {
   const subjectLabel = boundedText(formData.get("subjectLabel"), 100);
   const levelLabel = boundedText(formData.get("levelLabel"), 80);
   const academicCycle = boundedText(formData.get("academicCycle"), 40);
+  const rawGradeLevel = boundedText(formData.get("gradeLevel"), 10);
+  const rawAgeBand = boundedText(formData.get("learnerAgeBand"), 20);
+  const rawEnglishLevel = boundedText(formData.get("englishLevel"), 80);
+  const learningContext = explicitClassLearningContext({
+    gradeLevel: rawGradeLevel,
+    learnerAgeBand: rawAgeBand,
+    englishLevel: rawEnglishLevel,
+  });
   if (!name) throw new Error("Classroom name is required.");
+  if (rawGradeLevel && !learningContext.gradeLevel) throw new Error("Grade must be an explicit value from 1 to 12.");
+  if (rawAgeBand && !learningContext.learnerAgeBand) throw new Error("Age band must use an explicit range such as 14-16.");
 
   const profile = await requireTeacherOrganization(organizationId);
   const sql = getDb();
   const semanticId = `teacher-class-${randomUUID().slice(0, 8)}`;
   const rows = await sql`
     insert into classes (
-      organization_id, semantic_id, name, level_label, academic_cycle, status,
+      organization_id, semantic_id, name, level_label, academic_cycle,
+      grade_level, learner_age_band, english_level, status,
       class_scope, subject_label, owner_teacher_id
     )
     values (
-      ${organizationId}, ${semanticId}, ${name}, ${levelLabel || null}, ${academicCycle || null}, 'active',
+      ${organizationId}, ${semanticId}, ${name}, ${levelLabel || null}, ${academicCycle || null},
+      ${learningContext.gradeLevel}, ${learningContext.learnerAgeBand}, ${learningContext.englishLevel}, 'active',
       'teacher_custom', ${subjectLabel || null}, ${profile.id}
     )
     returning id

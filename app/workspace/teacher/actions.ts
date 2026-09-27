@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireTeacherClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { buildActivityContract } from "@/lib/learning/activity-contract";
 
 const attendanceStates = new Set(["present", "late", "absent", "excused"]);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -57,20 +58,64 @@ export async function createAssignment(formData: FormData) {
   const instructionsEn = boundedText(formData.get("instructionsEn"), 4000);
   const instructionsVi = boundedText(formData.get("instructionsVi"), 4000);
   const dueAt = boundedText(formData.get("dueAt"), 40);
+  const activityId = boundedText(formData.get("activityId"), 100);
 
   if (!UUID_RE.test(classId) || !titleEn || !titleVi) throw new Error("Assignment title is required in both languages.");
+  if (activityId && !UUID_RE.test(activityId)) throw new Error("Invalid curriculum activity.");
   if (dueAt && Number.isNaN(Date.parse(dueAt))) throw new Error("Invalid assignment due date.");
 
   const profile = await requireTeacherForClass(classId);
   const sql = getDb();
 
+  let activityContentVersion: number | null = null;
+  let activityContract: Record<string, unknown> | null = null;
+  if (activityId) {
+    const rows = await sql`
+      select
+        a.id, a.code, a.activity_type, a.content, a.content_version,
+        a.instructions_en, a.instructions_vi,
+        b.code as book_code, b.age_band, b.level_label,
+        bu.code as unit_code, bu.objective_en, bu.objective_vi
+      from activities a
+      join book_units bu on bu.id=a.unit_id
+      join books b on b.id=bu.book_id
+      where a.id=${activityId}
+        and a.status='published'
+        and bu.status='published'
+        and b.status='published'
+      limit 1
+    `;
+    const activity = rows[0];
+    if (!activity) throw new Error("Published curriculum activity not found.");
+    const contract = buildActivityContract({
+      activityId: String(activity.id),
+      activityCode: String(activity.code),
+      courseId: String(activity.book_code),
+      unitId: String(activity.unit_code),
+      activityType: String(activity.activity_type),
+      contentVersion: Number(activity.content_version || 1),
+      ageBand: activity.age_band ? String(activity.age_band) : null,
+      englishLevel: activity.level_label ? String(activity.level_label) : null,
+      objectiveEn: activity.objective_en ? String(activity.objective_en) : null,
+      objectiveVi: activity.objective_vi ? String(activity.objective_vi) : null,
+      instructionsEn: activity.instructions_en ? String(activity.instructions_en) : null,
+      instructionsVi: activity.instructions_vi ? String(activity.instructions_vi) : null,
+      content: activity.content,
+    });
+    activityContentVersion = contract.contentVersion;
+    activityContract = contract;
+  }
+
   await sql`
     insert into assignments (
-      class_id, created_by, title_en, title_vi,
+      class_id, activity_id, activity_content_version, activity_contract,
+      created_by, title_en, title_vi,
       instructions_en, instructions_vi, due_at, status
     )
     values (
-      ${classId}, ${profile.id}, ${titleEn}, ${titleVi},
+      ${classId}, ${activityId || null}, ${activityContentVersion},
+      ${activityContract ? JSON.stringify(activityContract) : null}::jsonb,
+      ${profile.id}, ${titleEn}, ${titleVi},
       ${instructionsEn || null}, ${instructionsVi || null},
       ${dueAt || null}::timestamptz, 'published'
     )
