@@ -5,6 +5,7 @@
 alter table lti_registrations
   add column if not exists organization_id uuid references organizations(id) on delete cascade,
   add column if not exists platform_name text,
+  add column if not exists auth_token_audience text,
   add column if not exists status text not null default 'pending',
   add column if not exists created_by uuid references profiles(id) on delete set null,
   add column if not exists updated_at timestamptz not null default now();
