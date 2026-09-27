@@ -28,7 +28,8 @@ export default async function MyClassroomPage() {
 
   const classrooms = profile.account_type === "platform_admin"
     ? await sql`
-        select c.id, c.name, c.subject_label, c.level_label, c.academic_cycle, o.name as organization_name,
+        select c.id, c.name, c.subject_label, c.level_label, c.academic_cycle,
+               c.grade_level, c.learner_age_band, c.english_level, o.name as organization_name,
                count(cm.student_id) filter (where cm.status='active')::int as student_count
         from classes c
         join organizations o on o.id=c.organization_id and o.status='active'
@@ -38,7 +39,8 @@ export default async function MyClassroomPage() {
         order by c.name
       `
     : await sql`
-        select c.id, c.name, c.subject_label, c.level_label, c.academic_cycle, o.name as organization_name,
+        select c.id, c.name, c.subject_label, c.level_label, c.academic_cycle,
+               c.grade_level, c.learner_age_band, c.english_level, o.name as organization_name,
                count(cm.student_id) filter (where cm.status='active')::int as student_count
         from classes c
         join organizations o on o.id=c.organization_id and o.status='active'
@@ -96,7 +98,10 @@ export default async function MyClassroomPage() {
                 <label><span>Institution</span><select name="organizationId">{organizations.map((org) => <option key={String(org.id)} value={String(org.id)}>{String(org.name)}</option>)}</select></label>
                 <label><span>Classroom name</span><input name="name" maxLength={120} required placeholder="Grade 8 Science · 8A" /></label>
                 <label><span>Subject</span><input name="subjectLabel" maxLength={100} placeholder="Science / English / Mathematics" /></label>
-                <label><span>Grade / level</span><input name="levelLabel" maxLength={80} placeholder="Grade 8" /></label>
+                <label><span>Display level</span><input name="levelLabel" maxLength={80} placeholder="Grade 8 / A2" /></label>
+                <label><span>Grade level</span><select name="gradeLevel" defaultValue=""><option value="">Not set</option>{Array.from({ length: 12 }, (_, index) => String(index + 1)).map((grade) => <option key={grade} value={grade}>Grade {grade}</option>)}</select></label>
+                <label><span>Learner age band</span><input name="learnerAgeBand" maxLength={20} placeholder="14-16" /></label>
+                <label><span>English level</span><input name="englishLevel" maxLength={80} placeholder="A1 / A2 / B1" /></label>
                 <label><span>Academic cycle</span><input name="academicCycle" maxLength={40} placeholder="2026–2027" /></label>
                 <button className="button primary" type="submit">Create My Classroom</button>
               </form>
@@ -109,7 +114,12 @@ export default async function MyClassroomPage() {
             {classrooms.length === 0 ? <Empty text="No teacher-owned classrooms yet." /> : (
               <div className="workspaceList">{classrooms.map((item) => (
                 <div className="workspaceRow" key={String(item.id)}>
-                  <div><strong>{String(item.name)}</strong><div className="muted">{String(item.organization_name)} · {String(item.subject_label || "Subject not set")} · {String(item.level_label || "Level not set")}</div></div>
+                  <div><strong>{String(item.name)}</strong><div className="muted">
+                    {String(item.organization_name)} · {String(item.subject_label || "Subject not set")} · {String(item.level_label || "Level not set")}
+                    {item.grade_level ? ` · Grade ${String(item.grade_level)}` : " · Grade not set"}
+                    {item.learner_age_band ? ` · Ages ${String(item.learner_age_band)}` : ""}
+                    {item.english_level ? ` · English ${String(item.english_level)}` : ""}
+                  </div></div>
                   <span className="pill">{String(item.student_count)} learners</span>
                 </div>
               ))}</div>
