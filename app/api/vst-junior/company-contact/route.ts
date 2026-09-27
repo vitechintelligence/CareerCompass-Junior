@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getManagedOrganization } from "@/lib/integration-runtime";
 import { getOrganizationRuntimePolicy, serverAiPermission } from "@/lib/organization-data-policy";
+import { platformAiRuntime } from "@/lib/platform-ai-runtime";
 import { findPublicCompanyContact } from "@/lib/vst-junior-ai";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,11 @@ export async function POST(request: Request) {
   }
 
   const policy = await getOrganizationRuntimePolicy(access.organization.id);
-  const aiPermission = serverAiPermission(policy);
+  const platformRuntime = platformAiRuntime();
+  const aiPermission = serverAiPermission(policy, {
+    platformAdmin: access.profile.account_type === "platform_admin",
+    platformMode: platformRuntime.mode,
+  });
   if (!aiPermission.allowed) {
     return NextResponse.json({ error: aiPermission.reason, code: aiPermission.code }, { status: 409 });
   }
@@ -39,6 +44,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Enter a company name first." }, { status: 400 });
   }
 
-  const result = await findPublicCompanyContact(companyName, website);
-  return NextResponse.json(result);
+  const allowWebSearch = access.profile.account_type === "platform_admin"
+    && platformRuntime.mode === "openai"
+    && process.env.CCJ_PLATFORM_OPENAI_WEB_SEARCH_ENABLED === "true";
+  const result = await findPublicCompanyContact(companyName, website, {
+    mode: access.profile.account_type === "platform_admin" ? platformRuntime.mode : "mock",
+    model: platformRuntime.model,
+    allowWebSearch,
+  });
+  return NextResponse.json({ ...result, testMode: !allowWebSearch });
 }
