@@ -6,6 +6,7 @@ export const LTI_CLAIMS = {
   roles: "https://purl.imsglobal.org/spec/lti/claim/roles",
   context: "https://purl.imsglobal.org/spec/lti/claim/context",
   resourceLink: "https://purl.imsglobal.org/spec/lti/claim/resource_link",
+  launchPresentation: "https://purl.imsglobal.org/spec/lti/claim/launch_presentation",
   custom: "https://purl.imsglobal.org/spec/lti/claim/custom",
   launchPresentation: "https://purl.imsglobal.org/spec/lti/claim/launch_presentation",
   agsEndpoint: "https://purl.imsglobal.org/spec/lti-ags/claim/endpoint",
@@ -30,3 +31,4 @@ export const LTI_MESSAGE_TYPES = {
 
 export const LTI_VERSION = "1.3.0";
 export const LTI_SESSION_COOKIE = "ccj_lti_session";
+export const LTI_FRAME_HOST_COOKIE = "ccj_lti_frame_host";
