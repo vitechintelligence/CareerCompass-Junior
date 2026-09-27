@@ -10,6 +10,9 @@ const GRADING = new Set(["NotReady","Failed","Pending","PendingManual","FullyGra
 export async function POST(request: Request) {
   const session = await getCurrentLtiSession();
   if (!session) return NextResponse.json({ error: "Active LTI session required." }, { status: 401 });
+  if (String(session.account_type) !== "student") {
+    return NextResponse.json({ error: "Learner LTI session required for score passback." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({})) as Record<string, unknown>;
   const scoreGiven = Number(body.scoreGiven);
@@ -17,7 +20,8 @@ export async function POST(request: Request) {
   const activityProgress = String(body.activityProgress || "Completed");
   const gradingProgress = String(body.gradingProgress || "FullyGraded");
 
-  if (!Number.isFinite(scoreGiven) || !Number.isFinite(scoreMaximum) || scoreMaximum <= 0 ||
+  if (!Number.isFinite(scoreGiven) || !Number.isFinite(scoreMaximum) ||
+      scoreGiven < 0 || scoreMaximum <= 0 || scoreGiven > scoreMaximum ||
       !ACTIVITY.has(activityProgress) || !GRADING.has(gradingProgress)) {
     return NextResponse.json({ error: "Invalid AGS score payload." }, { status: 400 });
   }
