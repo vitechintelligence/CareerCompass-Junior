@@ -2,7 +2,8 @@
 -- Prepared for isolated verification first. Do not apply to production without approval.
 
 alter table activity_attempts
-  add column if not exists submission_id uuid;
+  add column if not exists submission_id uuid,
+  add column if not exists submission_hash text;
 
 create unique index if not exists idx_activity_attempts_submission_id
   on activity_attempts(submission_id)
