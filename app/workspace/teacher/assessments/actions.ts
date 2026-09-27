@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireTeacherClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { assessmentEvidenceLevel, evidenceStatusForLevel } from "@/lib/evidence/evidence-policy";
+import { createHash } from "node:crypto";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -24,13 +26,26 @@ export async function createAssessment(formData: FormData) {
   const dueAt = boundedText(formData.get("dueAt"), 40);
   const timeLimitRaw = boundedText(formData.get("timeLimitMinutes"), 8);
   const timeLimit = timeLimitRaw ? Number(timeLimitRaw) : null;
+  const thresholdRaw = boundedText(formData.get("demonstratedThreshold"), 8);
+  const demonstratedThreshold = thresholdRaw ? Number(thresholdRaw) : 70;
 
   if (!["quiz", "exam", "checkpoint"].includes(assessmentType)) throw new Error("Invalid assessment type.");
   if (!titleEn || !titleVi) throw new Error("Assessment title is required in both languages.");
   if (dueAt && Number.isNaN(Date.parse(dueAt))) throw new Error("Invalid due date.");
   if (timeLimit !== null && (!Number.isInteger(timeLimit) || timeLimit < 1 || timeLimit > 300)) throw new Error("Time limit must be between 1 and 300 minutes.");
+  if (!Number.isFinite(demonstratedThreshold) || demonstratedThreshold < 0 || demonstratedThreshold > 100) throw new Error("Demonstrated threshold must be between 0 and 100.");
 
-  const questions: Array<{ questionType: string; promptEn: string; promptVi: string; options: string[]; correctAnswer: string; points: number }> = [];
+  const questions: Array<{
+    questionType: string;
+    promptEn: string;
+    promptVi: string;
+    options: string[];
+    correctAnswer: string;
+    points: number;
+    objectiveEn: string;
+    objectiveVi: string;
+    rubricGuidance: string;
+  }> = [];
   for (let index = 1; index <= 5; index += 1) {
     const promptEn = boundedText(formData.get(`q${index}PromptEn`), 1200);
     const promptVi = boundedText(formData.get(`q${index}PromptVi`), 1200);
@@ -43,8 +58,11 @@ export async function createAssessment(formData: FormData) {
     const correctAnswer = boundedText(formData.get(`q${index}Correct`), 500);
     const rawPoints = boundedText(formData.get(`q${index}Points`), 12);
     const points = rawPoints ? Number(rawPoints) : 1;
+    const objectiveEn = boundedText(formData.get(`q${index}ObjectiveEn`), 800);
+    const objectiveVi = boundedText(formData.get(`q${index}ObjectiveVi`), 800);
+    const rubricGuidance = boundedText(formData.get(`q${index}Rubric`), 1600);
     if (!Number.isFinite(points) || points < 0 || points > 1000) throw new Error(`Question ${index} has invalid points.`);
-    questions.push({ questionType, promptEn, promptVi, options, correctAnswer, points });
+    questions.push({ questionType, promptEn, promptVi, options, correctAnswer, points, objectiveEn, objectiveVi, rubricGuidance });
   }
   if (questions.length === 0) throw new Error("Add at least one assessment question.");
 
@@ -53,12 +71,13 @@ export async function createAssessment(formData: FormData) {
   const rows = await sql`
     insert into assessments (
       class_id, created_by, assessment_type, title_en, title_vi,
-      instructions_en, instructions_vi, status, due_at, time_limit_minutes
+      instructions_en, instructions_vi, status, due_at, time_limit_minutes,
+      demonstrated_threshold
     )
     values (
       ${classId}, ${profile.id}, ${assessmentType}, ${titleEn}, ${titleVi},
       ${instructionsEn || null}, ${instructionsVi || null}, 'published',
-      ${dueAt || null}::timestamptz, ${timeLimit}
+      ${dueAt || null}::timestamptz, ${timeLimit}, ${demonstratedThreshold}
     )
     returning id
   `;
@@ -69,11 +88,14 @@ export async function createAssessment(formData: FormData) {
     const q = questions[index];
     await sql`
       insert into assessment_questions (
-        assessment_id, sort_order, question_type, prompt_en, prompt_vi, options, correct_answer, points
+        assessment_id, sort_order, question_type, prompt_en, prompt_vi, options, correct_answer, points,
+        learning_objective_en, learning_objective_vi, rubric
       )
       values (
         ${assessmentId}, ${index + 1}, ${q.questionType}, ${q.promptEn}, ${q.promptVi},
-        ${JSON.stringify(q.options)}::jsonb, ${q.correctAnswer || null}, ${q.points}
+        ${JSON.stringify(q.options)}::jsonb, ${q.correctAnswer || null}, ${q.points},
+        ${q.objectiveEn || null}, ${q.objectiveVi || null},
+        ${JSON.stringify(q.rubricGuidance ? { guidance: q.rubricGuidance } : {})}::jsonb
       )
     `;
   }
