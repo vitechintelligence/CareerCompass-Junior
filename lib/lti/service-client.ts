@@ -40,6 +40,7 @@ async function platformAccessToken(session: Record<string, unknown>, scopes: str
     },
     body,
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new Error(`lti_oauth_token_failed_${response.status}`);
@@ -127,6 +128,7 @@ export async function createAgsLineItem(
       tag: input.tag?.slice(0, 255),
     }),
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new Error(`lti_ags_lineitem_failed_${response.status}`);
@@ -176,6 +178,7 @@ export async function postAgsScore(
       timestamp: new Date().toISOString(),
     }),
     cache: "no-store",
+    redirect: "error",
     signal: AbortSignal.timeout(10000),
   });
   if (!response.ok) throw new Error(`lti_ags_score_failed_${response.status}`);
