@@ -22,17 +22,16 @@ function readCompleted(storageNamespace: string) {
 
 export default function ProgressSyncBridge({ locale, enrollmentId, storageNamespace }: Props) {
   const syncedRef = useRef<Set<number>>(new Set());
-  const [status, setStatus] = useState<"checking" | "synced" | "local" | "failed">("checking");
+  const [status, setStatus] = useState<"checking" | "synced" | "local" | "failed">(
+    enrollmentId ? "checking" : "local",
+  );
 
   useEffect(() => {
     let cancelled = false;
     let syncing = false;
     let anonymous = false;
 
-    if (!enrollmentId) {
-      setStatus("local");
-      return () => { cancelled = true; };
-    }
+    if (!enrollmentId) return () => { cancelled = true; };
 
     async function sync() {
       if (syncing || anonymous || cancelled) return;
