@@ -87,6 +87,7 @@ The migration is additive but must still be reviewed and explicitly approved bef
    - deployment ID
    - authentication request / authorization URL
    - OAuth access-token URL
+   - optional OAuth authorization-server audience when the Platform requires an audience different from the token URL
    - platform public JWKS URL
 5. The administrator saves those values in Career Compass.
 6. Career Compass stores no shared LTI secret.
@@ -131,6 +132,7 @@ Then copy Moodle's platform details into Career Compass:
 - Client ID
 - Public keyset URL
 - Access token URL
+- optional OAuth token audience, when Moodle or its authorization server explicitly provides one
 - Authentication request URL
 - Deployment ID
 
