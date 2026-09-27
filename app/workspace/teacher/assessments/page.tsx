@@ -10,7 +10,7 @@ export default async function TeacherAssessmentsPage() {
   const user = await getSessionUser();
   if (!user) return <Gate />;
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || !["teacher", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
 
   const sql = getDb();
   const classes = profile.account_type === "platform_admin"
