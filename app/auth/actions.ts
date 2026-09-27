@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getAuth, getAuthConfigurationStatus } from "@/lib/auth/server";
 import { safeInternalPath } from "@/lib/navigation";
 import { SITE_URL } from "@/lib/site";
+import { revokeCurrentLtiSession } from "@/lib/lti/session";
 
 export type SignInState = {
   error: string | null;
@@ -222,6 +223,8 @@ export async function signInWithPassword(
     if (result.error) {
       return { error: friendlySignInError(result.error.message || "Authentication failed.") };
     }
+
+    await revokeCurrentLtiSession();
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     return { error: friendlySignInError(message) };
