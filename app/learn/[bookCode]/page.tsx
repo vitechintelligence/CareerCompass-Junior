@@ -10,11 +10,16 @@ export default async function BookOverviewPage({
   searchParams,
 }: {
   params: Promise<{ bookCode: string }>;
-  searchParams: Promise<{ lang?: string; start?: string }>;
+  searchParams: Promise<{ lang?: string; start?: string; enrollmentId?: string }>;
 }) {
   const { bookCode } = await params;
-  const { lang, start } = await searchParams;
+  const { lang, start, enrollmentId } = await searchParams;
   const locale: "en" | "vi" = lang === "vi" ? "vi" : "en";
+  const learningEnrollmentId = typeof enrollmentId === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(enrollmentId)
+    ? enrollmentId
+    : undefined;
+  const enrollmentQuery = learningEnrollmentId ? `&enrollmentId=${encodeURIComponent(learningEnrollmentId)}` : "";
   const book = getBookCatalogItem(bookCode);
   if (!book) notFound();
 
@@ -35,7 +40,7 @@ export default async function BookOverviewPage({
     <main className="lessonApp">
       <header className="topbar lessonTopbar">
         <Link className="brand" href="/books"><VitechMark /><span>Interactive Books</span></Link>
-        <div className="lessonHeaderActions"><Link className="pill" href={`/learn/${book.code}?lang=${locale === "vi" ? "en" : "vi"}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link></div>
+        <div className="lessonHeaderActions"><Link className="pill" href={`/learn/${book.code}?lang=${locale === "vi" ? "en" : "vi"}${enrollmentQuery}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link></div>
       </header>
       <div className="lessonShell">
         <aside className="lessonSidebar">
@@ -59,7 +64,7 @@ export default async function BookOverviewPage({
                 <h2 className="workspaceTitle">{locale === "vi" ? unit.titleVi : unit.titleEn}</h2>
                 <p className="muted">{locale === "vi" ? unit.objectiveVi : unit.objectiveEn}</p>
                 <div className="tagRow"><span className="tag">{unit.careerCompassFocus}</span><span className="tag">Mastery English</span></div>
-                <div className="actions"><Link className="button primary" href={`/learn/${book.code}/${unit.code}?lang=${locale}`}>{locale === "vi" ? "Mở bài tương tác" : "Open interactive unit"}</Link></div>
+                <div className="actions"><Link className="button primary" href={`/learn/${book.code}/${unit.code}?lang=${locale}${enrollmentQuery}`}>{locale === "vi" ? "Mở bài tương tác" : "Open interactive unit"}</Link></div>
               </article>
             ))}
           </div>
