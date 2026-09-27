@@ -1,33 +1,52 @@
 -- LTI 1.3 / LTI Advantage Tool Provider runtime.
 -- Additive migration only. Do not apply to production until reviewed and explicitly approved.
+-- Reuses the existing lti_registrations table instead of creating a parallel registration model.
 
-create table if not exists lti_platform_registrations (
-  id uuid primary key default gen_random_uuid(),
-  installation_id uuid not null unique references integration_installations(id) on delete cascade,
-  organization_id uuid not null references organizations(id) on delete cascade,
-  platform_name text not null,
-  issuer text not null,
-  client_id text not null,
-  deployment_id text not null,
-  auth_login_url text not null,
-  auth_token_url text not null,
-  jwks_url text not null,
-  status text not null default 'active' check (status in ('pending','active','disabled')),
-  created_by uuid references profiles(id) on delete set null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (issuer, client_id, deployment_id)
-);
+alter table lti_registrations
+  add column if not exists organization_id uuid references organizations(id) on delete cascade,
+  add column if not exists platform_name text,
+  add column if not exists status text not null default 'pending',
+  add column if not exists created_by uuid references profiles(id) on delete set null,
+  add column if not exists updated_at timestamptz not null default now();
+
+update lti_registrations r
+set organization_id=i.organization_id
+from integration_installations i
+where i.id=r.installation_id
+  and r.organization_id is null;
+
+update lti_registrations
+set platform_name='LTI Platform'
+where platform_name is null or btrim(platform_name)='';
+
+alter table lti_registrations
+  alter column organization_id set not null,
+  alter column platform_name set not null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname='lti_registrations_status_check'
+  ) then
+    alter table lti_registrations
+      add constraint lti_registrations_status_check
+      check (status in ('pending','active','disabled'));
+  end if;
+end $$;
 
 create index if not exists idx_lti_registrations_lookup
-  on lti_platform_registrations(issuer, client_id, status);
+  on lti_registrations(issuer, client_id, status);
 
 create index if not exists idx_lti_registrations_org
-  on lti_platform_registrations(organization_id, status, updated_at desc);
+  on lti_registrations(organization_id, status, updated_at desc);
+
+create index if not exists idx_lti_registrations_installation
+  on lti_registrations(installation_id, status, updated_at desc);
 
 create table if not exists lti_oidc_states (
   id uuid primary key default gen_random_uuid(),
-  registration_id uuid not null references lti_platform_registrations(id) on delete cascade,
+  registration_id uuid not null references lti_registrations(id) on delete cascade,
   state_hash text not null unique,
   nonce_hash text not null,
   target_link_uri text not null,
@@ -41,7 +60,7 @@ create index if not exists idx_lti_oidc_state_expiry
 
 create table if not exists lti_context_links (
   id uuid primary key default gen_random_uuid(),
-  registration_id uuid not null references lti_platform_registrations(id) on delete cascade,
+  registration_id uuid not null references lti_registrations(id) on delete cascade,
   external_context_id text not null,
   class_id uuid not null references classes(id) on delete cascade,
   context_label text,
@@ -57,7 +76,7 @@ create index if not exists idx_lti_context_class
 
 create table if not exists lti_launch_sessions (
   id uuid primary key default gen_random_uuid(),
-  registration_id uuid not null references lti_platform_registrations(id) on delete cascade,
+  registration_id uuid not null references lti_registrations(id) on delete cascade,
   organization_id uuid not null references organizations(id) on delete cascade,
   profile_id uuid not null references profiles(id) on delete cascade,
   class_id uuid references classes(id) on delete set null,
@@ -80,9 +99,9 @@ create index if not exists idx_lti_launch_session_profile
 create index if not exists idx_lti_launch_session_org
   on lti_launch_sessions(organization_id, expires_at desc);
 
-drop trigger if exists lti_platform_registrations_set_updated_at on lti_platform_registrations;
-create trigger lti_platform_registrations_set_updated_at
-  before update on lti_platform_registrations
+drop trigger if exists lti_registrations_set_updated_at on lti_registrations;
+create trigger lti_registrations_set_updated_at
+  before update on lti_registrations
   for each row execute function set_updated_at();
 
 drop trigger if exists lti_context_links_set_updated_at on lti_context_links;
