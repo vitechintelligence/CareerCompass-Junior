@@ -125,5 +125,6 @@ export async function revokeCurrentLtiSession() {
   }
 
   cookieStore.delete(LTI_SESSION_COOKIE);
+  cookieStore.delete(LTI_FRAME_HOST_COOKIE);
   return { hadSession };
 }
