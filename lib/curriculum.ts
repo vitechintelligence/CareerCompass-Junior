@@ -1,4 +1,5 @@
 import { getDb } from "@/lib/db";
+import { buildActivityContract, learnerActivityContract, type ActivityInputType } from "@/lib/learning/activity-contract";
 
 export type CurriculumActivity = {
   id: string;
@@ -10,6 +11,11 @@ export type CurriculumActivity = {
   instructionsVi: string | null;
   content: Record<string, unknown>;
   evidenceEligible: boolean;
+  contentVersion: number;
+  inputType: ActivityInputType;
+  learningObjective: { en: string | null; vi: string | null };
+  completionRule: Record<string, unknown>;
+  evidencePolicy: Record<string, unknown>;
 };
 
 export type CurriculumUnit = {
@@ -69,7 +75,7 @@ export async function getPublishedUnit(bookCode: string, unitCode: string): Prom
 
   const activities = await sql`
     select id, code, activity_type, title_en, title_vi,
-      instructions_en, instructions_vi, content, evidence_eligible
+      instructions_en, instructions_vi, content, evidence_eligible, content_version
     from activities
     where unit_id = ${String(unit.unit_id)}
       and status = 'published'
@@ -90,17 +96,40 @@ export async function getPublishedUnit(bookCode: string, unitCode: string): Prom
     objectiveVi: unit.objective_vi ? String(unit.objective_vi) : null,
     careerCompassFocus: unit.career_compass_focus ? String(unit.career_compass_focus) : null,
     masteryEnglishFocus: unit.mastery_english_focus ? String(unit.mastery_english_focus) : null,
-    activities: activities.map((item) => ({
-      id: String(item.id),
-      code: String(item.code),
-      activityType: String(item.activity_type),
-      titleEn: String(item.title_en),
-      titleVi: String(item.title_vi),
-      instructionsEn: item.instructions_en ? String(item.instructions_en) : null,
-      instructionsVi: item.instructions_vi ? String(item.instructions_vi) : null,
-      content: learnerContent(item.content),
-      evidenceEligible: item.evidence_eligible === true,
-    })),
+    activities: activities.map((item) => {
+      const contract = buildActivityContract({
+        activityId: String(item.id),
+        activityCode: String(item.code),
+        courseId: String(unit.book_code),
+        unitId: String(unit.unit_code),
+        activityType: String(item.activity_type),
+        contentVersion: Number(item.content_version || 1),
+        ageBand: unit.age_band ? String(unit.age_band) : null,
+        englishLevel: unit.level_label ? String(unit.level_label) : null,
+        objectiveEn: unit.objective_en ? String(unit.objective_en) : null,
+        objectiveVi: unit.objective_vi ? String(unit.objective_vi) : null,
+        instructionsEn: item.instructions_en ? String(item.instructions_en) : null,
+        instructionsVi: item.instructions_vi ? String(item.instructions_vi) : null,
+        content: item.content,
+      });
+      const safe = learnerActivityContract(contract, null).activity;
+      return {
+        id: String(item.id),
+        code: String(item.code),
+        activityType: String(item.activity_type),
+        titleEn: String(item.title_en),
+        titleVi: String(item.title_vi),
+        instructionsEn: item.instructions_en ? String(item.instructions_en) : null,
+        instructionsVi: item.instructions_vi ? String(item.instructions_vi) : null,
+        content: safe.content,
+        evidenceEligible: item.evidence_eligible === true,
+        contentVersion: safe.contentVersion,
+        inputType: safe.inputType,
+        learningObjective: safe.learningObjective,
+        completionRule: safe.completionRule,
+        evidencePolicy: safe.evidencePolicy,
+      };
+    }),
   };
 }
 
