@@ -68,6 +68,7 @@ export default async function PartnerWorkspacePage() {
 
   const classes = await sql`
     select c.id, c.name, c.level_label, c.academic_cycle,
+      c.grade_level, c.learner_age_band, c.english_level,
       count(distinct cm.student_id)::int as student_count,
       count(distinct ta.teacher_id)::int as teacher_count
     from classes c
@@ -162,7 +163,12 @@ export default async function PartnerWorkspacePage() {
         <section className="workspaceGrid">
           <article className="panel">
             <div className="eyebrow">Program delivery</div><h2 className="workspaceTitle">Classes</h2>
-            {classes.length === 0 ? <EmptyState text="Create your first class to begin assigning teachers and learners." /> : <div className="workspaceList">{classes.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.name)}</strong><div className="muted">{String(item.level_label || "Level not set")} · {String(item.academic_cycle || "Cycle not set")}</div></div><span className="pill">{String(item.student_count)} students · {String(item.teacher_count)} teachers</span></div>)}</div>}
+            {classes.length === 0 ? <EmptyState text="Create your first class to begin assigning teachers and learners." /> : <div className="workspaceList">{classes.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.name)}</strong><div className="muted">
+                    {String(item.level_label || "Level not set")} · {String(item.academic_cycle || "Cycle not set")}
+                    {item.grade_level ? ` · Grade ${String(item.grade_level)}` : " · Grade not set"}
+                    {item.learner_age_band ? ` · Ages ${String(item.learner_age_band)}` : ""}
+                    {item.english_level ? ` · English ${String(item.english_level)}` : ""}
+                  </div></div><span className="pill">{String(item.student_count)} students · {String(item.teacher_count)} teachers</span></div>)}</div>}
           </article>
 
           <article className="panel">
@@ -170,7 +176,10 @@ export default async function PartnerWorkspacePage() {
             <form action={createClass} className="workspaceForm">
               <input type="hidden" name="organizationId" value={organizationId} />
               <label><span>Class name</span><input name="name" maxLength={120} required placeholder="Junior A1 · Saturday" /></label>
-              <label><span>Level</span><input name="levelLabel" maxLength={80} placeholder="Beginner / A1" /></label>
+              <label><span>Display level</span><input name="levelLabel" maxLength={80} placeholder="Beginner / A1" /></label>
+              <label><span>Grade level</span><select name="gradeLevel" defaultValue=""><option value="">Not set</option>{Array.from({ length: 12 }, (_, index) => String(index + 1)).map((grade) => <option key={grade} value={grade}>Grade {grade}</option>)}</select></label>
+              <label><span>Learner age band</span><input name="learnerAgeBand" maxLength={20} placeholder="14-16" /></label>
+              <label><span>English level</span><input name="englishLevel" maxLength={80} placeholder="A1 / A2 / B1" /></label>
               <label><span>Academic cycle</span><input name="academicCycle" maxLength={40} placeholder="2026–2027" /></label>
               <button className="button primary" type="submit">Create class</button>
             </form>
