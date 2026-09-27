@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireTeacherClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -11,15 +11,7 @@ function boundedText(value: FormDataEntryValue | null, max: number) {
 }
 
 async function requireTeacherForClass(classId: string) {
-  if (!UUID_RE.test(classId)) throw new Error("Invalid class reference.");
-  const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) throw new Error("Teacher access required.");
-  if (profile.account_type === "teacher") {
-    const sql = getDb();
-    const rows = await sql`select 1 from teacher_assignments where class_id=${classId} and teacher_id=${profile.id} limit 1`;
-    if (!rows[0]) throw new Error("You are not assigned to this class.");
-  }
-  return profile;
+  return (await requireTeacherClassAccess(classId)).profile;
 }
 
 export async function createAssessment(formData: FormData) {
