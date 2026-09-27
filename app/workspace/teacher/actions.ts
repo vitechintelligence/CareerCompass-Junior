@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireTeacherClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 
 const attendanceStates = new Set(["present", "late", "absent", "excused"]);
@@ -13,26 +13,7 @@ function boundedText(value: FormDataEntryValue | null, max: number) {
 }
 
 async function requireTeacherForClass(classId: string) {
-  if (!UUID_RE.test(classId)) throw new Error("Invalid class reference.");
-
-  const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
-    throw new Error("Teacher access required.");
-  }
-
-  if (profile.account_type === "teacher") {
-    const sql = getDb();
-    const rows = await sql`
-      select 1
-      from teacher_assignments
-      where class_id = ${classId}
-        and teacher_id = ${profile.id}
-      limit 1
-    `;
-    if (!rows[0]) throw new Error("You are not assigned to this class.");
-  }
-
-  return profile;
+  return (await requireTeacherClassAccess(classId)).profile;
 }
 
 export async function recordAttendance(formData: FormData) {
@@ -108,11 +89,6 @@ export async function saveFeedback(formData: FormData) {
     throw new Error("Valid feedback and a score between 0 and 100 are required.");
   }
 
-  const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
-    throw new Error("Teacher access required.");
-  }
-
   const sql = getDb();
   const submission = await sql`
     select s.id, a.class_id
@@ -123,7 +99,7 @@ export async function saveFeedback(formData: FormData) {
   `;
   const classId = String(submission[0]?.class_id || "");
   if (!classId) throw new Error("Submission not found.");
-  await requireTeacherForClass(classId);
+  const profile = await requireTeacherForClass(classId);
 
   await sql`
     insert into teacher_feedback (

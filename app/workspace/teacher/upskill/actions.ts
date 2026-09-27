@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireActiveProfile } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 import { TEACHER_UPSKILL_MODULES } from "@/lib/teacher-upskill-catalog";
 
@@ -14,10 +14,7 @@ export async function updateTeacherLearningProgress(formData: FormData) {
     throw new Error("Invalid professional learning update.");
   }
 
-  const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
-    throw new Error("Teacher access required.");
-  }
+  const profile = await requireActiveProfile(["teacher", "platform_admin"]);
 
   const completionPercent = status === "completed" ? 100 : status === "in_progress" ? 50 : 0;
   const sql = getDb();

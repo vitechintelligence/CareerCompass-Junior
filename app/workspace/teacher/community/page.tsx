@@ -15,7 +15,7 @@ export default async function TeacherCommunityPage() {
   if (!user) return <Gate signedIn={false} />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher","platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || !["teacher","platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
 
   const sql = getDb();
   const schemaRows = await sql`select to_regclass('public.community_staff_permissions') as permissions`;

@@ -6,6 +6,7 @@ type ContactSuggestion = {
   contactPage: string | null;
   confidence: "high" | "medium" | "none";
   note: string;
+  provider?: "openai" | "mock";
 };
 
 function outputText(payload: unknown) {
@@ -26,15 +27,25 @@ function outputText(payload: unknown) {
   return "";
 }
 
-export async function findPublicCompanyContact(companyName: string, website?: string): Promise<ContactSuggestion> {
+export async function findPublicCompanyContact(
+  companyName: string,
+  website?: string,
+  options?: { mode?: "openai" | "mock"; model?: string; allowWebSearch?: boolean },
+): Promise<ContactSuggestion> {
+  const mode = options?.mode || "mock";
+  const model = options?.model || process.env.MR_VI_MODEL || "gpt-6-luna";
   const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!apiKey) {
+
+  if (mode !== "openai" || !apiKey || options?.allowWebSearch !== true) {
     return {
       email: null,
       sourceUrl: null,
       contactPage: null,
       confidence: "none",
-      note: "Ask Mr. Vi web lookup is not configured yet. Add OPENAI_API_KEY to the server environment.",
+      provider: "mock",
+      note: options?.allowWebSearch === false
+        ? "Mr. Vi is running in zero-cost test mode. Live OpenAI web search is disabled until explicitly enabled."
+        : "Mr. Vi is running in zero-cost test mode. The OpenAI connection can be tested separately in Data & AI Control.",
     };
   }
 
@@ -57,14 +68,22 @@ Rules:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: process.env.MR_VI_MODEL || "gpt-5.6-luna",
+        model,
+        reasoning: { effort: "none" },
         tools: [{ type: "web_search", search_context_size: "low" }],
         input: prompt,
       }),
       cache: "no-store",
     });
     if (!response.ok) {
-      return { email: null, sourceUrl: null, contactPage: null, confidence: "none", note: `Mr. Vi lookup failed (${response.status}).` };
+      return {
+        email: null,
+        sourceUrl: null,
+        contactPage: null,
+        confidence: "none",
+        provider: "mock",
+        note: `OpenAI lookup was unavailable (${response.status}); Mr. Vi stayed in safe test mode.`,
+      };
     }
     const payload = await response.json();
     const text = outputText(payload).trim().replace(/^\`\`\`json\s*/i, "").replace(/\`\`\`$/i, "").trim();
@@ -76,9 +95,17 @@ Rules:
       sourceUrl: typeof parsed.sourceUrl === "string" ? parsed.sourceUrl : null,
       contactPage: typeof parsed.contactPage === "string" ? parsed.contactPage : null,
       confidence: email ? confidence : "none",
+      provider: "openai",
       note: typeof parsed.note === "string" ? parsed.note.slice(0, 500) : (email ? "Public company contact found." : "No verified public email found."),
     };
   } catch {
-    return { email: null, sourceUrl: null, contactPage: null, confidence: "none", note: "Mr. Vi could not verify a public company email." };
+    return {
+      email: null,
+      sourceUrl: null,
+      contactPage: null,
+      confidence: "none",
+      provider: "mock",
+      note: "OpenAI could not complete the lookup; Mr. Vi stayed in safe test mode.",
+    };
   }
 }

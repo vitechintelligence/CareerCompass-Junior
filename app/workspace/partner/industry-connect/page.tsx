@@ -40,7 +40,7 @@ export default async function IndustryConnectPage() {
   const user = await getSessionUser();
   if (!user) return <Gate />;
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || !["partner_admin", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
 
   const sql = getDb();
   const organizations = profile.account_type === "platform_admin"
@@ -150,7 +150,7 @@ export default async function IndustryConnectPage() {
           </article>
 
           <div style={{ display: "grid", gap: 18 }}>
-            <CompanyContactFinder />
+            <CompanyContactFinder organizationId={organizationId} />
             <article className="panel">
               <div className="eyebrow">Connection queue</div>
               <h2 className="workspaceTitle">Company requests</h2>

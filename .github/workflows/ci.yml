@@ -2,7 +2,6 @@ name: Platform CI
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main, feat/platform-foundation]
 
@@ -36,6 +35,15 @@ jobs:
 
       - name: Learning correctness regression
         run: npm run test:learning
+
+      - name: Learning evidence regression
+        run: npm run test:evidence
+
+      - name: Authorization boundary regression
+        run: npm run test:authorization
+
+      - name: Platform AI spend-safety regression
+        run: npm run test:platform-ai
 
       - name: Production build
         run: npm run build

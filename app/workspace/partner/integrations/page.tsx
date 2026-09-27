@@ -5,6 +5,7 @@ import { integrationStandards, listIntegrationProviders, listOrganizationIntegra
 import IntegrationActions from "./IntegrationActions";
 import CustomIntegrationRequestForm from "./CustomIntegrationRequestForm";
 import { runAdapterDiagnostic } from "@/lib/integration-diagnostics";
+import { getConnectorReadiness } from "@/lib/integration-readiness";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +14,7 @@ export default async function PartnerIntegrationsPage() {
   if (!user) return <Gate title="Sign in required" copy="Sign in with an approved partner account to manage integrations." />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
     return <Gate title="Partner access required" copy="Integrations are organization-scoped and are available only to approved partner administrators." />;
   }
 
@@ -50,6 +51,8 @@ export default async function PartnerIntegrationsPage() {
   const categories = Array.from(new Set(providers.map((provider) => provider.category)));
   const diagnostics = providers.map((provider) => ({ slug: provider.slug, ...runAdapterDiagnostic(provider.slug) }));
   const healthyAdapters = diagnostics.filter((item) => item.ok).length;
+  const dedicatedAdapters = diagnostics.filter((item) => item.adapterMode === "dedicated").length;
+  const liveReadyConnectors = providers.filter((provider) => getConnectorReadiness(provider.slug).stage === "live_verified").length;
   const healthyInstallations = installations.filter((item) => String(item.health_state) === "healthy").length;
   const unhealthyInstallations = installations.filter((item) => ["degraded", "error"].includes(String(item.health_state))).length;
 
@@ -71,19 +74,20 @@ export default async function PartnerIntegrationsPage() {
           <Metric label="Installed" value={String(installations.length)} detail="Organization connectors" />
           <Metric label="Standards" value={String(integrationStandards.length)} detail="Interoperability paths" />
           <Metric label="Providers" value={String(providers.length)} detail="Available + beta" />
-          <Metric label="Adapter core" value={`${healthyAdapters}/${providers.length}`} detail="Normalization + secret-scrubbing checks" />
+          <Metric label="Adapter contract" value={`${healthyAdapters}/${providers.length}`} detail="Normalization + secret-scrubbing tests" />
+          <Metric label="Live plug-and-play" value={`${liveReadyConnectors}/${providers.length}`} detail="Real external provider verification" />
         </section>
 
         <section className="panel">
           <div className="eyebrow">System health</div>
           <h2 className="workspaceTitle">Integration adapter health</h2>
           <div className="miniGrid">
-            <div className="miniCard light"><strong>{healthyAdapters === providers.length ? "Healthy" : "Review"}</strong><span>{healthyAdapters}/{providers.length} provider profiles pass canonical diagnostics</span></div>
-            <div className="miniCard light"><strong>{String(healthyInstallations)}</strong><span>healthy installed connections</span></div>
-            <div className="miniCard light"><strong>{String(unhealthyInstallations)}</strong><span>degraded / error installed connections</span></div>
-            <div className="miniCard light"><strong>{String(requestRows.length)}</strong><span>recent custom connector requests</span></div>
+            <div className="miniCard light"><strong>Contract {healthyAdapters === providers.length ? "OK" : "Review"}</strong><span>{healthyAdapters}/{providers.length} provider profiles pass canonical diagnostics</span></div>
+            <div className="miniCard light"><strong>{String(dedicatedAdapters)}</strong><span>provider-specific normalizers</span></div>
+            <div className="miniCard light"><strong>{String(liveReadyConnectors)}</strong><span>live plug-and-play connectors verified end to end</span></div>
+            <div className="miniCard light"><strong>{String(healthyInstallations)}</strong><span>healthy installed school connections</span></div>
           </div>
-          <p className="muted" style={{ marginTop: 12 }}>The built-in diagnostic validates canonical people/classes/enrollments/events and recursively scrubs credential-like fields. Provider authorization and live external API health are checked separately once a real connection is configured.</p>
+          <p className="muted" style={{ marginTop: 12 }}>A passing adapter diagnostic proves the Career Compass canonical contract and secret scrubbing only. It does <strong>not</strong> mean the external provider is already plug-and-play. Live readiness additionally requires provider authorization, transport/runtime, identity mapping and an end-to-end school tenant verification.</p>
         </section>
 
         <section className="panel">
@@ -133,16 +137,21 @@ export default async function PartnerIntegrationsPage() {
           <section className="panel" key={category}>
             <div className="eyebrow">{category}</div><h2 className="workspaceTitle">{category.toUpperCase()} connectors</h2>
             <div className="cardGrid">
-              {providers.filter((provider) => provider.category === category).map((provider) => (
-                <article className="card" key={provider.id}>
-                  <span className="pill">{provider.protocol} · {provider.status}</span>
-                  <h3>{provider.displayName}</h3>
-                  <p className="muted">{provider.descriptionEn || "Standards-based integration profile."}</p>
-                  <div className="tagRow">{provider.capabilities.map((capability) => <span className="tag" key={capability}>{capability.replaceAll("_", " ")}</span>)}</div>
-                  <IntegrationActions organizationId={organizationId} providerSlug={provider.slug} providerName={provider.displayName} capabilities={provider.capabilities} />
-                  <p className="muted" style={{ fontSize: 12 }}>Secrets are never collected by this browser action. OAuth, LTI keys and API credentials remain part of provider-specific server authorization.</p>
-                </article>
-              ))}
+              {providers.filter((provider) => provider.category === category).map((provider) => {
+                const readiness = getConnectorReadiness(provider.slug);
+                return (
+                  <article className="card" key={provider.id}>
+                    <div className="tagRow"><span className="pill">{provider.protocol} · {provider.status}</span><span className="pill">{readiness.label}</span></div>
+                    <h3>{provider.displayName}</h3>
+                    <p className="muted">{provider.descriptionEn || "Standards-based integration profile."}</p>
+                    <p className="muted" style={{ fontSize: 12 }}><strong>Readiness:</strong> {readiness.summary}</p>
+                    <div className="tagRow">{provider.capabilities.map((capability) => <span className="tag" key={capability}>{capability.replaceAll("_", " ")}</span>)}</div>
+                    {readiness.missing.length > 0 && <p className="muted" style={{ fontSize: 11 }}>Before live use: {readiness.missing.join(" · ")}</p>}
+                    <IntegrationActions organizationId={organizationId} providerSlug={provider.slug} providerName={provider.displayName} capabilities={provider.capabilities} />
+                    <p className="muted" style={{ fontSize: 12 }}>Secrets are never collected by this browser action. OAuth, LTI keys and API credentials remain part of provider-specific server authorization.</p>
+                  </article>
+                );
+              })}
             </div>
           </section>
         ))}

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireActiveProfile } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 import { isLearnerAgeBand } from "@/lib/learner-age-bands";
 import { COMMUNITY_BRIDGE_MISSIONS } from "@/lib/steam-missions";
@@ -40,9 +40,11 @@ export async function POST(request: Request) {
   }
   const outcome = testBridge(payload.ageBand, payload.design);
 
-  const profile = await getCurrentProfile();
-  if (!profile || profile.account_type !== "student" || profile.status !== "active") {
-    return jsonError("Sign in with a student account to sync STEAM evidence.", 401, { localOnly: true });
+  let profile;
+  try {
+    profile = await requireActiveProfile(["student"]);
+  } catch {
+    return jsonError("Sign in with an active student account to sync STEAM evidence.", 401, { localOnly: true });
   }
 
   const sql = getDb();
@@ -67,6 +69,12 @@ export async function POST(request: Request) {
        order by cm.joined_at desc
        limit 1) as class_id
     from learner_delivery_profiles ldp
+    join organizations o on o.id=ldp.organization_id and o.status='active'
+    join organization_memberships om
+      on om.organization_id=ldp.organization_id
+     and om.profile_id=ldp.learner_id
+     and om.role='student'
+     and om.status='active'
     where ldp.learner_id=${profile.id}
       and ldp.age_band=${payload.ageBand}
     order by ldp.updated_at desc
@@ -86,6 +94,12 @@ export async function POST(request: Request) {
          order by cm.joined_at desc
          limit 1) as class_id
       from community_student_access csa
+      join organizations o on o.id=csa.organization_id and o.status='active'
+      join organization_memberships om
+        on om.organization_id=csa.organization_id
+       and om.profile_id=csa.student_id
+       and om.role='student'
+       and om.status='active'
       where csa.student_id=${profile.id}
         and csa.status='enabled'
         and csa.age_band=${payload.ageBand}

@@ -12,13 +12,15 @@ export type CommunityCapability =
 
 export async function requireInstitutionAdult(organizationId: string) {
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher","partner_admin","platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["teacher","partner_admin","platform_admin"].includes(profile.account_type)) {
     throw new Error("Teacher or administrator access required.");
   }
 
-  if (profile.account_type === "platform_admin") return profile;
-
   const sql = getDb();
+  const organization = await sql`select id from organizations where id=${organizationId} and status='active' limit 1`;
+  if (!organization[0]) throw new Error("Institution is not active.");
+
+  if (profile.account_type === "platform_admin") return profile;
   const role = profile.account_type === "teacher" ? "teacher" : "partner_admin";
   const membership = await sql`
     select 1

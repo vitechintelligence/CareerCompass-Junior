@@ -37,7 +37,7 @@ Do **not** use `little-shadow-12194945` for Career Compass Junior production wor
 
 Before making any Neon change:
 
-1. Use production/default branch `br-shiny-meadow-b3ibu54` for production.
+1. Use production/default branch `br-shiny-meadow-b3ibu54h` for production.
 2. Verify any branch change explicitly before changing production.
 3. Verify `DATABASE_URL` and `NEON_AUTH_BASE_URL` point to the same intended Neon project/branch.
 4. Never infer a Neon project from its display name alone.
@@ -60,7 +60,7 @@ Important environment variables:
 
 ```
 NEON_PROJECT_ID=royal-queen-79814128
-NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
+NEON_BRANCH_ID=br-shiny-meadow-b3ibu54h
 DATABASE_URL
 NEON_AUTH_BASE_URL
 NEON_AUTH_COOKIE_SECRET
@@ -276,3 +276,26 @@ Canonical origin: https://career-compass-junior-vitech.vercel.app
 Neon project: Career Compass LMS
 Neon project ID: royal-queen-79814128
 ```
+
+## 15. Platform OpenAI test lane vs institution BYOK
+
+ViTech's own platform testing and an institution's BYOK configuration are separate trust and billing boundaries.
+
+Platform-owned testing:
+- `OPENAI_API_KEY` is server-only and must never be committed, logged, rendered to clients, or stored in application tables.
+- Preview deployments may use the platform test key when present.
+- Production remains mock-only unless `CCJ_PLATFORM_OPENAI_TEST_ENABLED=true` is explicitly configured.
+- `CCJ_PLATFORM_AI_FORCE_MOCK=true` overrides all live OpenAI use.
+- Connectivity tests use `CCJ_OPENAI_CONNECTIVITY_MODEL` (default `gpt-5.6`) with a tiny bounded response.
+- Normal cost-sensitive platform AI defaults to `CCJ_OPENAI_TEST_MODEL=gpt-6-luna`.
+- Live connectivity attempts are capped by `CCJ_OPENAI_DAILY_TEST_CAP` (default 5, maximum 25) and audited with metadata only.
+- OpenAI web search remains off unless `CCJ_PLATFORM_OPENAI_WEB_SEARCH_ENABLED=true` is deliberately enabled.
+- `/api/platform-ai/test` is platform-admin only and never sends learner content.
+
+Institution BYOK:
+- A school's `ai_mode='byok'` does not automatically reuse ViTech's platform key.
+- Tenant BYOK must use an institution-controlled secret runtime before tenant AI calls are enabled.
+- Until that tenant credential runtime exists, institution BYOK stays fail-closed.
+- Never copy a platform OpenAI key into organization policy rows or label a platform key as school BYOK.
+
+If OpenAI credit is unavailable, the test lane must fall back to deterministic mock mode instead of breaking the platform or retrying without a cap.

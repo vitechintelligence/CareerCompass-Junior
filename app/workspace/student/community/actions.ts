@@ -40,6 +40,14 @@ async function requireStudentInOrganization(studentId: string, organizationId: s
   const rows = await sql`
     select csa.age_band
     from community_student_access csa
+    join organizations o
+      on o.id=csa.organization_id
+     and o.status='active'
+    join organization_memberships om
+      on om.organization_id=csa.organization_id
+     and om.profile_id=csa.student_id
+     and om.role='student'
+     and om.status='active'
     where csa.organization_id=${organizationId}
       and csa.student_id=${studentId}
       and csa.status='enabled'

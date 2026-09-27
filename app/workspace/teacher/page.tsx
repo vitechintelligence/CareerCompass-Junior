@@ -18,7 +18,7 @@ export default async function TeacherWorkspacePage() {
   if (admin) redirect("/workspace/admin");
 
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["teacher", "platform_admin"].includes(profile.account_type)) {
     return <WorkspaceGate title="Teacher Workspace" copy="This signed-in account does not have teacher access. Teacher roles are assigned by an approved partner or platform administrator." signedIn />;
   }
 
@@ -29,7 +29,7 @@ export default async function TeacherWorkspacePage() {
         select c.id, c.name, c.level_label, c.academic_cycle, c.class_scope, c.subject_label, o.name as organization_name,
           count(distinct cm.student_id)::int as student_count
         from classes c
-        join organizations o on o.id = c.organization_id
+        join organizations o on o.id = c.organization_id and o.status='active'
         left join class_memberships cm on cm.class_id = c.id and cm.status = 'active'
         where c.status = 'active'
         group by c.id, o.name
@@ -40,7 +40,12 @@ export default async function TeacherWorkspacePage() {
           count(distinct cm.student_id)::int as student_count
         from teacher_assignments ta
         join classes c on c.id = ta.class_id
-        join organizations o on o.id = c.organization_id
+        join organizations o on o.id = c.organization_id and o.status='active'
+        join organization_memberships om
+          on om.organization_id=c.organization_id
+         and om.profile_id=ta.teacher_id
+         and om.role='teacher'
+         and om.status='active'
         left join class_memberships cm on cm.class_id = c.id and cm.status = 'active'
         where ta.teacher_id = ${profile.id} and c.status = 'active'
         group by c.id, o.name
@@ -84,6 +89,13 @@ export default async function TeacherWorkspacePage() {
         from submissions s
         join assignments a on a.id = s.assignment_id
         join teacher_assignments ta on ta.class_id = a.class_id
+        join classes c on c.id=a.class_id and c.status='active'
+        join organizations o on o.id=c.organization_id and o.status='active'
+        join organization_memberships om
+          on om.organization_id=c.organization_id
+         and om.profile_id=ta.teacher_id
+         and om.role='teacher'
+         and om.status='active'
         where ta.teacher_id = ${profile.id} and s.status = 'submitted'
       `;
 
@@ -103,8 +115,14 @@ export default async function TeacherWorkspacePage() {
           p.semantic_id as learner_semantic_id
         from submissions s
         join assignments a on a.id = s.assignment_id
-        join classes c on c.id = a.class_id
+        join classes c on c.id = a.class_id and c.status='active'
+        join organizations o on o.id=c.organization_id and o.status='active'
         join teacher_assignments ta on ta.class_id = c.id
+        join organization_memberships om
+          on om.organization_id=c.organization_id
+         and om.profile_id=ta.teacher_id
+         and om.role='teacher'
+         and om.status='active'
         join profiles p on p.id = s.student_id
         where ta.teacher_id = ${profile.id}
         order by s.submitted_at desc nulls last

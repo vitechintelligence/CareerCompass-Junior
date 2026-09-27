@@ -6,7 +6,7 @@ import { hasCurrentCommunityAgreement } from "@/lib/community-access";
 import { LEARNER_AGE_BANDS, LEARNER_AGE_PROFILES, type LearnerAgeBand } from "@/lib/learner-age-bands";
 import { COMMUNITY_CHALLENGE_LIBRARY, QUARTERLY_FORMAT, challengeModeLabel, type ParticipationMode } from "@/lib/community-challenges";
 import { CommunityAgreementPanel } from "@/app/workspace/community/CommunityAgreementPanel";
-import { setCommunityStudentAccess, setTeacherCommunityPermissions } from "@/app/workspace/community/actions";
+import { revokeCommunityStudentAccess, setCommunityStudentAccess, setTeacherCommunityPermissions } from "@/app/workspace/community/actions";
 import {
   addCommunityChallenge,
   approveCommunityShowcase,
@@ -30,7 +30,7 @@ export default async function PartnerCommunityPage({
   if (!user) return <Gate copy="Sign in with an approved partner administrator account." />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin","platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["partner_admin","platform_admin"].includes(profile.account_type)) {
     return <Gate copy="School administrator access is required to control community rules, teacher delegation and publication." />;
   }
 
@@ -199,7 +199,7 @@ export default async function PartnerCommunityPage({
               <label className="communityCheck"><input type="checkbox" name="learnerAcknowledged" required /><span>Learner acknowledgement has been recorded.</span></label>
               <button className="button primary" type="submit" disabled={!agreementAccepted}>Enable learner community access</button>
             </form>
-            {accessRows.length > 0 && <div className="workspaceList">{accessRows.map((item) => <div className="workspaceRow" key={String(item.semantic_id)}><div><strong>{String(item.display_name || item.semantic_id)}</strong><div className="muted">{String(item.semantic_id)}</div></div><span className="pill">{String(item.age_band)} · {String(item.status)}</span></div>)}</div>}
+            {accessRows.length > 0 && <div className="workspaceList">{accessRows.map((item) => <div className="workspaceRow" key={String(item.semantic_id)}><div><strong>{String(item.display_name || item.semantic_id)}</strong><div className="muted">{String(item.semantic_id)}</div></div><div className="actions"><span className="pill">{String(item.age_band)} · {String(item.status)}</span>{String(item.status) === "enabled" && <form action={revokeCommunityStudentAccess}><input type="hidden" name="organizationId" value={organizationId} /><input type="hidden" name="studentSemanticId" value={String(item.semantic_id)} /><button className="button" type="submit">Revoke access</button></form>}</div></div>)}</div>}
           </article>
         </section>
 

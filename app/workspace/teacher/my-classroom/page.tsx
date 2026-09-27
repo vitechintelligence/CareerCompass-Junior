@@ -10,7 +10,7 @@ export default async function MyClassroomPage() {
   const user = await getSessionUser();
   if (!user) return <Gate />;
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || !["teacher", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
 
   const sql = getDb();
   const organizations = profile.account_type === "platform_admin"
@@ -31,7 +31,7 @@ export default async function MyClassroomPage() {
         select c.id, c.name, c.subject_label, c.level_label, c.academic_cycle, o.name as organization_name,
                count(cm.student_id) filter (where cm.status='active')::int as student_count
         from classes c
-        join organizations o on o.id=c.organization_id
+        join organizations o on o.id=c.organization_id and o.status='active'
         left join class_memberships cm on cm.class_id=c.id
         where c.class_scope='teacher_custom' and c.status='active'
         group by c.id, o.name
@@ -41,7 +41,15 @@ export default async function MyClassroomPage() {
         select c.id, c.name, c.subject_label, c.level_label, c.academic_cycle, o.name as organization_name,
                count(cm.student_id) filter (where cm.status='active')::int as student_count
         from classes c
-        join organizations o on o.id=c.organization_id
+        join organizations o on o.id=c.organization_id and o.status='active'
+        join organization_memberships om
+          on om.organization_id=c.organization_id
+         and om.profile_id=${profile.id}
+         and om.role='teacher'
+         and om.status='active'
+        join teacher_assignments ta
+          on ta.class_id=c.id
+         and ta.teacher_id=${profile.id}
         left join class_memberships cm on cm.class_id=c.id
         where c.class_scope='teacher_custom'
           and c.status='active'

@@ -10,7 +10,7 @@ type Result = {
   note: string;
 };
 
-export function CompanyContactFinder() {
+export function CompanyContactFinder({ organizationId }: { organizationId: string }) {
   const [companyName, setCompanyName] = useState("");
   const [website, setWebsite] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -23,7 +23,7 @@ export function CompanyContactFinder() {
       const response = await fetch("/api/vst-junior/company-contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ companyName, website }),
+        body: JSON.stringify({ organizationId, companyName, website }),
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Lookup failed.");

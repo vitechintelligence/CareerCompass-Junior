@@ -74,6 +74,24 @@ try {
     });
     assert.equal(response.status, 400, `Null input must be rejected at ${endpoint}`);
   }
+  const malformedEnrollment = await fetch(`${origin}/api/learning/attempt`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      bookCode: "CCJ-MASTERY-BEGINNER", unitCode: "U01", activityCode: "U01-L01",
+      enrollmentId: "../other-class", response: { selected: "hello" },
+    }),
+  });
+  assert.equal(malformedEnrollment.status, 400, "Malformed enrollment references must fail before authorization.");
+
+  const unsignedWrite = await fetch(`${origin}/api/learning/attempt`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      bookCode: "CCJ-MASTERY-BEGINNER", unitCode: "U01", activityCode: "U01-L01",
+      response: { selected: "hello" },
+    }),
+  });
+  assert.equal(unsignedWrite.status, 401, "Unauthenticated learning writes must never reach persistence.");
+
   const invalidBridge = await fetch(`${origin}/api/steam/bridge-attempt`, {
     method: "POST", headers: { "content-type": "application/json" },
     body: JSON.stringify({ ageBand: "7-9", design: { span: 999 }, outcome: { resultState: "stable" } }),

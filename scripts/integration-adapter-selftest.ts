@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { runAdapterDiagnostic } from "../lib/integration-diagnostics";
 import { getEducationAdapter, hasDedicatedEducationAdapter } from "../lib/provider-adapters";
 import { safeIntegrationConfig, validateCanonicalObject } from "../lib/integration-adapter-core";
+import { connectorIsPlugAndPlay, getConnectorReadiness } from "../lib/integration-readiness";
 
 const providers = [
   "xapi-lrs",
@@ -68,4 +69,14 @@ assert.equal(cleanConfig.tokenUrl, "https://school.example/oauth/token");
 assert.equal("accessToken" in cleanConfig, false);
 assert.deepEqual(cleanConfig.nested, { safeSetting: "keep-me" });
 
-console.log(`Integration adapter self-test passed for ${providers.length} provider profiles.`);
+assert.equal(getConnectorReadiness("google-classroom").stage, "dedicated_normalizer");
+assert.equal(getConnectorReadiness("microsoft-teams-edu").stage, "dedicated_normalizer");
+assert.equal(getConnectorReadiness("oneroster").stage, "dedicated_normalizer");
+assert.equal(getConnectorReadiness("canvas").stage, "standard_transport");
+assert.equal(getConnectorReadiness("moodle").stage, "standard_transport");
+assert.equal(getConnectorReadiness("scorm-package").stage, "standard_transport");
+assert.equal(connectorIsPlugAndPlay(getConnectorReadiness("google-classroom")), false);
+assert.equal(connectorIsPlugAndPlay(getConnectorReadiness("canvas")), false);
+assert.equal(connectorIsPlugAndPlay(getConnectorReadiness("custom-rest")), false);
+
+console.log(`Integration adapter self-test passed for ${providers.length} provider profiles with truthful live-readiness checks.`);

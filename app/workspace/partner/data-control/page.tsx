@@ -3,6 +3,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { updateOrganizationDataPolicy } from "@/app/workspace/community/actions";
+import OpenAITestPanel from "./OpenAITestPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,7 @@ export default async function PartnerDataControlPage() {
   if (!user) return <Gate copy="Sign in with an approved partner administrator account." />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin","platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["partner_admin","platform_admin"].includes(profile.account_type)) {
     return <Gate copy="School administrator access is required to choose institution data and AI modes." />;
   }
 
@@ -140,6 +141,8 @@ export default async function PartnerDataControlPage() {
             </div>
           </article>
         </section>
+
+        {profile.account_type === "platform_admin" && <OpenAITestPanel />}
 
         <section className="panel">
           <div className="eyebrow">When CTAs appear</div>

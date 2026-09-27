@@ -2,7 +2,8 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { ensureStudentProfile, getCurrentProfile } from "@/lib/auth/profile";
+import { ensureStudentProfile } from "@/lib/auth/profile";
+import { requirePartnerClassAccess, requirePartnerOrganizationAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -13,38 +14,11 @@ function boundedText(value: FormDataEntryValue | null, max: number) {
 }
 
 async function requirePartnerOrganization(organizationId: string) {
-  if (!UUID_RE.test(organizationId)) throw new Error("Invalid organization reference.");
-
-  const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin", "platform_admin"].includes(profile.account_type)) {
-    throw new Error("Partner administrator access required.");
-  }
-
-  if (profile.account_type === "partner_admin") {
-    const sql = getDb();
-    const rows = await sql`
-      select 1
-      from organization_memberships
-      where organization_id = ${organizationId}
-        and profile_id = ${profile.id}
-        and role = 'partner_admin'
-        and status = 'active'
-      limit 1
-    `;
-    if (!rows[0]) throw new Error("You do not manage this organization.");
-  }
-
-  return profile;
+  return (await requirePartnerOrganizationAccess(organizationId)).profile;
 }
 
 async function requirePartnerClass(classId: string) {
-  if (!UUID_RE.test(classId)) throw new Error("Invalid class reference.");
-  const sql = getDb();
-  const rows = await sql`select organization_id from classes where id = ${classId} and status='active' limit 1`;
-  const organizationId = String(rows[0]?.organization_id || "");
-  if (!organizationId) throw new Error("Class not found.");
-  await requirePartnerOrganization(organizationId);
-  return organizationId;
+  return (await requirePartnerClassAccess(classId)).organizationId;
 }
 
 export async function requestPartnerAccess(formData: FormData) {
@@ -72,6 +46,47 @@ export async function requestPartnerAccess(formData: FormData) {
       end,
       updated_at = now()
   `;
+
+  revalidatePath("/workspace/partner");
+}
+
+export async function revokeLearnerConsent(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
+  const consentType = String(formData.get("consentType") || "");
+  const allowedTypes = ["digital_learning", "learning_evidence", "guardian_reporting", "ai_assistive_features"];
+
+  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId) || !allowedTypes.includes(consentType)) {
+    throw new Error("Organization, learner and consent type are required.");
+  }
+
+  await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const learner = await sql`
+    select p.id
+    from profiles p
+    join organization_memberships om
+      on om.profile_id=p.id
+     and om.organization_id=${organizationId}
+     and om.role='student'
+     and om.status='active'
+    where p.semantic_id=${semanticId}
+      and p.account_type='student'
+    limit 1
+  `;
+  const learnerId = String(learner[0]?.id || "");
+  if (!learnerId) throw new Error("Learner is not an active member of this institution.");
+
+  const revoked = await sql`
+    update learner_consent_records
+    set status='revoked', revoked_at=now()
+    where learner_id=${learnerId}
+      and organization_id=${organizationId}
+      and consent_type=${consentType}
+      and status='active'
+    returning id
+  `;
+  if (!revoked[0]) throw new Error("No active consent record exists for this learner and purpose.");
 
   revalidatePath("/workspace/partner");
 }
@@ -165,6 +180,40 @@ export async function assignTeacher(formData: FormData) {
   revalidatePath("/workspace/partner");
 }
 
+export async function inviteStudentToOrganization(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
+  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId)) {
+    throw new Error("Organization and valid learner ID are required.");
+  }
+
+  await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const learner = await sql`
+    select id
+    from profiles
+    where semantic_id=${semanticId}
+      and account_type='student'
+      and status='active'
+    limit 1
+  `;
+  const studentId = String(learner[0]?.id || "");
+  if (!studentId) throw new Error("Active learner profile not found.");
+
+  await sql`
+    insert into organization_memberships (organization_id, profile_id, role, status)
+    values (${organizationId}, ${studentId}, 'student', 'invited')
+    on conflict (organization_id, profile_id, role) do update set
+      status = case
+        when organization_memberships.status='active' then 'active'
+        else 'invited'
+      end
+  `;
+
+  revalidatePath("/workspace/partner");
+  revalidatePath("/workspace/student");
+}
+
 export async function enrollStudent(formData: FormData) {
   const classId = String(formData.get("classId") || "");
   const semanticId = boundedText(formData.get("studentSemanticId"), 100);
@@ -173,20 +222,39 @@ export async function enrollStudent(formData: FormData) {
   const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
   const learner = await sql`
-    select id from profiles
-    where semantic_id = ${semanticId}
-      and account_type = 'student'
-      and status = 'active'
+    select p.id,
+      exists (
+        select 1 from organization_memberships existing
+        where existing.profile_id=p.id
+          and existing.organization_id=${organizationId}
+          and existing.role='student'
+          and existing.status='active'
+      ) as has_active_membership,
+      exists (
+        select 1 from student_credentials sc
+        where sc.student_id=p.id and sc.organization_id=${organizationId}
+      ) as has_org_credential
+    from profiles p
+    where p.semantic_id = ${semanticId}
+      and p.account_type = 'student'
+      and p.status = 'active'
     limit 1
   `;
   const studentId = String(learner[0]?.id || "");
   if (!studentId) throw new Error("Active learner profile not found.");
+  const hasActiveMembership = Boolean(learner[0]?.has_active_membership);
+  const hasOrgCredential = Boolean(learner[0]?.has_org_credential);
+  if (!hasActiveMembership && !hasOrgCredential) {
+    throw new Error("This learner must accept the institution invitation before class enrollment.");
+  }
 
-  await sql`
-    insert into organization_memberships (organization_id, profile_id, role, status)
-    values (${organizationId}, ${studentId}, 'student', 'active')
-    on conflict (organization_id, profile_id, role) do update set status = 'active'
-  `;
+  if (!hasActiveMembership && hasOrgCredential) {
+    await sql`
+      insert into organization_memberships (organization_id, profile_id, role, status)
+      values (${organizationId}, ${studentId}, 'student', 'active')
+      on conflict (organization_id, profile_id, role) do update set status='active'
+    `;
+  }
 
   await sql`
     insert into class_memberships (class_id, student_id, status)
@@ -224,11 +292,16 @@ export async function recordLearnerConsent(formData: FormData) {
   const actor = await requirePartnerOrganization(organizationId);
   const sql = getDb();
   const learner = await sql`
-    select id
-    from profiles
-    where semantic_id = ${semanticId}
-      and account_type = 'student'
-      and status = 'active'
+    select p.id
+    from profiles p
+    join organization_memberships om
+      on om.profile_id=p.id
+     and om.organization_id=${organizationId}
+     and om.role='student'
+     and om.status='active'
+    where p.semantic_id = ${semanticId}
+      and p.account_type = 'student'
+      and p.status = 'active'
     limit 1
   `;
   const learnerId = String(learner[0]?.id || "");

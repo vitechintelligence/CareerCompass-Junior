@@ -8,9 +8,10 @@ type Props = {
   locale: "en" | "vi";
   bookCode: string;
   unitCode: string;
+  enrollmentId?: string;
 };
 
-export default function GenericActivity({ activity, locale, bookCode, unitCode }: Props) {
+export default function GenericActivity({ activity, locale, bookCode, unitCode, enrollmentId }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [ordered, setOrdered] = useState<string[]>([]);
@@ -45,7 +46,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode }
       const res = await fetch("/api/learning/attempt", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ bookCode, unitCode, activityCode: activity.code, locale, response }),
+        body: JSON.stringify({ bookCode, unitCode, activityCode: activity.code, enrollmentId, locale, response }),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.evaluation?.feedback) {

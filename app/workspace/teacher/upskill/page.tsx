@@ -14,7 +14,7 @@ export default async function TeacherUpskillPage({ searchParams }: { searchParam
   if (!user) return <Gate />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || !["teacher", "platform_admin"].includes(profile.account_type)) return <Gate signedIn />;
 
   const sql = getDb();
   const rows = await sql`

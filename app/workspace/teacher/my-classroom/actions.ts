@@ -2,7 +2,7 @@
 
 import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
-import { getCurrentProfile } from "@/lib/auth/profile";
+import { requireOwnedTeacherClassroom, requireTeacherOrganizationAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -13,34 +13,12 @@ function boundedText(value: FormDataEntryValue | null, max: number) {
 }
 
 async function requireTeacherOrganization(organizationId: string) {
-  if (!UUID_RE.test(organizationId)) throw new Error("Invalid organization reference.");
-  const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) throw new Error("Teacher access required.");
-  if (profile.account_type === "teacher") {
-    const sql = getDb();
-    const rows = await sql`
-      select 1 from organization_memberships
-      where organization_id=${organizationId}
-        and profile_id=${profile.id}
-        and role='teacher'
-        and status='active'
-      limit 1
-    `;
-    if (!rows[0]) throw new Error("Teacher is not active in this organization.");
-  }
-  return profile;
+  return (await requireTeacherOrganizationAccess(organizationId)).profile;
 }
 
 async function requireOwnedCustomClassroom(classId: string) {
-  if (!UUID_RE.test(classId)) throw new Error("Invalid classroom reference.");
-  const profile = await getCurrentProfile();
-  if (!profile || !["teacher", "platform_admin"].includes(profile.account_type)) throw new Error("Teacher access required.");
-  const sql = getDb();
-  const rows = profile.account_type === "platform_admin"
-    ? await sql`select id, organization_id from classes where id=${classId} and class_scope='teacher_custom' and status='active' limit 1`
-    : await sql`select id, organization_id from classes where id=${classId} and class_scope='teacher_custom' and owner_teacher_id=${profile.id} and status='active' limit 1`;
-  if (!rows[0]) throw new Error("My Classroom class not found or not owned by this teacher.");
-  return { profile, organizationId: String(rows[0].organization_id) };
+  const context = await requireOwnedTeacherClassroom(classId);
+  return { profile: context.profile, organizationId: context.organizationId };
 }
 
 export async function createTeacherClassroom(formData: FormData) {

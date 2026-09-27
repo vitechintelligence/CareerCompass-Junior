@@ -13,15 +13,20 @@ export default async function DatabaseUnitPage({
   searchParams,
 }: {
   params: Promise<{ bookCode: string; unitCode: string }>;
-  searchParams: Promise<{ lang?: string }>;
+  searchParams: Promise<{ lang?: string; enrollmentId?: string }>;
 }) {
   const { bookCode, unitCode } = await params;
   if (getFullInteractiveBook(bookCode)) {
     redirect(`/learn/${encodeURIComponent(bookCode)}?start=${encodeURIComponent(unitCode)}`);
   }
 
-  const { lang } = await searchParams;
+  const { lang, enrollmentId } = await searchParams;
   const locale: "en" | "vi" = lang === "vi" ? "vi" : "en";
+  const learningEnrollmentId = typeof enrollmentId === "string"
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(enrollmentId)
+    ? enrollmentId
+    : undefined;
+  const enrollmentQuery = learningEnrollmentId ? `&enrollmentId=${encodeURIComponent(learningEnrollmentId)}` : "";
 
   const databaseUnit = await getPublishedUnit(bookCode, unitCode);
   const unit = databaseUnit ?? getCatalogUnit(bookCode, unitCode);
@@ -44,8 +49,8 @@ export default async function DatabaseUnitPage({
       <header className="topbar lessonTopbar">
         <Link className="brand" href={`/learn/${encodeURIComponent(bookCode)}`}><VitechMark /><span>Career Compass Junior</span></Link>
         <div className="lessonHeaderActions">
-          {bookCode === "CCJ-MASTERY-BEGINNER" && unitCode === "U01" && <Link className="pill" href={`/learn/unit-1?lang=${locale}`}>{locale === "vi" ? "Mở trải nghiệm nâng cao" : "Open enhanced experience"}</Link>}
-          <Link className="pill" href={`/learn/${encodeURIComponent(bookCode)}/${encodeURIComponent(unitCode)}?lang=${locale === "vi" ? "en" : "vi"}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link>
+          {bookCode === "CCJ-MASTERY-BEGINNER" && unitCode === "U01" && <Link className="pill" href={`/learn/unit-1?lang=${locale}${enrollmentQuery}`}>{locale === "vi" ? "Mở trải nghiệm nâng cao" : "Open enhanced experience"}</Link>}
+          <Link className="pill" href={`/learn/${encodeURIComponent(bookCode)}/${encodeURIComponent(unitCode)}?lang=${locale === "vi" ? "en" : "vi"}${enrollmentQuery}`}>{locale === "vi" ? "English" : "Tiếng Việt"}</Link>
         </div>
       </header>
 
@@ -55,7 +60,7 @@ export default async function DatabaseUnitPage({
           <h2 className="lessonUnitTitle">{locale === "vi" ? unit.bookTitleVi : unit.bookTitleEn}</h2>
           <p className="muted lessonSmallCopy">{unit.levelLabel || ""}{unit.ageBand ? ` · Ages ${unit.ageBand}` : ""}</p>
           <nav className="lessonNav" aria-label="Published book units">
-            {units.map((item) => <Link className={`lessonNavItem ${String(item.code) === unit.unitCode ? "active" : ""}`} key={String(item.code)} href={`/learn/${encodeURIComponent(bookCode)}/${encodeURIComponent(String(item.code))}?lang=${locale}`}><span className="lessonNavNumber">{String(item.unit_number)}</span><span><strong>{locale === "vi" ? String(item.title_vi) : String(item.title_en)}</strong><small>{String(item.code)}</small></span></Link>)}
+            {units.map((item) => <Link className={`lessonNavItem ${String(item.code) === unit.unitCode ? "active" : ""}`} key={String(item.code)} href={`/learn/${encodeURIComponent(bookCode)}/${encodeURIComponent(String(item.code))}?lang=${locale}${enrollmentQuery}`}><span className="lessonNavNumber">{String(item.unit_number)}</span><span><strong>{locale === "vi" ? String(item.title_vi) : String(item.title_en)}</strong><small>{String(item.code)}</small></span></Link>)}
           </nav>
         </aside>
 
@@ -70,7 +75,7 @@ export default async function DatabaseUnitPage({
             <article className="lessonCard missionCard"><div className="lessonSectionLabel">Career Compass × Mastery English</div><p><strong>{unit.careerCompassFocus}</strong></p><p className="muted">{unit.masteryEnglishFocus}</p></article>
           </div>
 
-          {unit.activities.length === 0 ? <article className="lessonCard"><p className="muted">{locale === "vi" ? "Nội dung tương tác của bài này đang được chuẩn bị." : "Interactive content for this unit is being prepared."}</p></article> : unit.activities.map((activity) => <GenericActivity activity={activity} locale={locale} bookCode={unit.bookCode} unitCode={unit.unitCode} key={activity.id} />)}
+          {unit.activities.length === 0 ? <article className="lessonCard"><p className="muted">{locale === "vi" ? "Nội dung tương tác của bài này đang được chuẩn bị." : "Interactive content for this unit is being prepared."}</p></article> : unit.activities.map((activity) => <GenericActivity activity={activity} locale={locale} bookCode={unit.bookCode} unitCode={unit.unitCode} enrollmentId={learningEnrollmentId} key={activity.id} />)}
         </section>
       </div>
     </main>
