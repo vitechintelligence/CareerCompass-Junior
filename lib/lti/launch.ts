@@ -98,13 +98,12 @@ export async function validateLtiLaunch(input: {
 
   const launchPresentation = record(payload[LTI_CLAIMS.launchPresentation]);
   const documentTarget = normalizeExternalId(launchPresentation.document_target, 80).toLowerCase();
-  if (documentTarget && documentTarget !== "window") {
-    throw new Error("lti_document_target_requires_window");
+  if (documentTarget && !["frame", "iframe", "window"].includes(documentTarget)) {
+    throw new Error("lti_document_target_invalid");
   }
 
   const resourceLink = record(payload[LTI_CLAIMS.resourceLink]);
   const custom = record(payload[LTI_CLAIMS.custom]);
-  const launchPresentation = record(payload[LTI_CLAIMS.launchPresentation]);
   let frameAncestorHost: string | null = null;
   if (typeof launchPresentation.return_url === "string" && launchPresentation.return_url) {
     try {
