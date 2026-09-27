@@ -1,23 +1,18 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { gunzipSync } from "node:zlib";
 import { beginnerPublicActivities } from "@/lib/learning/beginner-objectives";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BOOK_PARTS: Record<string, { prefix: string; parts: number }> = {
-  "my-compass": { prefix: "my-compass", parts: 4 },
-  "career-compass-junior": { prefix: "career-compass-junior", parts: 7 },
-};
+const BOOK_SLUGS = new Set(["my-compass", "career-compass-junior"]);
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-  const spec = BOOK_PARTS[slug];
-  if (!spec) return new Response("Interactive book not found.", { status: 404 });
+  if (!BOOK_SLUGS.has(slug)) return new Response("Interactive book not found.", { status: 404 });
 
   let html: string;
   if (slug === "career-compass-junior") {
@@ -26,15 +21,8 @@ export async function GET(
     const activities = JSON.stringify(beginnerPublicActivities()).replaceAll("<", "\\u003c");
     html = html.replace("<!-- CCJ_OBJECTIVE_ACTIVITIES -->", `<script id="objective-activities" type="application/json">${activities}</script>`);
   } else {
-    const dataDir = path.join(process.cwd(), "public", "interactive-book-data");
-    const chunks = await Promise.all(
-    Array.from({ length: spec.parts }, async (_, index) => {
-      const suffix = String(index + 1).padStart(2, "0");
-      return readFile(path.join(dataDir, `${spec.prefix}.b64.${suffix}`), "utf8");
-    }),
-  );
-
-    html = gunzipSync(Buffer.from(chunks.join("").trim(), "base64")).toString("utf8");
+    // The original compressed book remains archived under public/interactive-book-data.
+    html = await readFile(path.join(process.cwd(), "content", "interactive-books", "my-compass.html"), "utf8");
   }
 
   // The supplied full-book editions were authored with a desktop-first MediaRecorder

@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MY COMPASS — Interactive Workbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#152c54; --navy-deep:#0e1e3c; --navy-soft:#24406f;
+  --cream:#faf6ec; --paper:#fffdf8; --line:#e6ddc9;
+  --teal:#2f9c8f; --teal-deep:#1f7d72;
+  --coral:#e2703a; --coral-deep:#c65a29;
+  --gold:#d9a441;
+  --ink:#20283c; --muted:#6d7488;
+  --r-sm:10px; --r-md:16px; --r-lg:22px;
+  --shadow: 0 10px 28px -14px rgba(21,44,84,.28);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--cream);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,.brand,.unit-num,.stage-tag{font-family:'Baloo 2',system-ui,sans-serif}
+button{font-family:inherit;cursor:pointer}
+::selection{background:var(--gold);color:var(--navy-deep)}
+a{color:inherit}
+
+/* ---------- layout shell ---------- */
+#app{display:flex;flex-direction:column;min-height:100vh}
+header.topbar{
+  background:var(--navy);
+  color:#fff;
+  padding:14px 18px;
+  display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:40;
+  border-bottom:3px solid var(--gold);
+}
+.brand{display:flex;align-items:center;gap:10px;cursor:pointer;border:none;background:none;color:#fff;padding:0}
+.brand svg{flex-shrink:0}
+.brand-text{display:flex;flex-direction:column;line-height:1.1}
+.brand-text b{font-size:1.05rem;letter-spacing:.02em}
+.brand-text span{font-size:.68rem;color:#b9c6e0;font-family:'Inter';font-weight:500}
+.topbar-spacer{flex:1}
+.progress-pill{
+  display:flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;padding:6px 12px;font-size:.78rem;color:#dbe4f5;
+}
+.progress-pill .bar{width:70px;height:6px;border-radius:999px;background:rgba(255,255,255,.22);overflow:hidden}
+.progress-pill .bar i{display:block;height:100%;background:var(--gold);border-radius:999px;transition:width .4s}
+.menu-btn{
+  display:none;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:10px;padding:8px 10px;
+}
+
+.shell{display:flex;flex:1;min-height:0}
+nav.sidenav{
+  width:290px;flex-shrink:0;background:var(--navy-deep);color:#eef1fa;
+  padding:18px 14px 90px;overflow-y:auto;
+}
+nav.sidenav::-webkit-scrollbar{width:8px}
+nav.sidenav::-webkit-scrollbar-thumb{background:#2a3f68;border-radius:8px}
+.stage-group{margin-bottom:6px}
+.stage-tag{
+  font-size:.72rem;font-weight:700;letter-spacing:.03em;color:#8fa2cc;
+  padding:14px 10px 6px;
+}
+.unit-btn{
+  width:100%;text-align:left;background:none;border:none;color:#dfe6f7;
+  padding:9px 10px;border-radius:10px;display:flex;gap:10px;align-items:center;
+  font-size:.86rem;margin-bottom:2px;
+}
+.unit-btn:hover{background:rgba(255,255,255,.06)}
+.unit-btn.active{background:rgba(217,164,65,.16);color:#fff}
+.unit-num{
+  width:26px;height:26px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.76rem;font-weight:700;background:var(--navy-soft);color:#fff;
+}
+.unit-btn.active .unit-num{background:var(--coral)}
+.unit-title{flex:1}
+.unit-title small{display:block;color:#8fa2cc;font-size:.68rem;font-weight:500;margin-top:1px}
+.dot-row{display:flex;gap:4px;margin-left:auto}
+.dot{width:6px;height:6px;border-radius:50%;background:#3a4d76}
+.dot.done{background:var(--gold)}
+.capstone-btn{
+  margin-top:10px;width:100%;text-align:left;background:linear-gradient(135deg,#274674,#1a2f57);
+  border:1px solid rgba(255,255,255,.14);color:#fff;border-radius:12px;padding:12px 12px;
+  display:flex;gap:10px;align-items:center;font-size:.86rem;font-weight:600;
+}
+
+.backdrop{display:none;position:fixed;inset:0;background:rgba(10,16,32,.5);z-index:35}
+
+main.content{flex:1;min-width:0;overflow-y:auto;padding:26px 30px 80px}
+.wrap{max-width:820px;margin:0 auto}
+
+/* ---------- home / cover ---------- */
+.hero{
+  background:radial-gradient(circle at 20% 20%, #1c3a68, var(--navy) 60%);
+  color:#fff;border-radius:var(--r-lg);padding:38px 34px;margin-bottom:26px;
+  position:relative;overflow:hidden;border:1px solid #24406f;
+}
+.hero .compass-mark{position:absolute;right:-30px;top:-30px;opacity:.16}
+.hero h1{font-size:2.1rem;margin:0 0 6px;letter-spacing:.01em}
+.hero p.tagline{margin:0 0 18px;color:#c6d3ef;font-size:1rem;max-width:480px}
+.hero .quote{
+  font-family:'Baloo 2';font-size:1.05rem;color:#f3e6c8;border-left:3px solid var(--gold);
+  padding-left:14px;max-width:520px;margin-top:16px;line-height:1.5;
+}
+.hero .cta{
+  margin-top:22px;display:inline-flex;align-items:center;gap:8px;
+  background:var(--coral);color:#fff;border:none;border-radius:12px;
+  padding:12px 20px;font-weight:700;font-size:.95rem;box-shadow:var(--shadow);
+}
+
+.section-label{
+  font-size:.78rem;font-weight:700;color:var(--teal-deep);letter-spacing:.03em;
+  margin:0 0 10px;display:flex;align-items:center;gap:8px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.roadmap{display:flex;flex-direction:column;gap:10px;margin-bottom:30px}
+.roadmap-row{
+  display:flex;gap:14px;align-items:flex-start;background:var(--paper);
+  border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;
+  cursor:pointer;transition:transform .15s, box-shadow .15s;
+}
+.roadmap-row:hover{transform:translateX(3px);box-shadow:var(--shadow)}
+.roadmap-badge{
+  width:40px;height:40px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-family:'Baloo 2';font-weight:700;color:#fff;font-size:.95rem;
+}
+.roadmap-body h3{margin:0 0 2px;font-size:1rem}
+.roadmap-body p{margin:0;color:var(--muted);font-size:.86rem}
+.roadmap-units{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.roadmap-units span{
+  font-size:.72rem;background:var(--cream);border:1px solid var(--line);border-radius:999px;
+  padding:2px 8px;color:var(--navy);
+}
+
+.howworks{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:18px 20px;margin-bottom:26px;
+}
+.howworks .steps{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px}
+.howworks .step{flex:1;min-width:150px;background:var(--cream);border-radius:12px;padding:12px 14px}
+.howworks .step b{display:block;color:var(--teal-deep);font-size:.85rem;margin-bottom:3px}
+.howworks .step span{font-size:.82rem;color:var(--muted)}
+
+/* ---------- lesson view ---------- */
+.crumb{font-size:.8rem;color:var(--muted);margin-bottom:6px}
+.crumb b{color:var(--coral-deep)}
+.lesson-head h2{margin:0 0 4px;font-size:1.55rem}
+.lesson-head p{margin:0 0 22px;color:var(--muted);font-size:.98rem}
+
+.story-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);
+  border-left:6px solid var(--coral);padding:20px 22px;margin-bottom:20px;
+}
+.story-card h4{margin:0 0 8px;font-size:.78rem;letter-spacing:.03em;color:var(--coral-deep);font-weight:700}
+.story-card p.story-text{font-size:1.02rem;line-height:1.65;margin:0 0 14px}
+.key-idea{
+  background:var(--navy);color:#f3e6c8;border-radius:12px;padding:12px 16px;font-size:.92rem;
+  line-height:1.5;font-family:'Baloo 2';font-weight:600;
+}
+.think-box{margin-top:16px;background:#f1f7f6;border-radius:12px;padding:14px 16px}
+.think-box h5{margin:0 0 8px;font-size:.78rem;color:var(--teal-deep);font-weight:700;letter-spacing:.02em}
+.think-q{margin-bottom:10px}
+.think-q label{display:block;font-size:.88rem;margin-bottom:4px;color:var(--ink)}
+.think-q textarea{
+  width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;
+  font-size:.86rem;resize:vertical;min-height:40px;background:#fff;
+}
+
+.lab-panel{
+  background:var(--navy);color:#fff;border-radius:var(--r-lg);padding:22px 24px;margin-bottom:20px;
+}
+.lab-panel h4{margin:0 0 14px;font-size:.78rem;letter-spacing:.03em;color:#a9c1ec;font-weight:700}
+.vocab-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+.vocab-chip{
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:14px;
+  padding:12px 14px;flex:1;min-width:150px;
+}
+.vocab-chip .en{font-weight:700;font-size:1rem}
+.vocab-chip .vn{font-size:.82rem;color:#c6d3ef;margin-bottom:8px}
+.icon-row{display:flex;gap:6px}
+.icon-btn{
+  border:none;border-radius:8px;padding:6px 9px;font-size:.74rem;display:flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,.12);color:#fff;font-weight:600;
+}
+.icon-btn.speak{background:var(--teal)}
+.icon-btn.rec{background:var(--coral)}
+.icon-btn.rec.recording{background:#a5352f;animation:pulse 1s infinite}
+.icon-btn:disabled{opacity:.45;cursor:default}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+.phrase-block{
+  background:rgba(255,255,255,.06);border:1px dashed rgba(255,255,255,.28);border-radius:14px;
+  padding:16px 18px;margin-bottom:18px;
+}
+.phrase-block .label{font-size:.7rem;letter-spacing:.03em;color:#a9c1ec;font-weight:700;margin-bottom:6px}
+.phrase-block .en{font-family:'Baloo 2';font-size:1.25rem;font-weight:700;margin-bottom:2px}
+.phrase-block .vn{color:#c6d3ef;font-size:.88rem;margin-bottom:12px}
+.mini-tip{font-size:.8rem;color:#c6d3ef;background:rgba(255,255,255,.05);border-radius:10px;padding:9px 12px;margin-bottom:14px}
+.mini-tip b{color:var(--gold)}
+audio.playback{width:100%;height:32px;margin-top:8px;display:none}
+audio.playback.show{display:block}
+
+.listen-block{background:rgba(255,255,255,.06);border-radius:14px;padding:16px 18px}
+.listen-block .label{font-size:.7rem;letter-spacing:.03em;color:#a9c1ec;font-weight:700;margin-bottom:6px}
+.listen-block p.vn-audio-text{font-size:.94rem;line-height:1.55;margin:0 0 10px}
+.listen-block .q{font-size:.88rem;color:var(--gold);margin-bottom:8px;font-weight:600}
+.listen-block textarea{
+  width:100%;border:none;border-radius:8px;padding:8px 10px;font-family:inherit;font-size:.85rem;
+  min-height:38px;resize:vertical;
+}
+
+.tryit-card{
+  background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:20px;
+}
+.tryit-card h4{margin:0 0 14px;font-size:.78rem;letter-spacing:.03em;color:var(--teal-deep);font-weight:700}
+.ex-item{border-top:1px solid var(--line);padding:14px 0}
+.ex-item:first-child{border-top:none;padding-top:0}
+.ex-label{font-size:.92rem;margin-bottom:8px;font-weight:600}
+.ex-hint{font-size:.78rem;color:var(--muted);margin-top:4px}
+.ex-input{width:100%;max-width:340px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:.9rem}
+.ex-textarea{width:100%;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-family:inherit;font-size:.88rem;min-height:52px;resize:vertical}
+.ex-check{margin-left:8px;background:var(--teal);color:#fff;border:none;border-radius:8px;padding:7px 12px;font-size:.82rem;font-weight:600}
+.ex-result{font-size:.82rem;margin-top:6px;font-weight:600}
+.ex-result.ok{color:var(--teal-deep)}
+.ex-result.no{color:var(--coral-deep)}
+.choice-row{display:flex;flex-wrap:wrap;gap:8px}
+.choice-btn{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 14px;font-size:.85rem}
+.choice-btn.ok{background:var(--teal);color:#fff;border-color:var(--teal)}
+.choice-btn.no{background:#fdeeea;color:var(--coral-deep);border-color:var(--coral)}
+.match-grid{display:flex;flex-wrap:wrap;gap:8px}
+.match-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font-size:.85rem}
+.match-btn.matched{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+.selfcheck{
+  background:var(--navy);color:#fff;border-radius:var(--r-lg);padding:20px 22px;margin-bottom:28px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.selfcheck .label{font-size:.78rem;letter-spacing:.03em;color:#a9c1ec;font-weight:700}
+.selfcheck p{margin:0;font-size:.94rem;color:#eef1fa}
+.stars{display:flex;gap:4px}
+.star-btn{background:none;border:none;font-size:1.5rem;color:#3a4d76;padding:0;line-height:1}
+.star-btn.on{color:var(--gold)}
+
+.lesson-nav{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.nav-btn{
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 18px;
+  font-weight:600;font-size:.88rem;display:flex;align-items:center;gap:8px;
+}
+.nav-btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+.nav-btn:disabled{opacity:.35}
+
+/* capstone */
+.capstone-block{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px;margin-bottom:20px}
+.capstone-block h4{margin:0 0 4px;font-size:1.05rem}
+.capstone-block p.sub{margin:0 0 16px;color:var(--muted);font-size:.88rem}
+.check-row{display:flex;align-items:center;gap:12px;border-radius:12px;padding:12px 14px;margin-bottom:8px;color:#fff}
+.check-row input{width:100%;border:none;border-radius:8px;padding:7px 10px;font-family:inherit;font-size:.85rem;margin-top:6px}
+.check-row .en{font-weight:700}
+.check-row .vn{font-size:.78rem;opacity:.85}
+.prompt-item{border-top:1px solid var(--line);padding:14px 0}
+.prompt-item:first-child{border-top:none;padding-top:0}
+.prompt-item .en{font-family:'Baloo 2';font-weight:700;color:var(--navy)}
+.prompt-item .vn{color:var(--muted);font-size:.84rem;margin-bottom:8px}
+
+/* helpers / mobile */
+.mic-note{font-size:.72rem;color:#93a2c4;margin-top:10px}
+@media (max-width:900px){
+  nav.sidenav{position:fixed;left:0;top:0;bottom:0;z-index:36;transform:translateX(-104%);transition:transform .25s;box-shadow:20px 0 40px rgba(0,0,0,.3)}
+  nav.sidenav.open{transform:translateX(0)}
+  .backdrop.open{display:block}
+  .menu-btn{display:inline-flex}
+  main.content{padding:18px 16px 70px}
+  .hero{padding:26px 20px}
+  .hero h1{font-size:1.6rem}
+}
+
+/* Natural voice controls */
+.voice-tools{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:5px 7px;color:#fff}
+.voice-tools .voice-icon{font-size:.9rem}
+.voice-tools select{max-width:150px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.10);color:#fff;border-radius:8px;padding:5px 7px;font:600 .72rem/1.2 inherit;outline:none}
+.voice-tools select option{color:#16233b;background:#fff}
+.voice-tools .voice-status{font-size:.65rem;color:rgba(255,255,255,.72);white-space:nowrap}
+@media(max-width:900px){.voice-tools .voice-picker,.voice-tools .voice-status{display:none}.voice-tools select{max-width:118px}}
+@media(max-width:640px){.voice-tools{padding:4px 5px}.voice-tools .voice-icon{display:none}.voice-tools select{max-width:105px;font-size:.68rem}}
+
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="topbar">
+    <button class="menu-btn" id="menuBtn" aria-label="Menu">☰</button>
+    <button class="brand" id="brandBtn">
+      <svg width="30" height="30" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#d9a441" stroke-width="2"/><path d="M20 6 L23 20 L20 34 L17 20 Z" fill="#d9a441"/><path d="M6 20 L20 17 L34 20 L20 23 Z" fill="#e2703a"/></svg>
+      <span class="brand-text"><b>MY COMPASS</b><span>English + Life Skills + Career Discovery</span></span>
+    </button>
+
+    <div class="voice-tools" title="English listening voice settings">
+      <span class="voice-icon" aria-hidden="true">🎧</span>
+      <select id="voiceMode" aria-label="Listening speed">
+        <option value="conversation">Natural conversation</option>
+        <option value="practice">Slow practice</option>
+      </select>
+      <select class="voice-picker" id="voicePicker" aria-label="English voice">
+        <option value="">Best available voice</option>
+      </select>
+      <span class="voice-status" id="voiceStatus">Loading voice…</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="progress-pill">
+      <span id="progressLabel" title="Self-reported practice on this device; not verified mastery">0/24 tự ghi nhận luyện tập</span>
+      <span class="bar"><i id="progressBar" style="width:0%"></i></span>
+    </div>
+  </header>
+
+  <div class="shell">
+    <div class="backdrop" id="backdrop"></div>
+    <nav class="sidenav" id="sidenav"></nav>
+    <main class="content"><div class="wrap" id="content"></div></main>
+  </div>
+</div>
+
+<script>
+/* ============================= DATA ============================= */
+const STAGES = [
+  {key:'pd', name:'PERSONAL DEVELOPMENT', color:'#e2703a', units:[1,2]},
+  {key:'ss', name:'SOCIAL SKILLS', color:'#2f9c8f', units:[3,4]},
+  {key:'co', name:'COLLABORATION', color:'#5b7fd6', units:[5]},
+  {key:'ld', name:'LEADERSHIP', color:'#d9a441', units:[6]},
+  {key:'se', name:'SUBJECT EXPLORATION', color:'#8a5cc4', units:[7,8]},
+  {key:'sd', name:'SKILLS DISCOVERY', color:'#2f9c8f', units:[9,10]},
+  {key:'ce', name:'CAREER EXPLORATION', color:'#e2703a', units:[11]},
+  {key:'ur', name:'UNIVERSITY READINESS', color:'#5b7fd6', units:[12]},
+];
+
+function L(title,subtitle,story,key,think,vocab,phraseEn,phraseVn,tip,listenVn,listenQ,tryit,check){
+  return {title,subtitle,story,key,think,vocab,phraseEn,phraseVn,tip,listenVn,listenQ,tryit,check};
+}
+
+const UNITS = [
+{id:1, cat:'PERSONAL DEVELOPMENT', title:'Bạn học cách tạo khoảng dừng trước khi phản ứng.', titleEn:'You learn to create a pause before you react.', lessons:[
+  L('Pause, Breathe, Speak','Cơ thể có thể giúp bạn chọn cách phản ứng tốt hơn.',
+    'Khi Minh mệt, bạn nói hơi mạnh. Cậu dừng lại, hít vào chậm, thở ra dài rồi mới trả lời. Không phải "im lặng vì sợ" - mà là tạo một khoảng dừng để não kịp chọn lời.',
+    'Thở không giải quyết mọi vấn đề. Nhưng nó cho bạn vài giây để không phản ứng theo cảm xúc.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'breathe',vn:'thở'},{en:'tired',vn:'mệt'},{en:'calm',vn:'bình tĩnh'}],
+    'I breathe first.','Mình thở trước.',
+    'Hear the long vowel in "breathe". Say it slowly 3 times.',
+    'Minh đang mệt. Bạn của Minh hỏi một câu khó. Minh thở chậm trước khi trả lời.','Minh làm gì trước khi nói?',
+    [{type:'choice',label:'Nối: breathe → ?',options:['mệt','thở','vui'],answer:'thở'},
+     {type:'fill',label:'Điền: I ___ first. (breathe)',answer:'breathe'},
+     {type:'choice',label:'Khoanh cách tốt hơn:',options:['nói ngay','thở rồi nói'],answer:'thở rồi nói'}],
+    'Tôi đã biết dừng lại trước khi phản ứng. Tôi có thể nói "I breathe first."'),
+  L('Body Reset','Một tín hiệu cơ thể có thể nhắc bạn thay đổi nhịp.',
+    'Lan chuẩn bị kiểm tra và thấy tim đập nhanh. Cô đặt hai chân xuống sàn, thả vai, hít vào 4 nhịp và thở ra 4 nhịp. Sau đó cô bắt đầu câu đầu tiên.',
+    'Biết nhận ra tín hiệu cơ thể là bước đầu của self-awareness.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'body',vn:'cơ thể'},{en:'slow',vn:'chậm'},{en:'ready',vn:'sẵn sàng'}],
+    'I am ready.','Mình đã sẵn sàng.',
+    'Stress the word READY. Let the small words stay soft.',
+    'Lan thấy hồi hộp nhưng không bỏ cuộc. Cô dùng nhịp thở để đưa cơ thể về trạng thái sẵn sàng.','Lan dùng gì để sẵn sàng?',
+    [{type:'sort',label:'Sắp xếp: slowly / I / breathe',answer:'I breathe slowly'},
+     {type:'match'},
+     {type:'free',label:'Mô tả 3 biểu tượng: căng thẳng - dừng - sẵn sàng'}],
+    'Tôi nhận ra ít nhất một dấu hiệu cơ thể và biết một cách reset.'),
+]},
+{id:2, cat:'PERSONAL DEVELOPMENT', title:'Bạn học gọi tên cảm xúc và chọn hành động.', titleEn:'You learn to name feelings and choose an action.', lessons:[
+  L('Name the Feeling','Gọi đúng cảm xúc giúp bạn chọn hành động.',
+    'Nam bị điểm thấp. Cậu muốn bỏ cuộc. Thay vì nói "Mình tệ", cậu thử nói: "Mình thất vọng." Từ đó cậu hỏi: "Mình cần làm gì tiếp theo?"',
+    'Cảm xúc là tín hiệu, không phải mệnh lệnh.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'happy',vn:'vui'},{en:'sad',vn:'buồn'},{en:'worried',vn:'lo lắng'}],
+    'I feel worried.','Mình cảm thấy lo lắng.',
+    'Listen for the beginning sound in "worried". Do not rush.',
+    'Nam thất vọng vì điểm thấp, nhưng cậu không xem đó là con người của mình.','Nam dùng từ nào để gọi cảm xúc?',
+    [{type:'choice',label:'Cảm xúc của Nam gần nhất với:',options:['happy','sad','worried'],answer:'sad'},
+     {type:'fill',label:'Điền: I feel ___.',answer:'worried',hint:'hoặc điền cảm xúc thật của bạn'},
+     {type:'free',label:'Viết 1 việc có thể làm sau khi buồn',hint:'Gợi ý: ask for help / review / rest'}],
+    'Tôi có thể gọi tên một cảm xúc mà không tự phán xét mình.'),
+  L('Choice After Feeling','Cảm xúc đến trước; lựa chọn đến sau.',
+    'Vy nhận tin nhắn làm mình khó chịu. Ngón tay muốn trả lời ngay. Cô đặt điện thoại xuống 1 phút, viết điều mình muốn nói ra giấy, rồi đọc lại.',
+    'Một lựa chọn tốt có thể bắt đầu bằng một khoảng dừng nhỏ.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'wait',vn:'đợi'},{en:'think',vn:'nghĩ'},{en:'choose',vn:'chọn'}],
+    'I can choose.','Mình có thể lựa chọn.',
+    'Tap the table on CHOOSE. Keep "I can" light.',
+    'Vy không gửi tin nhắn ngay. Cô đợi, nghĩ và chọn lại lời.','Hãy nói 3 bước theo đúng thứ tự.',
+    [{type:'sort',label:'Sắp xếp: choose / wait / think',answer:'wait, think, choose'},
+     {type:'match'},
+     {type:'free',label:'Viết một câu trả lời tôn trọng hơn'}],
+    'Tôi có thể mô tả một tình huống và một lựa chọn tốt hơn.'),
+]},
+{id:3, cat:'SOCIAL SKILLS', title:'Bạn học cách nói sau khi đã nghĩ và nghe.', titleEn:'You learn to speak after thinking and listening.', lessons:[
+  L('Think Before You Speak','Nói đúng lúc cũng là một kỹ năng.',
+    'Mai nghe bạn nói một điều cô không đồng ý. Cô muốn chen vào. Sau một hơi thở, cô hỏi: "Bạn có thể giải thích thêm không?"',
+    'Trước khi nói, thử kiểm tra: điều này có đúng, cần thiết và tử tế không?',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'think',vn:'nghĩ'},{en:'speak',vn:'nói'},{en:'kind',vn:'tử tế'}],
+    'Think before you speak.','Hãy suy nghĩ trước khi nói.',
+    'Sound Detective: SPEAK gets the strong beat.',
+    'Mai không đồng ý ngay lập tức. Cô đặt câu hỏi để hiểu trước.','Mai làm gì trước khi nêu ý kiến?',
+    [{type:'fill',label:'Điền: Think before you ___.',answer:'speak'},
+     {type:'choice',label:'Khoanh:',options:['ask','shout','interrupt'],answer:'ask'},
+     {type:'free',label:'Viết 1 câu hỏi mở bắt đầu bằng "Why…?"'}],
+    'Tôi có thể chờ, nghe và hỏi trước khi phản đối.'),
+  L('Respectful Disagreement','Không đồng ý không có nghĩa là thiếu tôn trọng.',
+    'Khoa nói: "I think exercise is more important." Linh không đồng ý: "I see your point. I think sleep is also important." Hai bạn tiếp tục nói mà không công kích nhau.',
+    'Tách người khỏi ý kiến: bạn có thể không đồng ý với ý tưởng mà vẫn tôn trọng người nói.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'agree',vn:'đồng ý'},{en:'point',vn:'ý kiến'},{en:'also',vn:'cũng'}],
+    'I see your point.','Mình hiểu ý bạn.',
+    'Link the words smoothly: "your point".',
+    'Hai bạn có ý kiến khác nhau nhưng vẫn nói chuyện bình tĩnh.','Câu nào cho thấy sự tôn trọng?',
+    [{type:'choice',label:'Chọn câu lịch sự nhất:',options:['You are wrong.','I see your point.'],answer:'I see your point.'},
+     {type:'fill',label:'Điền: I see your ___.',answer:'point'},
+     {type:'free',label:'Role-play: viết một ý kiến khác nhau'}],
+    'Tôi có ít nhất một câu để bất đồng lịch sự.'),
+]},
+{id:4, cat:'SOCIAL SKILLS', title:'Bạn học cách nghe để hiểu và hỏi rõ.', titleEn:'You learn to listen for understanding and ask clearly.', lessons:[
+  L('Listening Is a Skill','Nghe để hiểu, không chỉ để chờ lượt nói.',
+    'Trong nhóm, Huy gật đầu nhưng không hiểu nhiệm vụ. Nhóm trưởng đổi cách: "Bạn hãy nói lại bằng lời của bạn nhé." Huy giải thích được và nhóm bắt đầu đúng.',
+    'Người nghe giỏi có thể kiểm tra mình đã hiểu chưa.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'listen',vn:'nghe'},{en:'understand',vn:'hiểu'},{en:'repeat',vn:'nhắc lại'}],
+    'I understand.','Mình hiểu.',
+    'Ending sound: hold the final /d/ in "understand".',
+    'Nhóm không hỏi Huy có nghe không; nhóm kiểm tra Huy có hiểu không.','Cách kiểm tra là gì?',
+    [{type:'match'},
+     {type:'fill',label:'Điền: I ___.',answer:'understand'},
+     {type:'free',label:'Tạo câu xác nhận: "Bạn muốn mình…"'}],
+    'Tôi biết cách kiểm tra hiểu bằng cách nhắc lại ý chính.'),
+  L('Ask a Better Question','Câu hỏi tốt giúp học nhanh hơn.',
+    'Thay vì "Em không hiểu", An hỏi: "Phần này liên quan gì đến bài hôm qua?" Câu hỏi cụ thể giúp giáo viên biết chính xác chỗ cần giải thích.',
+    'Một câu hỏi rõ thường bắt đầu từ việc bạn đã xác định phần mình chưa hiểu.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'what',vn:'gì'},{en:'why',vn:'tại sao'},{en:'how',vn:'như thế nào'}],
+    'How does it work?','Nó hoạt động như thế nào?',
+    'Question tune: raise your voice slightly, then come down.',
+    'An không chỉ nói em không hiểu. An nói rõ mình muốn kết nối với bài cũ.','Điều gì làm câu hỏi của An tốt hơn?',
+    [{type:'match'},
+     {type:'fill',label:'Điền: How does it ___?',answer:'work'},
+     {type:'free',label:'Viết một câu hỏi về một môn học'}],
+    'Tôi có thể biến "không hiểu" thành một câu hỏi cụ thể.'),
+]},
+{id:5, cat:'COLLABORATION', title:'Bạn học phối hợp và phản hồi hữu ích.', titleEn:'You learn to collaborate and give useful feedback.', lessons:[
+  L('Working With Others','Làm việc nhóm là phối hợp, không phải chỉ chia việc.',
+    'Nhóm bốn người chia poster. Một bạn muốn làm nhanh, một bạn muốn làm đẹp. Họ thống nhất tiêu chí trước: đúng, rõ, hoàn thành đúng giờ.',
+    'Nhóm hiệu quả bắt đầu từ mục tiêu chung và cách giao tiếp rõ.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'team',vn:'nhóm'},{en:'goal',vn:'mục tiêu'},{en:'help',vn:'giúp'}],
+    'Can you help me?','Bạn có thể giúp mình không?',
+    'Popcorn: say each word separately, then Smooth-River the whole phrase.',
+    'Nhóm thống nhất tiêu chí trước khi chia việc.','Có ba tiêu chí nào?',
+    [{type:'fill',label:'Điền: Can you ___ me?',answer:'help'},
+     {type:'match'},
+     {type:'free',label:'Viết một mục tiêu nhóm'}],
+    'Tôi có thể nói rõ mục tiêu và xin hỗ trợ.'),
+  L('Give Useful Feedback','Phản hồi tốt giúp người khác tiến bộ.',
+    'Thay vì "Bài của bạn tệ", Trang nói: "Phần mở đầu rõ. Phần ví dụ có thể cụ thể hơn." Bạn của Trang biết mình nên giữ gì và sửa gì.',
+    'Phản hồi hữu ích có hai phần: điều đang tốt + điều có thể cải thiện.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'good',vn:'tốt'},{en:'better',vn:'tốt hơn'},{en:'example',vn:'ví dụ'}],
+    'It is good. Try this.','Điều này tốt. Hãy thử cách này.',
+    'Stress GOOD and TRY.',
+    'Trang nêu một điểm mạnh trước, sau đó đưa ra gợi ý cụ thể.','Phản hồi gồm những phần nào?',
+    [{type:'sort',label:'Sắp xếp thứ tự phản hồi: suggestion / strength',answer:'strength then suggestion'},
+     {type:'free',label:'Viết một gợi ý cụ thể (Try this ___.)'},
+     {type:'choice',label:'Chọn phản hồi hữu ích hơn:',options:['"Bài của bạn tệ."','"Phần mở đầu rõ. Phần ví dụ có thể cụ thể hơn."'],answer:'"Phần mở đầu rõ. Phần ví dụ có thể cụ thể hơn."'}],
+    'Tôi có thể đưa phản hồi mà không làm người khác mất mặt.'),
+]},
+{id:6, cat:'LEADERSHIP', title:'Bạn thử lãnh đạo bằng hành động nhỏ.', titleEn:'You try leadership through small actions.', lessons:[
+  L('Lead From Where You Are','Lãnh đạo bắt đầu từ trách nhiệm nhỏ.',
+    'Không ai giao Minh Trang làm trưởng nhóm. Nhưng Minh Trang đến đúng giờ, mang tài liệu, hỏi cả nhóm cần gì và bắt đầu phần khó nhất. Những người khác tự nhiên làm theo.',
+    'Lãnh đạo không chỉ là chức danh; đó là cách bạn hành động khi chưa ai yêu cầu.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'lead',vn:'dẫn dắt'},{en:'start',vn:'bắt đầu'},{en:'ready',vn:'sẵn sàng'}],
+    "Let's start.",'Chúng ta bắt đầu nhé.',
+    'Use a clear falling tone on START.',
+    'Minh Trang không có chức danh nhưng chủ động.','Hãy kể hai hành động của Minh Trang.',
+    [{type:'fill',label:"Điền: Let's ___.",answer:'start'},
+     {type:'choice',label:'Khoanh:',options:['wait for orders','start with responsibility'],answer:'start with responsibility'},
+     {type:'free',label:'Viết một hành động chủ động'}],
+    'Tôi hiểu "leadership" có thể bắt đầu từ trách nhiệm cá nhân.'),
+  L('Mini Leadership Mission','Một nhiệm vụ nhỏ có thể cho bạn thấy cách mình lãnh đạo.',
+    'Trong 20 phút, nhóm phải tạo một kế hoạch "Góc học tập tốt hơn". Có người điều phối, người ghi, người hỏi, người trình bày. Sau cùng cả nhóm tự đánh giá cách làm việc.',
+    'Hãy thử một vai trò rồi quan sát: mình thích dẫn dắt, tổ chức, phân tích hay kết nối?',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'plan',vn:'kế hoạch'},{en:'lead',vn:'dẫn dắt'},{en:'share',vn:'chia sẻ'}],
+    "Let's make a plan.",'Chúng ta cùng lập kế hoạch nhé.',
+    'Sentence stress: PLAN and SHARE carry meaning.',
+    'Mỗi người chọn một vai trò. Không có vai trò nào quan trọng nhất.','Điều gì cần quan sát sau nhiệm vụ?',
+    [{type:'match'},
+     {type:'fill',label:'Điền: make a ___.',answer:'plan'},
+     {type:'free',label:'Chọn vai trò bạn muốn thử (lead / note / ask / present)'}],
+    'Tôi biết một vai trò nhóm mình muốn thử lại.'),
+]},
+{id:7, cat:'SUBJECT EXPLORATION', title:'Bạn nối kiến thức Toán với quyết định đời sống.', titleEn:'You connect school math to real-life decisions.', lessons:[
+  L('Math in Real Life','Toán không chỉ nằm trên giấy.',
+    'Một bạn có 300.000đ cho một tuần. Bạn ấy phải chia cho ăn, đi lại, học tập và một khoản dự phòng. Bài toán trở thành quyết định thật.',
+    'Môn học trở nên có ý nghĩa khi bạn nhìn thấy nó trong vấn đề đời sống.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'money',vn:'tiền'},{en:'cost',vn:'chi phí'},{en:'plan',vn:'kế hoạch'}],
+    'How much is it?','Cái này giá bao nhiêu?',
+    'Hold the final /t/ in "it".',
+    'Bạn phải lập kế hoạch cho 300.000đ trong một tuần.','Bạn cần những nhóm chi phí nào?',
+    [{type:'fill',label:'Điền: How much is ___?',answer:'it'},
+     {type:'match'},
+     {type:'free',label:'Lập ngân sách 4 mục: Ăn uống, Đi lại, Học tập, Dự phòng'}],
+    'Tôi tìm được ít nhất một cách Toán giúp mình ra quyết định.'),
+  L('Science Around Me','Khoa học giúp ta giải thích điều đang xảy ra.',
+    'Một chiếc điện thoại nóng lên khi dùng lâu. Bạn bắt đầu hỏi: nhiệt đến từ đâu? điều gì làm nóng nhanh hơn? làm sao giảm nhiệt?',
+    'Subject exploration bắt đầu bằng câu hỏi về thế giới thật.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'heat',vn:'nhiệt'},{en:'energy',vn:'năng lượng'},{en:'change',vn:'thay đổi'}],
+    'What happens?','Điều gì xảy ra?',
+    'Listen for /h/ in heat and keep the final /t/.',
+    'Hãy bắt đầu bằng quan sát trước khi kết luận.','Bạn sẽ quan sát điều gì?',
+    [{type:'match'},
+     {type:'fill',label:'Điền: What ___?',answer:'happens'},
+     {type:'free',label:'Viết 2 giả thuyết đơn giản'}],
+    'Tôi có thể biến một điều quen thuộc thành một câu hỏi khoa học.'),
+]},
+{id:8, cat:'SUBJECT EXPLORATION', title:'Bạn nhìn các môn học qua vấn đề thật.', titleEn:'You see school subjects through real-world problems.', lessons:[
+  L('Language & Media','Ngôn ngữ là kỹ năng; truyền thông là cách thông tin di chuyển.',
+    'Một video có thể làm người xem vui, sợ hoặc tin một điều. Bạn xem lại và hỏi: Ai tạo? Muốn người xem làm gì? Thông tin nào bị bỏ qua?',
+    'Học Ngữ văn/ngoại ngữ cũng là học cách diễn đạt, chọn từ và hiểu ý định.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'story',vn:'câu chuyện'},{en:'message',vn:'thông điệp'},{en:'viewer',vn:'người xem'}],
+    'What is the message?','Thông điệp là gì?',
+    'Stress MESSAGE. Let "the" stay small.',
+    'Đừng chỉ hỏi video nói gì. Hỏi cả vì sao nó nói như vậy.','Ai là người nhận thông điệp?',
+    [{type:'fill',label:'Điền: What is the ___?',answer:'message'},
+     {type:'match'},
+     {type:'free',label:'Chọn một video và ghi 1 mục đích'}],
+    'Tôi biết nhìn một nội dung từ góc độ người tạo và người xem.'),
+  L('Society in My Neighborhood','Xã hội học từ những nơi bạn đang sống.',
+    'Một con hẻm có người bán hàng, người đi học, người lớn tuổi và trẻ nhỏ. Nếu thay đổi cách rác được gom, ai sẽ bị ảnh hưởng? Ai cần tham gia?',
+    'Subject exploration nối kiến thức với người thật và hệ thống thật.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'people',vn:'mọi người'},{en:'place',vn:'nơi chốn'},{en:'change',vn:'thay đổi'}],
+    'People make change.','Mọi người tạo ra sự thay đổi.',
+    'Link "make_change" gently in one breath.',
+    'Một thay đổi nhỏ có thể ảnh hưởng nhiều nhóm người.','Hãy nêu hai nhóm người trong tình huống.',
+    [{type:'fill',label:'Điền: People make ___.',answer:'change'},
+     {type:'match'},
+     {type:'free',label:'Mô tả: ai bị ảnh hưởng bởi thay đổi này?'}],
+    'Tôi có thể nhìn một vấn đề qua nhiều góc nhìn.'),
+]},
+{id:9, cat:'SKILLS DISCOVERY', title:'Bạn tìm kỹ năng ẩn trong điều mình làm.', titleEn:'You discover skills hidden in what you do.', lessons:[
+  L('Spot Your Skills','Bạn đang dùng kỹ năng nào mà có thể chưa gọi tên?',
+    'Phương làm video cho câu lạc bộ. Bạn ấy nghĩ mình chỉ "chơi điện thoại". Nhưng nhìn kỹ: tìm ý tưởng, quay, chỉnh sửa, kể chuyện, làm đúng thời hạn - đó là nhiều kỹ năng.',
+    'Kỹ năng có thể ẩn trong việc bạn thích hoặc làm thường xuyên.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'skill',vn:'kỹ năng'},{en:'create',vn:'tạo'},{en:'solve',vn:'giải quyết'}],
+    'I can solve it.','Mình có thể giải quyết việc này.',
+    'Stress SOLVE. Keep the final word "it" clear.',
+    'Một hoạt động có thể chứa nhiều kỹ năng.','Hãy tìm ba kỹ năng trong việc làm video.',
+    [{type:'match'},
+     {type:'fill',label:'Điền: I can ___ it.',answer:'solve'},
+     {type:'free',label:'Liệt kê 3 việc bạn làm được'}],
+    'Tôi gọi tên được ít nhất ba kỹ năng mình đang dùng.'),
+  L('Practice Makes a Skill','Giỏi hơn không phải vì "có năng khiếu" mà vì có vòng lặp luyện tập tốt.',
+    'Một bạn muốn thuyết trình tốt. Bạn ấy không chỉ "nói nhiều hơn". Bạn ấy luyện 30 giây, nghe lại, sửa một điểm, rồi nói lại.',
+    'Vòng lặp: làm → nhận tín hiệu → sửa một điểm → làm lại.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'practice',vn:'luyện tập'},{en:'listen',vn:'nghe'},{en:'improve',vn:'cải thiện'}],
+    'I want to improve.','Mình muốn cải thiện.',
+    'Schwa game: "to" becomes soft in connected speech.',
+    'Mỗi vòng chỉ sửa một điểm để không quá tải.','Bước nào đến sau khi nghe lại?',
+    [{type:'sort',label:'Sắp xếp 4 bước: listen / redo / do / fix',answer:'do, listen, fix, redo'},
+     {type:'fill',label:'Điền: I want to ___.',answer:'improve'},
+     {type:'free',label:'Chọn 1 kỹ năng và một vòng luyện 10 phút'}],
+    'Tôi có một cách luyện tập nhỏ và có thể lặp lại.'),
+]},
+{id:10, cat:'SKILLS DISCOVERY', title:'Bạn dùng bằng chứng để hiểu điểm mạnh.', titleEn:'You use evidence to understand your strengths.', lessons:[
+  L('Strengths Are Evidence','Điểm mạnh không phải lời khen; nó cần bằng chứng.',
+    'Hằng nói "Em sáng tạo". Cô được hỏi: "Ví dụ?" Hằng kể ba lần cô tự nghĩ cách giải quyết khác với cách quen thuộc.',
+    'Hãy tìm bằng chứng: việc bạn làm, kết quả, và cách bạn làm.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'strength',vn:'điểm mạnh'},{en:'evidence',vn:'bằng chứng'},{en:'result',vn:'kết quả'}],
+    'I have evidence.','Mình có bằng chứng.',
+    'Keep the final /s/ clear in "evidence".',
+    'Một điểm mạnh đáng tin hơn khi bạn có ví dụ.','Bằng chứng của Hằng là gì?',
+    [{type:'match'},
+     {type:'fill',label:'Điền: I have ___.',answer:'evidence'},
+     {type:'free',label:'Viết 1 điểm mạnh + 1 bằng chứng'}],
+    'Tôi có thể nói một điểm mạnh kèm bằng chứng.'),
+  L('Problem Solver or People Builder?','Bạn thường thích giải vấn đề, làm sản phẩm, hay giúp người khác tiến bộ?',
+    'Trong cùng một dự án, có người thích tìm lỗi, có người thích thiết kế, có người thích nói chuyện với khách hàng. Không ai "tốt hơn"; sở thích kỹ năng khác nhau.',
+    'Career exploration bắt đầu bằng kiểu đóng góp bạn thích.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'problem',vn:'vấn đề'},{en:'people',vn:'mọi người'},{en:'build',vn:'xây dựng'}],
+    'I like helping people.','Mình thích giúp đỡ mọi người.',
+    'Stress HELPING and PEOPLE.',
+    'Không phải chỉ có một cách để làm tốt một dự án.','Có những kiểu đóng góp nào?',
+    [{type:'choice',label:'Bạn thích kiểu nào nhất?',options:['problem','people','build','cả ba đều được'],answer:'cả ba đều được',hint:'Không có đáp án sai — chọn điều đúng với bạn.'},
+     {type:'fill',label:'Điền: I like ___ people.',answer:'helping'},
+     {type:'free',label:'Đánh dấu kiểu bạn muốn thử'}],
+    'Tôi có thể chọn một kiểu đóng góp mình muốn thử.'),
+]},
+{id:11, cat:'CAREER EXPLORATION', title:'Bạn khám phá nhiều vai trò trước khi chọn nghề.', titleEn:'You explore roles before choosing a career direction.', lessons:[
+  L('Career Clusters','Đừng bắt đầu bằng "nghề gì hot?" - bắt đầu bằng loại vấn đề bạn muốn làm.',
+    'Một người thích bệnh viện có thể làm bác sĩ, điều dưỡng, thiết kế thiết bị, dữ liệu, vận hành, truyền thông. Một môi trường có nhiều nghề.',
+    'Career cluster giúp bạn nhìn rộng trước khi chọn một nghề cụ thể.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'career',vn:'nghề nghiệp'},{en:'work',vn:'công việc'},{en:'future',vn:'tương lai'}],
+    'What do you want to do?','Bạn muốn làm gì?',
+    'Listen for WANT and DO.',
+    'Cùng một lĩnh vực có nhiều vai trò.','Vì sao không nên chọn nghề chỉ vì tên nghề?',
+    [{type:'fill',label:'Điền: What do you want to ___?',answer:'do'},
+     {type:'match'},
+     {type:'free',label:'Chọn 1 lĩnh vực và viết 3 vai trò'}],
+    'Tôi nhìn thấy nhiều vai trò trong cùng một lĩnh vực.'),
+  L('Role Scenario: A Day at Work','Hãy thử một nghề bằng tình huống trước khi yêu nó.',
+    'Bạn đóng vai "coordinator" cho một sự kiện học sinh. Sáng: nhận thông tin. Trưa: giải quyết thay đổi. Chiều: báo cáo kết quả. Sau đó bạn tự hỏi: phần nào làm mình có năng lượng?',
+    'Role-play giúp biến nghề từ "tên gọi" thành trải nghiệm về nhiệm vụ.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'day',vn:'ngày'},{en:'work',vn:'công việc'},{en:'solve',vn:'giải quyết'}],
+    "Let's solve the problem.",'Chúng ta cùng giải quyết vấn đề nhé.',
+    'Automatic application: use the phrase without translating word-by-word.',
+    'Sau role-play, điều quan trọng là phản hồi về cảm giác và kỹ năng, không phải chấm đúng-sai.','Phần nào cho bạn nhiều năng lượng?',
+    [{type:'match'},
+     {type:'fill',label:"Điền: Let's solve the ___.",answer:'problem'},
+     {type:'free',label:'Bạn thích phần nào: people / ideas / systems / making?'}],
+    'Tôi biết phần nào trong một vai trò làm mình có năng lượng hơn.'),
+]},
+{id:12, cat:'UNIVERSITY READINESS', title:'Bạn biến "tương lai" thành các bước có lý do.', titleEn:'You turn the future into reasoned next steps.', lessons:[
+  L('University Course Fit','Chọn ngành không chỉ vì tên ngành - hãy xem mình sẽ học gì và làm gì.',
+    'Một bạn thích công nghệ nhưng không biết thích code, thiết kế, kinh doanh hay an toàn hệ thống. Bạn ấy xem từng chương trình học như một "bản đồ kỹ năng".',
+    'Đọc ngành bằng câu hỏi: môn gì? kỹ năng gì? dự án gì? công việc nào? môi trường nào?',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'course',vn:'ngành học'},{en:'study',vn:'học tập'},{en:'fit',vn:'phù hợp'}],
+    'Is it a good fit?','Điều này có phù hợp không?',
+    'Stress GOOD and FIT.',
+    'Một ngành phù hợp là ngành kết nối được hứng thú, kỹ năng và cách học.','Có những thành phần nào cần xem?',
+    [{type:'fill',label:'Điền: Is it a good ___?',answer:'fit'},
+     {type:'match'},
+     {type:'free',label:'Viết 4 câu hỏi khi xem một ngành'}],
+    'Tôi có bộ câu hỏi để so sánh ngành học thay vì chọn cảm tính.'),
+  L('My Future Compass','Bạn chưa cần biết chính xác. Bạn cần biết bước tiếp theo.',
+    'Ở trang cuối, bạn không phải viết "Nghề của tôi là…". Bạn viết: "Điều mình muốn khám phá thêm là…; kỹ năng mình muốn thử là…; một ngành mình muốn tìm hiểu là…".',
+    'La bàn tốt không nói trước toàn bộ hành trình. Nó giúp bạn đi bước tiếp theo có ý thức.',
+    ['Điều gì xảy ra?','Nhân vật cảm thấy thế nào?','Bạn có thể làm gì tiếp theo?'],
+    [{en:'future',vn:'tương lai'},{en:'choice',vn:'lựa chọn'},{en:'next',vn:'tiếp theo'}],
+    'My next step is…','Bước tiếp theo của mình là…',
+    'My Story: use your own words. English grows with your confidence.',
+    'Bạn chưa cần có câu trả lời cuối cùng. Bạn cần một bước tiếp theo có lý do.','Bước tiếp theo của bạn là gì?',
+    [{type:'fill',label:'Điền: My next ___ is…',answer:'step'},
+     {type:'match'},
+     {type:'free',label:'Viết 3 bước khám phá tiếp theo'}],
+    'Tôi có một bước tiếp theo cụ thể và biết vì sao mình chọn nó.'),
+]},
+];
+
+const TOTAL_LESSONS = UNITS.reduce((n,u)=>n+u.lessons.length,0);
+
+const CAPSTONE_CHECKS = [
+  {en:'I can pause', vn:'Tôi có thể dừng lại', color:'#2f9c8f'},
+  {en:'I can listen', vn:'Tôi có thể lắng nghe', color:'#5b7fd6'},
+  {en:'I can explore', vn:'Tôi có thể khám phá', color:'#8a5cc4'},
+  {en:'I can name skills', vn:'Tôi có thể gọi tên kỹ năng', color:'#2f9c8f'},
+  {en:'I can choose a next step', vn:'Tôi có thể chọn bước tiếp theo', color:'#e2703a'},
+];
+const SPEECH_PROMPTS = [
+  {q:'WHO AM I?', starter:'My name is ___. I am ___.', vn:'Tên + điều bạn muốn người khác biết'},
+  {q:'WHAT MATTERS TO ME?', starter:'I care about ___.', vn:'Một giá trị / vấn đề / điều bạn quan tâm'},
+  {q:'WHAT CAN I DO?', starter:'I can ___.', vn:'Một kỹ năng + bằng chứng'},
+  {q:'WHAT DO I WANT TO EXPLORE?', starter:'I want to explore ___.', vn:'Một lĩnh vực / môn / vai trò'},
+  {q:'WHAT IS MY NEXT STEP?', starter:'My next step is ___.', vn:'Một hành động cụ thể'},
+];
+const INTERVIEW_QS = [
+  {en:'What do you enjoy?', vn:'Bạn thích làm gì?'},
+  {en:'What are you good at?', vn:'Bạn làm tốt việc gì?'},
+  {en:'What problem do you care about?', vn:'Bạn quan tâm vấn đề nào?'},
+  {en:'What do you want to explore?', vn:'Bạn muốn khám phá gì?'},
+  {en:'What is your next step?', vn:'Bước tiếp theo của bạn là gì?'},
+];
+
+/* ============================= STATE / STORAGE ============================= */
+const STORE_KEY = 'mycompass_progress_v1';
+function loadStore(){
+  try{ return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveStore(s){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(s)); }catch(e){}
+}
+let store = loadStore();
+function setVal(id,val){ store[id]=val; saveStore(store); }
+function getVal(id,def){ return store[id]!==undefined?store[id]:def; }
+
+function lessonId(u,l){ return 'u'+u+'l'+l; }
+function completedCount(){
+  let n=0;
+  UNITS.forEach(u=>u.lessons.forEach((_,li)=>{ if(getVal(lessonId(u.id,li)+'_stars',0)>0) n++; }));
+  return n;
+}
+function updateProgressUI(){
+  const n = completedCount();
+  document.getElementById('progressLabel').textContent = n+'/'+TOTAL_LESSONS+' tự ghi nhận luyện tập';
+  document.getElementById('progressBar').style.width = Math.round(n/TOTAL_LESSONS*100)+'%';
+}
+
+/* ============================= AUDIO: NATURAL ENGLISH VOICE ============================= */
+// English listening is intentionally English-only. We prefer pre-generated natural audio
+// when deployed, then the best neural/natural device voice available in the browser.
+const AUDIO_PREF_KEY = 'mycompass_audio_pref_v2';
+let _voicesReadyPromise = null;
+let _audioPrefs = (()=>{
+  try { return JSON.parse(localStorage.getItem(AUDIO_PREF_KEY)) || {}; } catch(e) { return {}; }
+})();
+function saveAudioPrefs(){ try{ localStorage.setItem(AUDIO_PREF_KEY, JSON.stringify(_audioPrefs)); }catch(e){} }
+function loadVoices(){
+  if(_voicesReadyPromise) return _voicesReadyPromise;
+  _voicesReadyPromise = new Promise(resolve=>{
+    if(!('speechSynthesis' in window)){ resolve([]); return; }
+    const existing = window.speechSynthesis.getVoices();
+    if(existing && existing.length){ resolve(existing); return; }
+    let done = false;
+    const finish = ()=>{ if(done) return; done = true; resolve(window.speechSynthesis.getVoices()); };
+    window.speechSynthesis.onvoiceschanged = finish;
+    setTimeout(finish, 1000);
+  });
+  return _voicesReadyPromise;
+}
+loadVoices();
+const VOICE_RANK = [/natural/i, /neural/i, /online/i, /wavenet/i, /premium/i, /enhanced/i, /studio/i,
+  /google us english/i, /microsoft.*(aria|jenny|guy|ava|emma)/i, /samantha/i, /matthew/i, /zira/i];
+function englishVoices(voices){
+  return voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith('en'))
+    .sort((a,b)=>{
+      const score=v=>VOICE_RANK.reduce((best,re,i)=>re.test(v.name)?Math.max(best,VOICE_RANK.length-i):best,0)+(v.localService?0:.25);
+      return score(b)-score(a) || a.name.localeCompare(b.name);
+    });
+}
+async function bestVoice(lang){
+  const voices = await loadVoices();
+  const candidates = voices.filter(v=>v.lang && v.lang.toLowerCase().startsWith((lang||'en').slice(0,2).toLowerCase()));
+  const selected = _audioPrefs.voiceURI;
+  if(selected){
+    const exact = candidates.find(v=>v.voiceURI===selected || v.name===selected);
+    if(exact) return exact;
+  }
+  let best=null, bestScore=-1;
+  candidates.forEach(v=>{
+    let score=0;
+    VOICE_RANK.forEach((re,i)=>{ if(re.test(v.name)) score=Math.max(score,VOICE_RANK.length-i); });
+    if(v.lang.toLowerCase()===(lang||'en-US').toLowerCase()) score+=.5;
+    if(score>bestScore){ bestScore=score; best=v; }
+  });
+  return best || candidates[0] || null;
+}
+function voiceMode(){ return _audioPrefs.mode === 'practice' ? 'practice' : 'conversation'; }
+function voiceRate(){ return voiceMode()==='practice' ? 0.82 : 0.98; }
+function voicePitch(){ return voiceMode()==='practice' ? 1.0 : 1.0; }
+
+/* ---------- Optional pre-generated studio/natural audio ---------- */
+let _audioManifest = null;
+let _audioManifestPromise = fetch('./audio/manifest.json').then(r=>r.ok?r.json():{}).catch(()=>({}));
+_audioManifestPromise.then(m=>{ _audioManifest=m||{}; updateVoiceStatus(); });
+let _sharedAudioEl = null;
+function playPreGenerated(text){
+  if(!_audioManifest) return false;
+  const file = _audioManifest[text];
+  if(!file) return false;
+  if(!_sharedAudioEl) _sharedAudioEl = new Audio();
+  _sharedAudioEl.pause();
+  _sharedAudioEl.src = './audio/' + file;
+  _sharedAudioEl.currentTime = 0;
+  _sharedAudioEl.playbackRate = voiceMode()==='practice' ? .86 : 1;
+  _sharedAudioEl.play().catch(()=>{});
+  return true;
+}
+
+async function speak(text, lang){
+  lang = lang || 'en-US';
+  if(lang.startsWith('en')){
+    if(_audioManifest===null) await _audioManifestPromise;
+    if(playPreGenerated(text)) return;
+  }
+  try{
+    if(!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = lang;
+    u.rate = voiceRate();
+    u.pitch = voicePitch();
+    const v = await bestVoice(lang);
+    if(v) u.voice=v;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+async function updateVoiceStatus(){
+  const status=document.getElementById('voiceStatus');
+  if(!status) return;
+  const studio = _audioManifest && Object.keys(_audioManifest).length>0;
+  if(studio){ status.textContent = voiceMode()==='practice' ? 'Studio · practice' : 'Studio audio'; return; }
+  const v=await bestVoice('en-US');
+  status.textContent = v ? (voiceMode()==='practice' ? 'Slow · '+v.name : v.name) : 'Browser voice';
+}
+async function initVoiceControls(){
+  const mode=document.getElementById('voiceMode');
+  const picker=document.getElementById('voicePicker');
+  if(!mode || !picker) return;
+  mode.value=voiceMode();
+  const voices=englishVoices(await loadVoices());
+  voices.slice(0,18).forEach(v=>{
+    const opt=document.createElement('option');
+    opt.value=v.voiceURI || v.name;
+    opt.textContent=v.name+' · '+v.lang;
+    picker.appendChild(opt);
+  });
+  if(_audioPrefs.voiceURI && [...picker.options].some(o=>o.value===_audioPrefs.voiceURI)) picker.value=_audioPrefs.voiceURI;
+  mode.onchange=()=>{ _audioPrefs.mode=mode.value; saveAudioPrefs(); updateVoiceStatus(); };
+  picker.onchange=()=>{ _audioPrefs.voiceURI=picker.value; saveAudioPrefs(); updateVoiceStatus(); };
+  await updateVoiceStatus();
+}
+initVoiceControls();
+
+
+/* ============================= AUDIO: RECORDING ============================= */
+let activeRecorder=null, activeChunks=[], activeStream=null;
+async function toggleRecord(btnEl, audioEl){
+  if(btnEl.classList.contains('recording')){
+    if(activeRecorder && activeRecorder.state!=='inactive') activeRecorder.stop();
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('Trình duyệt này không hỗ trợ ghi âm.'); return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    activeStream = stream;
+    activeChunks = [];
+    const rec = new MediaRecorder(stream);
+    activeRecorder = rec;
+    rec.ondataavailable = e=>{ if(e.data.size>0) activeChunks.push(e.data); };
+    rec.onstop = ()=>{
+      const blob = new Blob(activeChunks, {type:'audio/webm'});
+      const url = URL.createObjectURL(blob);
+      audioEl.src = url;
+      audioEl.classList.add('show');
+      btnEl.classList.remove('recording');
+      btnEl.textContent = '🎙 Ghi lại';
+      stream.getTracks().forEach(t=>t.stop());
+    };
+    rec.start();
+    btnEl.classList.add('recording');
+    btnEl.textContent = '⏹ Dừng';
+  }catch(err){
+    alert('Không thể truy cập micro. Hãy cho phép quyền micro trong trình duyệt.');
+  }
+}
+
+/* ============================= ROUTER ============================= */
+function go(route){ location.hash = route; }
+window.addEventListener('hashchange', render);
+document.getElementById('brandBtn').onclick = ()=>go('home');
+
+/* mobile nav toggle */
+const sidenav = document.getElementById('sidenav');
+const backdrop = document.getElementById('backdrop');
+document.getElementById('menuBtn').onclick = ()=>{ sidenav.classList.add('open'); backdrop.classList.add('open'); };
+backdrop.onclick = ()=>{ sidenav.classList.remove('open'); backdrop.classList.remove('open'); };
+
+/* ============================= RENDER: SIDENAV ============================= */
+function renderSidenav(){
+  const route = location.hash.replace('#','') || 'home';
+  let html = '';
+  STAGES.forEach(stage=>{
+    html += `<div class="stage-group"><div class="stage-tag" style="color:${stage.color}">${stage.name}</div>`;
+    stage.units.forEach(uid=>{
+      const u = UNITS.find(x=>x.id===uid);
+      const active = route.startsWith('u'+uid+'l');
+      const dots = u.lessons.map((_,li)=> getVal(lessonId(uid,li)+'_stars',0)>0 ? '<span class="dot done"></span>' : '<span class="dot"></span>').join('');
+      html += `<button class="unit-btn ${active?'active':''}" data-go="u${uid}l0">
+        <span class="unit-num" style="background:${active?'var(--coral)':stage.color}">${uid}</span>
+        <span class="unit-title">${u.lessons[0].title.split(':')[0]} <small>Unit ${uid}</small></span>
+        <span class="dot-row">${dots}</span>
+      </button>`;
+    });
+    html += `</div>`;
+  });
+  html += `<button class="capstone-btn" data-go="capstone">🧭 Capstone — My Story + Next Step</button>`;
+  sidenav.innerHTML = html;
+  sidenav.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=>{ go(b.dataset.go); sidenav.classList.remove('open'); backdrop.classList.remove('open'); });
+}
+
+/* ============================= RENDER: HOME ============================= */
+function renderHome(){
+  const c = document.getElementById('content');
+  let stageRows = STAGES.map(stage=>{
+    const chips = stage.units.map(uid=>`<span>Unit ${uid}</span>`).join('');
+    const first = UNITS.find(u=>u.id===stage.units[0]);
+    return `<div class="roadmap-row" data-go="u${stage.units[0]}l0">
+      <div class="roadmap-badge" style="background:${stage.color}">${stage.units[0]}</div>
+      <div class="roadmap-body">
+        <h3>${stage.name}</h3>
+        <p>${first.title}</p>
+        <div class="roadmap-units">${chips}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="hero">
+      <svg class="compass-mark" width="220" height="220" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" stroke="#d9a441" stroke-width="1.5"/><path d="M20 6 L23 20 L20 34 L17 20 Z" fill="#d9a441"/><path d="M6 20 L20 17 L34 20 L20 23 Z" fill="#e2703a"/></svg>
+      <h1>MY COMPASS</h1>
+      <p class="tagline">Tiếng Anh + Kỹ năng sống + Khám phá nghề nghiệp — 12 units, 24 bài học, song ngữ Việt–Anh cho tuổi 13–18.</p>
+      <p class="quote">"Bạn không cần toàn bộ câu trả lời. Bạn cần một hướng đi — và bước tiếp theo."</p>
+      <button class="cta" data-go="u1l0">Bắt đầu Unit 1 →</button>
+    </div>
+
+    <div class="howworks">
+      <div class="section-label">Cách dùng sách</div>
+      <p style="margin:0;color:var(--muted);font-size:.9rem">Mỗi bài học có 3 bước: nhận biết tình huống, luyện nghe–nói có chủ đích, rồi dùng tự nhiên trong bối cảnh mới.</p>
+      <div class="steps">
+        <div class="step"><b>01 · Nhận biết</b><span>Đọc câu chuyện và hiểu tình huống trước.</span></div>
+        <div class="step"><b>02 · Luyện có chủ đích</b><span>Nghe · Nói · Kết nối — với từ vựng và câu mẫu.</span></div>
+        <div class="step"><b>03 · Dùng tự nhiên</b><span>Áp dụng vào tình huống mới của riêng bạn.</span></div>
+      </div>
+    </div>
+
+    <div class="section-label">Hành trình 12 unit</div>
+    <div class="roadmap">${stageRows}</div>
+  `;
+  c.querySelectorAll('[data-go]').forEach(b=> b.onclick = ()=> go(b.dataset.go));
+}
+
+/* ============================= RENDER: LESSON ============================= */
+function exId(u,l,i){ return lessonId(u,l)+'_ex'+i; }
+
+function renderExercise(ex, u, l, i, vocab){
+  const id = exId(u,l,i);
+  if(ex.type==='free'){
+    const saved = getVal(id,'');
+    return `<div class="ex-item">
+      <div class="ex-label">${ex.label}${ex.hint?`<div class="ex-hint">${ex.hint}</div>`:''}</div>
+      <textarea class="ex-textarea" data-store="${id}">${saved}</textarea>
+    </div>`;
+  }
+  if(ex.type==='choice'){
+    const opts = ex.options.map(o=>`<button class="choice-btn" data-answer="${o.replace(/"/g,'&quot;')}" data-correct="${ex.answer.replace(/"/g,'&quot;')}">${o}</button>`).join('');
+    return `<div class="ex-item">
+      <div class="ex-label">${ex.label}${ex.hint?`<div class="ex-hint">${ex.hint}</div>`:''}</div>
+      <div class="choice-row" data-choice-group>${opts}</div>
+    </div>`;
+  }
+  if(ex.type==='sort'){
+    return `<div class="ex-item">
+      <div class="ex-label">${ex.label}</div>
+      <input class="ex-input" placeholder="Viết câu đúng thứ tự…" data-fillcheck data-answer="${ex.answer.replace(/"/g,'&quot;')}">
+      <button class="ex-check">Kiểm tra</button>
+      <div class="ex-result"></div>
+    </div>`;
+  }
+  if(ex.type==='match'){
+    // auto mini-match built from this lesson's vocab
+    const shuffled = [...vocab].sort(()=>Math.random()-0.5);
+    const btns = shuffled.map(v=>`<button class="match-btn" data-en="${v.en}" data-vn="${v.vn}">${v.vn}</button>`).join('');
+    const ens = vocab.map(v=>`<span style="font-weight:700;margin-right:14px">${v.en}</span>`).join('');
+    return `<div class="ex-item">
+      <div class="ex-label">Ghép từ với nghĩa: nhấn từ tiếng Anh, rồi chọn nghĩa đúng</div>
+      <div style="margin-bottom:8px">${ens}</div>
+      <div class="match-grid">${btns}</div>
+      <div class="ex-hint">Nhấn lần lượt các nghĩa theo đúng thứ tự từ ở trên để kiểm tra.</div>
+    </div>`;
+  }
+  // fill
+  return `<div class="ex-item">
+    <div class="ex-label">${ex.label}${ex.hint?`<div class="ex-hint">${ex.hint}</div>`:''}</div>
+    <input class="ex-input" placeholder="Viết câu trả lời…" data-fillcheck data-answer="${(ex.answer||'').replace(/"/g,'&quot;')}">
+    <button class="ex-check">Kiểm tra</button>
+    <div class="ex-result"></div>
+  </div>`;
+}
+
+function wireExercises(container){
+  container.querySelectorAll('textarea[data-store]').forEach(t=>{
+    t.addEventListener('input', ()=> setVal(t.dataset.store, t.value));
+  });
+  container.querySelectorAll('.choice-row').forEach(row=>{
+    row.querySelectorAll('.choice-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const correct = btn.dataset.correct;
+        row.querySelectorAll('.choice-btn').forEach(b=>{
+          b.classList.remove('ok','no');
+          if(b.dataset.answer===correct) b.classList.add(b===btn||correct===b.dataset.answer?'ok':'');
+        });
+        if(btn.dataset.answer===correct){ btn.classList.add('ok'); }
+        else { btn.classList.add('no'); row.querySelector(`[data-answer="${correct.replace(/"/g,'&quot;')}"]`)?.classList.add('ok'); }
+      });
+    });
+  });
+  container.querySelectorAll('.ex-item').forEach(item=>{
+    const input = item.querySelector('[data-fillcheck]');
+    const btn = item.querySelector('.ex-check');
+    if(!input||!btn) return;
+    btn.addEventListener('click', ()=>{
+      const res = item.querySelector('.ex-result');
+      const val = input.value.trim().toLowerCase();
+      const ans = (input.dataset.answer||'').toLowerCase();
+      if(!ans){ res.textContent='Đã ghi lại câu trả lời.'; res.className='ex-result ok'; return; }
+      if(val === ans || val.includes(ans)){
+        res.textContent = '✓ Chính xác!'; res.className='ex-result ok';
+      }else{
+        res.textContent = 'Gần đúng rồi — đáp án gợi ý: "'+input.dataset.answer+'"'; res.className='ex-result no';
+      }
+    });
+  });
+  container.querySelectorAll('.match-grid').forEach(grid=>{
+    const ensWrap = grid.previousElementSibling;
+    let order = [];
+    ensWrap && Array.from(ensWrap.children).forEach(s=>{});
+    let idx = 0;
+    const ensList = Array.from(grid.closest('.ex-item').querySelectorAll('div[style*="margin-bottom"] span'));
+    grid.querySelectorAll('.match-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        if(btn.classList.contains('matched')) return;
+        if(idx>=ensList.length) return;
+        const target = ensList[idx];
+        const targetEn = target.textContent.trim();
+        const vocabItem = ensList; // placeholder
+        if(btn.dataset.en===targetEn){
+          btn.classList.add('matched');
+          target.style.color = 'var(--teal-deep)';
+          idx++;
+        }else{
+          btn.style.background='#fdeeea'; btn.style.borderColor='var(--coral)';
+          setTimeout(()=>{ btn.style.background=''; btn.style.borderColor=''; },500);
+        }
+      });
+    });
+  });
+}
+
+function renderLesson(u, li){
+  const unit = UNITS.find(x=>x.id===u);
+  const lesson = unit.lessons[li];
+  const id = lessonId(u, li);
+  const c = document.getElementById('content');
+  const vocabHtml = lesson.vocab.map((v,vi)=>`
+    <div class="vocab-chip">
+      <div class="en">${v.en}</div>
+      <div class="vn">${v.vn}</div>
+      <div class="icon-row">
+        <button class="icon-btn speak" data-speak="${v.en.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe</button>
+        <button class="icon-btn rec" data-rec-target="vaud_${id}_${vi}">🎙 Ghi lại</button>
+      </div>
+      <audio class="playback" id="vaud_${id}_${vi}" controls></audio>
+    </div>`).join('');
+
+  const thinkHtml = lesson.think.map((q,ti)=>{
+    const saved = getVal(id+'_think'+ti,'');
+    return `<div class="think-q"><label>${q}</label><textarea data-store="${id}_think${ti}">${saved}</textarea></div>`;
+  }).join('');
+
+  const exHtml = lesson.tryit.map((ex,i)=>renderExercise(ex,u,li,i,lesson.vocab)).join('');
+
+  const savedStars = getVal(id+'_stars',0);
+  const starsHtml = [1,2,3,4,5].map(n=>`<button class="star-btn ${n<=savedStars?'on':''}" data-star="${n}">★</button>`).join('');
+
+  const listenSaved = getVal(id+'_listenAns','');
+
+  // prev/next
+  const flat = [];
+  UNITS.forEach(uu=>uu.lessons.forEach((_,ll)=>flat.push({u:uu.id,l:ll})));
+  const curIdx = flat.findIndex(f=>f.u===u && f.l===li);
+  const prev = curIdx>0?flat[curIdx-1]:null;
+  const next = curIdx<flat.length-1?flat[curIdx+1]:null;
+
+  c.innerHTML = `
+    <div class="crumb"><b>Unit ${u}</b> · ${unit.cat} · Lesson ${li+1}/${unit.lessons.length}</div>
+    <div class="lesson-head">
+      <h2>${lesson.title}</h2>
+      <p>${lesson.subtitle}</p>
+    </div>
+
+    <div class="story-card">
+      <h4>A · STORY / CÂU CHUYỆN</h4>
+      <p class="story-text">${lesson.story}</p>
+      <div class="key-idea">💡 ${lesson.key}</div>
+      <div class="think-box">
+        <h5>THINK / NGHĨ</h5>
+        ${thinkHtml}
+      </div>
+    </div>
+
+    <div class="lab-panel">
+      <h4>B · BILINGUAL ENGLISH LAB / THỰC HÀNH TIẾNG ANH</h4>
+      <div class="vocab-row">${vocabHtml}</div>
+
+      <div class="phrase-block">
+        <div class="label">USEFUL PHRASE / CÂU MẪU</div>
+        <div class="en">"${lesson.phraseEn}"</div>
+        <div class="vn">${lesson.phraseVn}</div>
+        <div class="icon-row">
+          <button class="icon-btn speak" data-speak="${lesson.phraseEn.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe mẫu</button>
+          <button class="icon-btn rec" data-rec-target="paud_${id}">🎙 Ghi âm của bạn</button>
+        </div>
+        <audio class="playback" id="paud_${id}" controls></audio>
+        <div class="mini-tip"><b>Mastery English —</b> ${lesson.tip}</div>
+      </div>
+
+      <div class="listen-block">
+        <div class="label">LISTEN &amp; UNDERSTAND / NGHE HIỂU</div>
+        <p class="vn-audio-text">"${lesson.listenVn}"</p>
+        <div class="q">${lesson.listenQ}</div>
+        <textarea data-store="${id}_listenAns" placeholder="Viết câu trả lời của bạn…">${listenSaved}</textarea>
+      </div>
+    </div>
+
+    <div class="tryit-card">
+      <h4>F · TRY IT / THỬ NGAY</h4>
+      ${exHtml}
+    </div>
+
+    <div class="selfcheck">
+      <div class="label">G · SELF-CHECK / TỰ KIỂM TRA</div>
+      <p>${lesson.check}</p>
+      <p>Tự ghi nhận luyện tập trên thiết bị này / Self-reported practice on this device. Chưa xác nhận thành thạo / Not verified mastery.</p>
+      <div class="stars">${starsHtml}</div>
+    </div>
+
+    <div class="lesson-nav">
+      <button class="nav-btn" id="prevBtn" ${prev?'':'disabled'}>← Bài trước</button>
+      <button class="nav-btn primary" id="nextBtn">${next?'Bài tiếp theo →':'Về trang chủ →'}</button>
+    </div>
+  `;
+
+  // wire speak buttons
+  c.querySelectorAll('[data-speak]').forEach(b=> b.onclick = ()=> speak(b.dataset.speak, b.dataset.lang));
+  // wire record buttons
+  c.querySelectorAll('[data-rec-target]').forEach(b=>{
+    const audioEl = document.getElementById(b.dataset.recTarget);
+    b.onclick = ()=> toggleRecord(b, audioEl);
+  });
+  // wire textareas for think/listen
+  c.querySelectorAll('textarea[data-store]').forEach(t=> t.addEventListener('input', ()=> setVal(t.dataset.store, t.value)));
+  // wire exercises
+  wireExercises(c);
+  // wire stars
+  c.querySelectorAll('.star-btn').forEach(sb=>{
+    sb.onclick = ()=>{
+      const n = parseInt(sb.dataset.star,10);
+      setVal(id+'_stars', n);
+      renderLesson(u, li);
+      updateProgressUI();
+      renderSidenav();
+    };
+  });
+  // nav
+  document.getElementById('prevBtn').onclick = ()=>{ if(prev) go('u'+prev.u+'l'+prev.l); };
+  document.getElementById('nextBtn').onclick = ()=>{ if(next) go('u'+next.u+'l'+next.l); else go('capstone'); };
+
+  window.scrollTo(0,0);
+  c.closest('main').scrollTop = 0;
+}
+
+/* ============================= RENDER: CAPSTONE ============================= */
+function renderCapstone(){
+  const c = document.getElementById('content');
+  const checksHtml = CAPSTONE_CHECKS.map((ck,i)=>{
+    const saved = getVal('cap_check'+i,'');
+    return `<div class="check-row" style="background:${ck.color}">
+      <div style="flex:1">
+        <div class="en">${ck.en}</div>
+        <div class="vn">${ck.vn}</div>
+        <input placeholder="Ví dụ của tôi / My example" data-store="cap_check${i}" value="${saved.replace(/"/g,'&quot;')}">
+      </div>
+    </div>`;
+  }).join('');
+
+  const speechHtml = SPEECH_PROMPTS.map((p,i)=>{
+    const saved = getVal('cap_speech'+i,'');
+    return `<div class="prompt-item">
+      <div class="en">${p.q}</div>
+      <div class="vn">${p.starter} — ${p.vn}</div>
+      <textarea class="ex-textarea" data-store="cap_speech${i}">${saved}</textarea>
+      <div class="icon-row" style="margin-top:8px">
+        <button class="icon-btn speak" style="background:var(--teal);color:#fff" data-speak="${p.starter.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe mẫu câu</button>
+        <button class="icon-btn rec" style="background:var(--coral);color:#fff" data-rec-target="sp_${i}">🎙 Ghi âm bài nói</button>
+      </div>
+      <audio class="playback" id="sp_${i}" controls></audio>
+    </div>`;
+  }).join('');
+
+  const interviewHtml = INTERVIEW_QS.map((q,i)=>{
+    const saved = getVal('cap_iv'+i,'');
+    return `<div class="prompt-item">
+      <div class="en">${q.en}</div>
+      <div class="vn">${q.vn}</div>
+      <div class="icon-row" style="margin:8px 0">
+        <button class="icon-btn speak" style="background:var(--teal);color:#fff" data-speak="${q.en.replace(/"/g,'&quot;')}" data-lang="en-US">🔊 Nghe câu hỏi</button>
+        <button class="icon-btn rec" style="background:var(--coral);color:#fff" data-rec-target="iv_${i}">🎙 Ghi câu trả lời</button>
+      </div>
+      <audio class="playback" id="iv_${i}" controls></audio>
+      <textarea class="ex-textarea" placeholder="Ghi lại ý chính bạn nghe được (listener note)…" data-store="cap_iv${i}">${saved}</textarea>
+    </div>`;
+  }).join('');
+
+  c.innerHTML = `
+    <div class="crumb"><b>Unit 12</b> · CAPSTONE</div>
+    <div class="lesson-head"><h2>Final Integration</h2><p>MY STORY + MY NEXT STEP — không phải bài kiểm tra sự hoàn hảo, mà là bằng chứng bạn có thể giao tiếp, phản tư và chọn điều để khám phá tiếp theo.</p></div>
+
+    <div class="capstone-block">
+      <h4>I can… / Tôi có thể…</h4>
+      <p class="sub">Viết một ví dụ nhỏ cho từng điều bạn đã học được.</p>
+      ${checksHtml}
+    </div>
+
+    <div class="capstone-block">
+      <h4>5–8 Minutes · My Story Speech</h4>
+      <p class="sub">Chuẩn bị ý chính, rồi luyện nói bằng lời của mình. Ghi âm để nghe lại chính mình.</p>
+      ${speechHtml}
+    </div>
+
+    <div class="capstone-block">
+      <h4>Pair Activity · Teen Explorer Interview</h4>
+      <p class="sub">Nghe kỹ, ghi âm câu trả lời, và ghi lại ý chính bạn hiểu được — listening = understanding, not waiting for your turn.</p>
+      ${interviewHtml}
+    </div>
+
+    <div class="lesson-nav">
+      <button class="nav-btn" id="backBtn">← Về Unit 12</button>
+      <button class="nav-btn primary" id="homeBtn">Về trang chủ →</button>
+    </div>
+  `;
+  c.querySelectorAll('[data-speak]').forEach(b=> b.onclick = ()=> speak(b.dataset.speak, b.dataset.lang));
+  c.querySelectorAll('[data-rec-target]').forEach(b=>{
+    const audioEl = document.getElementById(b.dataset.recTarget);
+    b.onclick = ()=> toggleRecord(b, audioEl);
+  });
+  c.querySelectorAll('[data-store]').forEach(el=>{
+    const ev = el.tagName==='TEXTAREA' ? 'input' : 'input';
+    el.addEventListener(ev, ()=> setVal(el.dataset.store, el.value));
+  });
+  document.getElementById('backBtn').onclick = ()=> go('u12l1');
+  document.getElementById('homeBtn').onclick = ()=> go('home');
+  window.scrollTo(0,0);
+}
+
+/* ============================= MAIN RENDER ============================= */
+function render(){
+  const route = location.hash.replace('#','') || 'home';
+  renderSidenav();
+  updateProgressUI();
+  if(route==='home'){ renderHome(); return; }
+  if(route==='capstone'){ renderCapstone(); return; }
+  const m = route.match(/^u(\d+)l(\d+)$/);
+  if(m){
+    const u = parseInt(m[1],10);
+    let li = parseInt(m[2],10);
+    const unit = UNITS.find(x=>x.id===u);
+    if(!unit){ renderHome(); return; }
+    if(li>=unit.lessons.length) li=0;
+    renderLesson(u, li);
+    return;
+  }
+  renderHome();
+}
+render();
+</script>
+</body>
+</html>

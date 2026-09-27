@@ -2,10 +2,12 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ensureStudentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
+import { EvaluationError } from "@/lib/learning/objective-evaluation";
+import { EvidencePolicyError, evaluateActivityEvidence } from "@/lib/learning/evidence-policy";
+import { readBoundedJson } from "@/lib/learning/request-json";
 
 export const dynamic = "force-dynamic";
 
-const MAX_REQUEST_BYTES = 64 * 1024;
 const MAX_RESPONSE_BYTES = 32 * 1024;
 
 type AttemptPayload = {
@@ -13,8 +15,6 @@ type AttemptPayload = {
   unitCode?: string;
   activityCode?: string;
   locale?: "en" | "vi";
-  completed?: boolean;
-  score?: number;
   response?: unknown;
 };
 
@@ -27,16 +27,13 @@ function jsonError(message: string, status: number, extra: Record<string, unknow
 }
 
 export async function POST(request: Request) {
-  const advertisedLength = Number(request.headers.get("content-length") || 0);
-  if (Number.isFinite(advertisedLength) && advertisedLength > MAX_REQUEST_BYTES) {
-    return jsonError("Learning response is too large.", 413);
-  }
-
   let payload: AttemptPayload;
   try {
-    payload = await request.json();
-  } catch {
-    return jsonError("Invalid JSON payload.", 400);
+    const value = await readBoundedJson(request, 64 * 1024);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return jsonError("Invalid learning payload.", 400);
+    payload = value as AttemptPayload;
+  } catch (error) {
+    return jsonError(error instanceof EvaluationError ? error.code : "invalid_json", error instanceof EvaluationError ? error.status : 400);
   }
 
   const bookCode = cleanCode(payload.bookCode);
@@ -70,6 +67,7 @@ export async function POST(request: Request) {
       a.id as activity_id,
       a.title_en,
       a.title_vi,
+      a.activity_type,
       a.max_score,
       a.evidence_eligible,
       a.content
@@ -88,6 +86,14 @@ export async function POST(request: Request) {
   const ref = refs[0];
   if (!ref) {
     return jsonError("This starter activity is not published to the database yet.", 409, { localOnly: true });
+  }
+
+  let decision;
+  try {
+    decision = evaluateActivityEvidence({ activityType: String(ref.activity_type), content: ref.content, maxScore: ref.max_score }, payload.response);
+  } catch (error) {
+    if (error instanceof EvidencePolicyError) return jsonError(error.code, error.status);
+    throw error;
   }
 
   let enrollments = await sql`
@@ -128,10 +134,11 @@ export async function POST(request: Request) {
       and student_id = ${profile.id}
   `;
   const attemptNumber = Number(attemptRows[0]?.next_attempt ?? 1);
-  const completed = payload.completed === true;
-  const maxScore = Math.max(0, ref.max_score == null ? 1 : Number(ref.max_score));
-  const requestedScore = typeof payload.score === "number" && Number.isFinite(payload.score) ? payload.score : (completed ? maxScore : 0);
-  const score = Math.max(0, Math.min(maxScore || 1, requestedScore));
+  const completed = decision.level === "DEMONSTRATED";
+  const score = decision.score;
+  // Keep the raw learner response and the server's policy decision together. Never
+  // alter historic attempts that used the old client-reported completion flag.
+  const evaluatedResponse = JSON.stringify({ learnerResponse: payload.response, evaluation: decision });
 
   const inserted = await sql`
     insert into activity_attempts (
@@ -139,7 +146,7 @@ export async function POST(request: Request) {
       score, completion_status, submitted_at
     ) values (
       ${String(ref.activity_id)}, ${profile.id}, ${enrollmentId}, ${attemptNumber},
-      ${responseJson}::jsonb, ${score}, ${completed ? "completed" : "submitted"}, now()
+      ${evaluatedResponse}::jsonb, ${score}, ${decision.completionStatus}, now()
     )
     returning id
   `;
@@ -179,11 +186,11 @@ export async function POST(request: Request) {
       const content = (ref.content || {}) as Record<string, unknown>;
       const rawTags = Array.isArray(content.skillTags) ? content.skillTags.map(String).filter(Boolean).slice(0, 20) : [];
       const skillTags = rawTags.length > 0 ? rawTags : ["english-communication", "future-readiness"];
-      const evidenceSummary = JSON.stringify({ activityCode, score, maxScore, completionStatus: "completed" });
+      const evidenceSummary = JSON.stringify({ activityCode, score, level: decision.level, result: decision.result, completionRule: decision.completionRule, evidencePolicy: decision.evidencePolicy, attemptId });
       const integrityHash = createHash("sha256")
         .update(`${profile.semantic_id}:${bookCode}:${unitCode}:${activityCode}:${attemptId}:completed`)
         .digest("hex");
-      const capsuleSemanticId = `${profile.semantic_id}-${bookCode}-${unitCode}-${activityCode}`.toLowerCase();
+      const capsuleSemanticId = `${profile.semantic_id}-${bookCode}-${unitCode}-${activityCode}-${attemptId}`.toLowerCase();
       const organizationId = enrollments[0]?.organization_id ? String(enrollments[0].organization_id) : null;
       const classId = enrollments[0]?.class_id ? String(enrollments[0].class_id) : null;
 
@@ -198,14 +205,7 @@ export async function POST(request: Request) {
           ${evidenceSummary}::jsonb, ${skillTags}, 'demonstrated', ${integrityHash},
           'draft', 'learner', current_date
         )
-        on conflict (semantic_id) do update set
-          organization_id = excluded.organization_id,
-          class_id = excluded.class_id,
-          source_id = excluded.source_id,
-          evidence_summary = excluded.evidence_summary,
-          skill_tags = excluded.skill_tags,
-          integrity_hash = excluded.integrity_hash,
-          updated_at = now()
+        on conflict (semantic_id) do nothing
       `;
       capsuleCreated = true;
     }
@@ -215,6 +215,8 @@ export async function POST(request: Request) {
     ok: true,
     synced: true,
     attemptNumber,
+    attemptId: String(inserted[0]?.id ?? ""),
+    evaluation: decision,
     progressPercent,
     capsuleCreated,
     classScoped: Boolean(enrollments[0]?.class_id),

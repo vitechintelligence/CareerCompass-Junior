@@ -1,4 +1,4 @@
-import type { LearnerAgeBand } from "@/lib/learner-age-bands";
+import type { LearnerAgeBand } from "../learner-age-bands";
 
 export type BridgeMaterial = "wood" | "recycled" | "steel" | "composite" | "reinforced-concrete" | "timber-hybrid" | "steel-truss" | "cable-supported" | "hybrid-composite";
 
@@ -82,4 +82,31 @@ export function testBridge(ageBand: LearnerAgeBand, design: BridgeDesign): Bridg
 
 export function bridgeTargetForAge(ageBand: LearnerAgeBand) {
   return TARGET[ageBand];
+}
+
+/** Validate the published mission's design limits before running the server simulation. */
+export function validateBridgeDesign(
+  ageBand: LearnerAgeBand,
+  submitted: unknown,
+  constraints: Array<{ key: string; min?: number; max?: number; options?: string[] }>,
+): submitted is BridgeDesign {
+  if (!submitted || typeof submitted !== "object" || Array.isArray(submitted)) return false;
+  const design = submitted as Record<string, unknown>;
+  const ranges = new Map(constraints.map((item) => [item.key, item]));
+  const defaults: Record<string, { min: number; max: number }> = {
+    span: { min: 4, max: 80 }, supports: { min: 1, max: 9 }, deckWidth: { min: 2, max: 14 },
+    accessibility: { min: 0, max: 5 }, sustainability: { min: 1, max: 5 },
+  };
+  for (const [key, fallback] of Object.entries(defaults)) {
+    const value = design[key];
+    const limit = ranges.get(key);
+    if (typeof value !== "number" || !Number.isInteger(value) ||
+        value < (limit?.min ?? fallback.min) || value > (limit?.max ?? fallback.max)) return false;
+  }
+  if (ageBand === "7-9" && (design.deckWidth !== 2 || design.accessibility !== 1 || design.sustainability !== 3)) return false;
+  if (ageBand === "10-13" && design.sustainability !== 3) return false;
+  if (ageBand === "14-16" && design.sustainability !== 3) return false;
+  if (typeof design.material !== "string" || !ranges.get("material")?.options?.includes(design.material) ||
+      !["simple", "nature", "modern", "community-art"].includes(String(design.visualStyle))) return false;
+  return true;
 }

@@ -3,14 +3,15 @@ import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { isLearnerAgeBand } from "@/lib/learner-age-bands";
 import { COMMUNITY_BRIDGE_MISSIONS } from "@/lib/steam-missions";
-import type { BridgeDesign, BridgeOutcome } from "@/lib/steam/bridge-engine";
+import { testBridge, validateBridgeDesign, type BridgeDesign } from "@/lib/steam/bridge-engine";
+import { EvaluationError } from "@/lib/learning/objective-evaluation";
+import { readBoundedJson } from "@/lib/learning/request-json";
 
 export const dynamic = "force-dynamic";
 
 type Payload = {
   ageBand?: string;
   design?: BridgeDesign;
-  outcome?: BridgeOutcome;
   observation?: string;
   changeFromPrevious?: string;
   runMode?: "individual" | "small_group" | "large_group";
@@ -23,14 +24,21 @@ function jsonError(message: string, status: number, extra: Record<string, unknow
 export async function POST(request: Request) {
   let payload: Payload;
   try {
-    payload = await request.json();
-  } catch {
-    return jsonError("Invalid JSON payload.", 400);
+    const value = await readBoundedJson(request, 32 * 1024);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return jsonError("Invalid payload.", 400);
+    payload = value as Payload;
+  } catch (error) {
+    return jsonError(error instanceof EvaluationError ? error.code : "invalid_json", error instanceof EvaluationError ? error.status : 400);
   }
 
-  if (!payload.ageBand || !isLearnerAgeBand(payload.ageBand) || !payload.design || !payload.outcome) {
-    return jsonError("Age level, bridge design and outcome are required.", 400);
+  if (!payload.ageBand || !isLearnerAgeBand(payload.ageBand)) {
+    return jsonError("Assigned age level is required.", 400);
   }
+  const missionDefinition = COMMUNITY_BRIDGE_MISSIONS[payload.ageBand];
+  if (!validateBridgeDesign(payload.ageBand, payload.design, missionDefinition.constraints)) {
+    return jsonError("Bridge design is outside this mission's limits.", 400);
+  }
+  const outcome = testBridge(payload.ageBand, payload.design);
 
   const profile = await getCurrentProfile();
   if (!profile || profile.account_type !== "student" || profile.status !== "active") {
@@ -91,7 +99,6 @@ export async function POST(request: Request) {
     return jsonError("Your school has not assigned this STEAM age level to your account.", 409, { localOnly: true });
   }
 
-  const missionDefinition = COMMUNITY_BRIDGE_MISSIONS[payload.ageBand];
   const missionRows = await sql`
     insert into steam_missions (mission_key, title_en, title_vi, simulation_type, studios, status)
     values (
@@ -153,10 +160,21 @@ export async function POST(request: Request) {
 
   const runId = String(runRows[0].id);
   const nextAttempt = Number(runRows[0].attempt_count || 0) + 1;
-  const observation = String(payload.observation || payload.outcome.observations?.[0] || "").slice(0, 1200);
-  const changeFromPrevious = String(payload.changeFromPrevious || "").slice(0, 1200);
+  const observation = typeof payload.observation === "string" ? payload.observation.slice(0, 1200) : "";
+  const changeFromPrevious = typeof payload.changeFromPrevious === "string" ? payload.changeFromPrevious.slice(0, 1200) : "";
   const designJson = JSON.stringify(payload.design);
-  const outcomeJson = JSON.stringify(payload.outcome);
+  const outcomeJson = JSON.stringify(outcome);
+  const previousRows = await sql`
+    select design_state, outcome from steam_attempts
+    where run_id=${runId} order by attempt_number desc limit 1
+  `;
+  const previous = previousRows[0];
+  const previousOutcome = previous?.outcome as Record<string, unknown> | undefined;
+  const observedImprovement = Boolean(previous && changeFromPrevious.trim() &&
+    JSON.stringify(previous.design_state) !== designJson &&
+    typeof previousOutcome?.stability === "number" &&
+    outcome.stability > previousOutcome.stability &&
+    (typeof previousOutcome.cost !== "number" || outcome.cost <= previousOutcome.cost));
 
   const attemptRows = await sql`
     insert into steam_attempts (
@@ -164,24 +182,22 @@ export async function POST(request: Request) {
     )
     values (
       ${runId}, ${nextAttempt}, ${designJson}::jsonb, ${outcomeJson}::jsonb,
-      ${observation || null}, ${changeFromPrevious || null}, ${payload.outcome.resultState}
+      ${observation || null}, ${changeFromPrevious || null}, ${outcome.resultState}
     )
     returning id
   `;
   const attemptId = String(attemptRows[0].id);
 
-  const evidenceLabel = nextAttempt > 1
-    ? "improved"
-    : payload.outcome.resultState === "stable"
-      ? "demonstrated"
-      : "practiced";
+  // A simulated threshold is practice. A rubric/reviewer must evaluate the
+  // explanation and creation before a child is labelled demonstrated or verified.
+  const evidenceLabel = "practiced";
 
-  for (const skill of (payload.outcome.skills || []).slice(0, 20)) {
+  for (const skill of outcome.skills) {
     await sql`
       insert into steam_skill_evidence (run_id, attempt_id, skill_key, evidence_label, evidence)
       values (
         ${runId}, ${attemptId}, ${String(skill).slice(0,80)}, ${evidenceLabel},
-        ${JSON.stringify({ attemptNumber: nextAttempt, resultState: payload.outcome.resultState })}::jsonb
+        ${JSON.stringify({ attemptNumber: nextAttempt, resultState: outcome.resultState, observedImprovement })}::jsonb
       )
     `;
   }
@@ -189,24 +205,27 @@ export async function POST(request: Request) {
   const skillSummary = JSON.stringify({
     latestAttempt: nextAttempt,
     latestEvidenceLabel: evidenceLabel,
-    skills: payload.outcome.skills || [],
+    skills: outcome.skills,
+    observedImprovement,
   });
   await sql`
     update steam_mission_runs
     set attempt_count=${nextAttempt},
-        current_step=${payload.outcome.resultState === "stable" ? "explain" : "improve"},
+        current_step=${outcome.resultState === "stable" ? "explain" : "improve"},
         skill_summary=${skillSummary}::jsonb,
         updated_at=now()
     where id=${runId}
   `;
 
-  const capsuleSemanticId = `${profile.semantic_id}-steam-${missionDefinition.key}-${organizationId}`.toLowerCase();
+  const capsuleSemanticId = `${profile.semantic_id}-steam-${missionDefinition.key}-${organizationId}-${attemptId}`.toLowerCase();
   const capsuleEvidence = JSON.stringify({
     missionKey: missionDefinition.key,
     ageBand: payload.ageBand,
     attemptCount: nextAttempt,
-    latestResult: payload.outcome.resultState,
-    latestSkills: payload.outcome.skills || [],
+    latestResult: outcome.resultState,
+    latestSkills: outcome.skills,
+    observedImprovement,
+    attemptId,
     note: "Observed STEAM practice evidence; not a psychological diagnosis or career prediction.",
   });
   await sql`
@@ -218,15 +237,10 @@ export async function POST(request: Request) {
     values (
       ${capsuleSemanticId}, ${profile.id}, ${organizationId}, ${classId},
       'project', ${runId}, ${missionDefinition.titleEn}, ${missionDefinition.titleVi},
-      ${capsuleEvidence}::jsonb, ${payload.outcome.skills || []}, ${evidenceLabel},
+      ${capsuleEvidence}::jsonb, ${outcome.skills}, ${evidenceLabel},
       'draft', 'learner', current_date
     )
-    on conflict (semantic_id) do update set
-      source_id=excluded.source_id,
-      evidence_summary=excluded.evidence_summary,
-      skill_tags=excluded.skill_tags,
-      mastery_level=excluded.mastery_level,
-      updated_at=now()
+    on conflict (semantic_id) do nothing
   `;
 
   return NextResponse.json({
@@ -235,5 +249,7 @@ export async function POST(request: Request) {
     runId,
     attemptNumber: nextAttempt,
     evidenceLabel,
+    outcome,
+    observedImprovement,
   }, { headers: { "Cache-Control": "no-store" } });
 }
