@@ -147,10 +147,31 @@ export async function enrollStudent(formData: FormData) {
   const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
   const learner = await sql`
-    select id from profiles
-    where semantic_id = ${semanticId}
-      and account_type = 'student'
-      and status = 'active'
+    select p.id
+    from profiles p
+    where p.semantic_id = ${semanticId}
+      and p.account_type = 'student'
+      and p.status = 'active'
+      and (
+        exists (
+          select 1 from organization_memberships existing
+          where existing.profile_id=p.id
+            and existing.organization_id=${organizationId}
+            and existing.role='student'
+            and existing.status='active'
+        )
+        or exists (
+          select 1 from student_credentials sc
+          where sc.student_id=p.id and sc.organization_id=${organizationId}
+        )
+        or not exists (
+          select 1 from organization_memberships other
+          where other.profile_id=p.id
+            and other.role='student'
+            and other.status='active'
+            and other.organization_id <> ${organizationId}
+        )
+      )
     limit 1
   `;
   const studentId = String(learner[0]?.id || "");
@@ -198,11 +219,16 @@ export async function recordLearnerConsent(formData: FormData) {
   const actor = await requirePartnerOrganization(organizationId);
   const sql = getDb();
   const learner = await sql`
-    select id
-    from profiles
-    where semantic_id = ${semanticId}
-      and account_type = 'student'
-      and status = 'active'
+    select p.id
+    from profiles p
+    join organization_memberships om
+      on om.profile_id=p.id
+     and om.organization_id=${organizationId}
+     and om.role='student'
+     and om.status='active'
+    where p.semantic_id = ${semanticId}
+      and p.account_type = 'student'
+      and p.status = 'active'
     limit 1
   `;
   const learnerId = String(learner[0]?.id || "");
