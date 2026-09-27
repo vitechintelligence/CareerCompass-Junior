@@ -196,6 +196,44 @@ export async function setCommunityStudentAccess(formData: FormData) {
   revalidatePath("/workspace/student/community");
 }
 
+export async function revokeCommunityStudentAccess(formData: FormData) {
+  const organizationId = value(formData.get("organizationId"), 60);
+  assertUuid(organizationId, "organization");
+  await requireCommunityManager(organizationId, "enable_students");
+
+  const studentSemanticId = value(formData.get("studentSemanticId"), 100);
+  if (!SEMANTIC_RE.test(studentSemanticId)) throw new Error("Invalid learner semantic ID.");
+
+  const sql = getDb();
+  const learner = await sql`
+    select p.id
+    from profiles p
+    join organization_memberships om
+      on om.profile_id=p.id
+     and om.organization_id=${organizationId}
+     and om.role='student'
+     and om.status='active'
+    where p.semantic_id=${studentSemanticId}
+      and p.account_type='student'
+    limit 1
+  `;
+  if (!learner[0]) throw new Error("Learner is not an active member of this institution.");
+
+  const updated = await sql`
+    update community_student_access
+    set status='revoked', updated_at=now()
+    where organization_id=${organizationId}
+      and student_id=${String(learner[0].id)}
+      and status <> 'revoked'
+    returning student_id
+  `;
+  if (!updated[0]) throw new Error("Community access is already revoked or was never enabled.");
+
+  revalidatePath("/workspace/partner/community");
+  revalidatePath("/workspace/teacher/community");
+  revalidatePath("/workspace/student/community");
+}
+
 export async function updateOrganizationDataPolicy(formData: FormData) {
   const organizationId = value(formData.get("organizationId"), 60);
   assertUuid(organizationId, "organization");
