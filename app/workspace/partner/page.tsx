@@ -4,7 +4,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
-import { activateTeacher, assignTeacher, createClass, enrollStudent, recordLearnerConsent, requestPartnerAccess } from "./actions";
+import { activateTeacher, assignTeacher, createClass, enrollStudent, recordLearnerConsent, requestPartnerAccess, revokeLearnerConsent } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -218,6 +218,12 @@ export default async function PartnerWorkspacePage() {
                 <label><span><input type="checkbox" name="learnerConfirmation" /> Learner confirmation recorded</span></label>
                 <label><span><input type="checkbox" name="guardianConfirmation" /> Parent / guardian confirmation recorded</span></label>
                 <button className="button soft" type="submit">Save consent record</button>
+              </form>
+              <form action={revokeLearnerConsent} className="workspaceForm" style={{ marginTop: 16 }}>
+                <input type="hidden" name="organizationId" value={organizationId} />
+                <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
+                <label><span>Consent scope to revoke</span><select name="consentType" defaultValue="digital_learning"><option value="digital_learning">Digital learning</option><option value="learning_evidence">Learning evidence</option><option value="guardian_reporting">Guardian reporting</option><option value="ai_assistive_features">Assistive AI features</option></select></label>
+                <button className="button" type="submit">Revoke active consent</button>
               </form>
             </article>
             <article className="panel">
