@@ -32,6 +32,10 @@ const EXTENDED_TABLES = [
   "industry_partners",
   "industry_roles",
   "vst_junior_simulations",
+  "lti_platform_registrations",
+  "lti_oidc_states",
+  "lti_context_links",
+  "lti_launch_sessions",
 ] as const;
 
 function authPublicStatus() {
@@ -118,7 +122,11 @@ export async function GET() {
             'school_company_connections',
             'industry_partners',
             'industry_roles',
-            'vst_junior_simulations'
+            'vst_junior_simulations',
+            'lti_platform_registrations',
+            'lti_oidc_states',
+            'lti_context_links',
+            'lti_launch_sessions'
           )
       `,
     ]);
