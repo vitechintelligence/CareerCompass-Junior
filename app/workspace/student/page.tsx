@@ -32,11 +32,18 @@ export default async function StudentWorkspacePage() {
   const enrollments = await sql`
     select se.id, se.status, b.code, b.title_en, b.title_vi, b.level_label, b.age_band,
       c.name as class_name,
-      coalesce(round(avg(bp.completion_percent)::numeric, 0), 0)::int as progress_percent
+      case
+        when count(bu.id)=0 then 0
+        else round(
+          sum(coalesce(bp.completion_percent, 0))::numeric / count(bu.id),
+          0
+        )::int
+      end as progress_percent
     from student_enrollments se
     join books b on b.id = se.book_id
     left join classes c on c.id = se.class_id
-    left join book_progress bp on bp.enrollment_id = se.id
+    left join book_units bu on bu.book_id=b.id and bu.status='published'
+    left join book_progress bp on bp.enrollment_id = se.id and bp.unit_id=bu.id
     where se.student_id = ${profile.id}
       and se.status in ('active','completed')
       and (
