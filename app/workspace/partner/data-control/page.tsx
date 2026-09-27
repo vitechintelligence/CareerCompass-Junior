@@ -22,7 +22,7 @@ export default async function PartnerDataControlPage() {
   if (!user) return <Gate copy="Sign in with an approved partner administrator account." />;
 
   const profile = await getCurrentProfile();
-  if (!profile || !["partner_admin","platform_admin"].includes(profile.account_type)) {
+  if (!profile || profile.status !== "active" || !["partner_admin","platform_admin"].includes(profile.account_type)) {
     return <Gate copy="School administrator access is required to choose institution data and AI modes." />;
   }
 
