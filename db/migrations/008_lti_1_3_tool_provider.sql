@@ -23,17 +23,9 @@ alter table lti_registrations
   alter column organization_id set not null,
   alter column platform_name set not null;
 
-do $$
-begin
-  if not exists (
-    select 1 from pg_constraint
-    where conname='lti_registrations_status_check'
-  ) then
-    alter table lti_registrations
-      add constraint lti_registrations_status_check
-      check (status in ('pending','active','disabled'));
-  end if;
-end $$;
+alter table lti_registrations
+  add constraint lti_registrations_status_check
+  check (status in ('pending','active','disabled'));
 
 create index if not exists idx_lti_registrations_lookup
   on lti_registrations(issuer, client_id, status);
