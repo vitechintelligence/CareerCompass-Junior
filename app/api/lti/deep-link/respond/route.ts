@@ -51,11 +51,13 @@ export async function POST(request: Request) {
   if (!returnUrl) return new Response("The LMS did not provide a deep-link return URL.", { status: 409 });
 
   const acceptedTargets = Array.isArray(settings.accept_presentation_document_targets)
-    ? settings.accept_presentation_document_targets.map(String)
+    ? settings.accept_presentation_document_targets.map((value) => String(value).toLowerCase())
     : [];
-  if (!acceptedTargets.includes("window")) {
+  const supportsWindow = acceptedTargets.includes("window");
+  const supportsIframe = acceptedTargets.includes("iframe") || acceptedTargets.includes("frame");
+  if (!supportsWindow && !supportsIframe) {
     return new Response(
-      "This LMS deep-link request does not accept window launches. Secure iframe launch support is not enabled for this Career Compass deployment yet.",
+      "This LMS deep-link request does not accept a supported Career Compass presentation target.",
       { status: 409 },
     );
   }
@@ -74,10 +76,20 @@ export async function POST(request: Request) {
     text: String(book.title_vi || book.title_en),
     url: absoluteUrl("/api/lti/launch"),
     custom: { ccj_target: targetPath },
-    window: {
-      targetName: "CareerCompassJunior",
-    },
   };
+  if (supportsWindow) {
+    contentItem.window = {
+      targetName: "CareerCompassJunior",
+      width: 1200,
+      height: 900,
+    };
+  }
+  if (supportsIframe) {
+    contentItem.iframe = {
+      width: 1100,
+      height: 720,
+    };
+  }
   if (settings.accept_lineitem === true) {
     contentItem.lineItem = {
       label: String(book.title_en),
