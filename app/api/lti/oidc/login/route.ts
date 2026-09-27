@@ -23,12 +23,20 @@ async function initiate(request: Request) {
     const targetLinkUri = normalizeExternalId(params.get("target_link_uri"), 2000);
     const ltiMessageHint = normalizeExternalId(params.get("lti_message_hint"), 4000);
     const clientId = normalizeExternalId(params.get("client_id"), 500);
+    const deploymentId = normalizeExternalId(
+      params.get("lti_deployment_id") || params.get("deployment_id"),
+      500,
+    );
 
     if (!issuer || !loginHint || !targetLinkUri || !allowedLtiTargetLinkUri(targetLinkUri)) {
       return NextResponse.json({ error: "Invalid LTI OIDC login initiation request." }, { status: 400 });
     }
 
-    const registration = await resolveLtiRegistrationForLogin(issuer, clientId || undefined);
+    const registration = await resolveLtiRegistrationForLogin(
+      issuer,
+      clientId || undefined,
+      deploymentId || undefined,
+    );
     if (!registration) {
       return NextResponse.json({ error: "No active LTI registration matches this issuer/client." }, { status: 404 });
     }
