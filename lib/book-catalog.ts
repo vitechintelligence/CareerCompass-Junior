@@ -120,6 +120,15 @@ export function getCatalogUnit(bookCode: string, unitCode: string): CurriculumUn
         instructionsVi: "Chạm vào từng từ để nghe, sau đó nói thành tiếng.",
         content: { items: vocabulary },
         evidenceEligible: false,
+        contentVersion: 1,
+        inputType: "practice_acknowledgement",
+        learningObjective: { en: unit.objectiveEn, vi: unit.objectiveVi },
+        completionRule: { type: "practice_recorded", demonstrated: false },
+        evidencePolicy: {
+          practiced: "participation_recorded",
+          demonstrated: "not_automatic",
+          verified: "not_automatic",
+        },
       },
       {
         id: `${book.code}-${unit.code}-model`,
@@ -131,6 +140,15 @@ export function getCatalogUnit(bookCode: string, unitCode: string): CurriculumUn
         instructionsVi: "Nghe, lặp lại, sau đó thay đổi câu theo ý của em.",
         content: { model: book.code === "EERS-ACTION-CITY" ? "Listen, move, say, play!" : "My idea is important because it can help people." },
         evidenceEligible: true,
+        contentVersion: 1,
+        inputType: "speaking_text",
+        learningObjective: { en: unit.objectiveEn, vi: unit.objectiveVi },
+        completionRule: { type: "review_required", practicedOnSubmission: true },
+        evidencePolicy: {
+          practiced: "response_submitted",
+          demonstrated: "rubric_criterion_met",
+          verified: "teacher_approval",
+        },
       },
       {
         id: `${book.code}-${unit.code}-check`,
@@ -144,6 +162,15 @@ export function getCatalogUnit(bookCode: string, unitCode: string): CurriculumUn
         // activity supplies the authoritative answer to the server.
         content: { options: ["because", "hello", "blue"] },
         evidenceEligible: false,
+        contentVersion: 1,
+        inputType: "single_choice",
+        learningObjective: { en: unit.objectiveEn, vi: unit.objectiveVi },
+        completionRule: { type: "objective_criterion", criterion: "server_evaluated_correct" },
+        evidencePolicy: {
+          practiced: "attempt_submitted",
+          demonstrated: "objective_criterion_met",
+          verified: "not_automatic",
+        },
       },
     ],
   };
