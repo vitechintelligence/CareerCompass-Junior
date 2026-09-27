@@ -5,6 +5,12 @@ import { AuthorizationError, isUuidReference, resolveStudentLearningEnrollment }
 import { getDb } from "@/lib/db";
 import { EvaluationError } from "@/lib/learning/objective-evaluation";
 import { EvidencePolicyError, evaluateActivityEvidence } from "@/lib/learning/evidence-policy";
+import {
+  ActivityContractError,
+  activityContractHash,
+  buildActivityContract,
+  requireActivityContentVersion,
+} from "@/lib/learning/activity-contract";
 import { readBoundedJson } from "@/lib/learning/request-json";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +21,7 @@ type AttemptPayload = {
   bookCode?: string;
   unitCode?: string;
   activityCode?: string;
+  contentVersion?: number;
   enrollmentId?: string;
   locale?: "en" | "vi";
   response?: unknown;
@@ -76,7 +83,14 @@ export async function POST(request: Request) {
       a.activity_type,
       a.max_score,
       a.evidence_eligible,
-      a.content
+      a.content,
+      a.content_version,
+      a.instructions_en,
+      a.instructions_vi,
+      b.age_band,
+      b.level_label,
+      bu.objective_en,
+      bu.objective_vi
     from books b
     join book_units bu on bu.book_id = b.id
     join activities a on a.unit_id = bu.id
@@ -92,6 +106,32 @@ export async function POST(request: Request) {
   const ref = refs[0];
   if (!ref) {
     return jsonError("This starter activity is not published to the database yet.", 409, { localOnly: true });
+  }
+
+  let contract;
+  let contractHash;
+  try {
+    const currentContentVersion = Number(ref.content_version || 1);
+    requireActivityContentVersion(payload.contentVersion, currentContentVersion);
+    contract = buildActivityContract({
+      activityId: String(ref.activity_id),
+      activityCode,
+      courseId: bookCode,
+      unitId: unitCode,
+      activityType: String(ref.activity_type),
+      contentVersion: currentContentVersion,
+      ageBand: ref.age_band ? String(ref.age_band) : null,
+      englishLevel: ref.level_label ? String(ref.level_label) : null,
+      objectiveEn: ref.objective_en ? String(ref.objective_en) : null,
+      objectiveVi: ref.objective_vi ? String(ref.objective_vi) : null,
+      instructionsEn: ref.instructions_en ? String(ref.instructions_en) : null,
+      instructionsVi: ref.instructions_vi ? String(ref.instructions_vi) : null,
+      content: ref.content,
+    });
+    contractHash = activityContractHash(contract);
+  } catch (error) {
+    if (error instanceof ActivityContractError) return jsonError(error.code, error.status);
+    throw error;
   }
 
   let decision;
@@ -134,10 +174,13 @@ export async function POST(request: Request) {
   const inserted = await sql`
     insert into activity_attempts (
       activity_id, student_id, enrollment_id, attempt_number, response,
-      score, completion_status, submitted_at
+      score, completion_status, submitted_at,
+      activity_content_version, contract_version, activity_contract, contract_hash
     ) values (
       ${String(ref.activity_id)}, ${profile.id}, ${enrollmentId}, ${attemptNumber},
-      ${evaluatedResponse}::jsonb, ${score}, ${decision.completionStatus}, now()
+      ${evaluatedResponse}::jsonb, ${score}, ${decision.completionStatus}, now(),
+      ${contract.contentVersion}, ${contract.contractVersion},
+      ${JSON.stringify(contract)}::jsonb, ${contractHash}
     )
     returning id
   `;
@@ -177,7 +220,18 @@ export async function POST(request: Request) {
       const content = (ref.content || {}) as Record<string, unknown>;
       const rawTags = Array.isArray(content.skillTags) ? content.skillTags.map(String).filter(Boolean).slice(0, 20) : [];
       const skillTags = rawTags.length > 0 ? rawTags : ["english-communication", "future-readiness"];
-      const evidenceSummary = JSON.stringify({ activityCode, score, level: decision.level, result: decision.result, completionRule: decision.completionRule, evidencePolicy: decision.evidencePolicy, attemptId });
+      const evidenceSummary = JSON.stringify({
+        activityCode,
+        activityContentVersion: contract.contentVersion,
+        contractVersion: contract.contractVersion,
+        contractHash,
+        score,
+        level: decision.level,
+        result: decision.result,
+        completionRule: decision.completionRule,
+        evidencePolicy: decision.evidencePolicy,
+        attemptId,
+      });
       const integrityHash = createHash("sha256")
         .update(`${profile.semantic_id}:${bookCode}:${unitCode}:${activityCode}:${attemptId}:completed`)
         .digest("hex");
@@ -212,5 +266,8 @@ export async function POST(request: Request) {
     capsuleCreated,
     classScoped: Boolean(enrollment.class_id),
     enrollmentId,
+    contentVersion: contract.contentVersion,
+    contractVersion: contract.contractVersion,
+    contractHash,
   }, { headers: { "Cache-Control": "no-store" } });
 }
