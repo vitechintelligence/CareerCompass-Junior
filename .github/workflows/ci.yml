@@ -51,6 +51,9 @@ jobs:
       - name: Duplicate-safe learning event regression
         run: npm run test:idempotency
 
+      - name: Classroom revision workflow regression
+        run: npm run test:classroom
+
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 
