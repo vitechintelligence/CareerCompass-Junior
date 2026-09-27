@@ -16,7 +16,7 @@ export default async function StudentWorkspacePage() {
 
   let profile = await getCurrentProfile();
   if (!profile) profile = await ensureStudentProfile("vi");
-  if (!profile || profile.account_type !== "student") return <StudentGate signedIn />;
+  if (!profile || profile.account_type !== "student" || profile.status !== "active") return <StudentGate signedIn />;
 
   const sql = getDb();
   const enrollments = await sql`
