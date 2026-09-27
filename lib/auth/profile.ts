@@ -13,13 +13,13 @@ export type LmsProfile = {
 };
 
 export async function getSessionUser() {
-  const auth = getAuth();
-  if (auth) {
-    const { data } = await auth.getSession();
-    if (data?.user) return data.user;
-  }
+  const ltiUser = await getLtiSessionUser();
+  if (ltiUser) return ltiUser;
 
-  return getLtiSessionUser();
+  const auth = getAuth();
+  if (!auth) return null;
+  const { data } = await auth.getSession();
+  return data?.user ?? null;
 }
 
 export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
