@@ -87,7 +87,10 @@ export async function getLtiSessionUser() {
   if (!session?.auth_subject) return null;
   return {
     id: String(session.auth_subject),
-    name: session.display_name ? String(session.display_name) : undefined,
+    name: session.display_name ? String(session.display_name) : "",
+    email: undefined,
+    emailVerified: false,
+    image: null,
     lti: true,
   };
 }
