@@ -42,6 +42,9 @@ jobs:
       - name: Authorization boundary regression
         run: npm run test:authorization
 
+      - name: Versioned activity contract regression
+        run: npm run test:activity-contract
+
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 
