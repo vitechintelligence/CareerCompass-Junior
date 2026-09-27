@@ -21,7 +21,7 @@ function readCompleted() {
 
 export default function ProgressSyncBridge({ locale }: Props) {
   const syncedRef = useRef<Set<number>>(new Set());
-  const [status, setStatus] = useState<"checking" | "synced" | "local">("checking");
+  const [status, setStatus] = useState<"checking" | "synced" | "local" | "failed">("checking");
 
   useEffect(() => {
     let cancelled = false;
@@ -56,10 +56,14 @@ export default function ProgressSyncBridge({ locale }: Props) {
             setStatus("local");
             break;
           }
-          if (!response.ok) continue;
+          if (!response.ok) { setStatus("failed"); continue; }
+          const result = await response.json().catch(() => null);
+          if (result?.evaluation?.level !== "SELF_REPORTED") { setStatus("failed"); continue; }
           syncedRef.current.add(lessonId);
           setStatus("synced");
         }
+      } catch {
+        setStatus("failed");
       } finally {
         syncing = false;
       }
@@ -75,8 +79,9 @@ export default function ProgressSyncBridge({ locale }: Props) {
 
   return (
     <div className="syncBadge" role="status" aria-live="polite">
-      {status === "synced" && (locale === "vi" ? "☁ Đã đồng bộ tiến độ" : "☁ Progress synced")}
-      {status === "local" && (locale === "vi" ? "Thiết bị này · đăng nhập để đồng bộ" : "On this device · sign in to sync")}
+      {status === "synced" && (locale === "vi" ? "☁ Đã đồng bộ tự ghi nhận luyện tập" : "☁ Practice self-report synced")}
+      {status === "local" && (locale === "vi" ? "Chỉ trên thiết bị này · đăng nhập để đồng bộ" : "On this device only · sign in to sync")}
+      {status === "failed" && (locale === "vi" ? "Lưu thất bại — đang thử lại" : "Save failed — retrying")}
       {status === "checking" && (locale === "vi" ? "Đang kiểm tra đồng bộ…" : "Checking sync…")}
     </div>
   );

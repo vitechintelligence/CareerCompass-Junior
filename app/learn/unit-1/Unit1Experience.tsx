@@ -112,8 +112,8 @@ export default function Unit1Experience({ locale }: Props) {
     }
     setMessage(
       locale === "vi"
-        ? "Hoàn thành! Tiến độ này chỉ được lưu trên thiết bị trong bản thử nghiệm."
-        : "Completed! In this preview, progress is stored only on this device.",
+        ? "Em đã tự ghi nhận bài luyện tập trên thiết bị này. Đây chưa phải minh chứng đã nắm vững."
+        : "Practice self-reported on this device. This does not demonstrate mastery.",
     );
   }
 
@@ -249,12 +249,12 @@ export default function Unit1Experience({ locale }: Props) {
           </h2>
           <p className="muted lessonSmallCopy">
             {locale === "vi"
-              ? "4 tuần · 8 bài học tương tác · tiến độ bản thử nghiệm lưu trên thiết bị"
-              : "4 weeks · 8 interactive lessons · preview progress stored on-device"}
+              ? "4 tuần · 8 bài học tương tác · dấu luyện tập trên thiết bị"
+              : "4 weeks · 8 interactive lessons · on-device practice markers"}
           </p>
           <div className="lessonProgressLabel">
             <strong>{progressPercent}%</strong>
-            <span>{locale === "vi" ? "hoàn thành" : "complete"}</span>
+            <span>{locale === "vi" ? "tự ghi nhận luyện tập" : "practice self-reported"}</span>
           </div>
           <div className="progressTrack">
             <div className="progressFill" style={{ width: `${progressPercent}%` }} />
@@ -289,7 +289,7 @@ export default function Unit1Experience({ locale }: Props) {
             </div>
             <div className={`lessonStatus ${isComplete ? "done" : ""}`}>
               {isComplete
-                ? locale === "vi" ? "✓ Đã hoàn thành" : "✓ Completed"
+                ? locale === "vi" ? "✓ Tự ghi nhận đã luyện tập" : "✓ Practice self-reported"
                 : locale === "vi" ? "Đang học" : "In progress"}
             </div>
           </div>

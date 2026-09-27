@@ -86,7 +86,7 @@ export default function CommunityBridgeExperience({
         <div className="steamMissionStatus">
           <strong>{attempts.length}</strong>
           <span>test attempt{attempts.length === 1 ? "" : "s"}</span>
-          <small>{syncState === "saving" ? "Saving…" : syncState === "saved" ? "Evidence synced" : syncState === "local" ? "Local practice" : "Ready"}</small>
+          <small>{syncState === "saving" ? "Saving…" : syncState === "saved" ? "Practice synced · not yet reviewed" : syncState === "local" ? "Practice in this session · not saved" : "Ready"}</small>
         </div>
       </section>
 

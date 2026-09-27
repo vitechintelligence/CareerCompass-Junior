@@ -29,6 +29,14 @@ export type CurriculumUnit = {
   activities: CurriculumActivity[];
 };
 
+/** Never serialize the server's objective answer into a learner-facing page. */
+export function learnerContent(content: unknown): Record<string, unknown> {
+  if (!content || typeof content !== "object" || Array.isArray(content)) return {};
+  const { answer: _answer, answerSequence: _answerSequence, correctAnswerId: _correctAnswerId, ...visible } = content as Record<string, unknown>;
+  void _answer; void _answerSequence; void _correctAnswerId;
+  return visible;
+}
+
 export async function getPublishedUnit(bookCode: string, unitCode: string): Promise<CurriculumUnit | null> {
   const sql = getDb();
   const units = await sql`
@@ -90,7 +98,7 @@ export async function getPublishedUnit(bookCode: string, unitCode: string): Prom
       titleVi: String(item.title_vi),
       instructionsEn: item.instructions_en ? String(item.instructions_en) : null,
       instructionsVi: item.instructions_vi ? String(item.instructions_vi) : null,
-      content: (item.content || {}) as Record<string, unknown>,
+      content: learnerContent(item.content),
       evidenceEligible: item.evidence_eligible === true,
     })),
   };

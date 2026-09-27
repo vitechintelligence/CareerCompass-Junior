@@ -140,7 +140,9 @@ export function getCatalogUnit(bookCode: string, unitCode: string): CurriculumUn
         titleVi: "Kiểm tra nhanh",
         instructionsEn: "Choose the phrase that gives a reason.",
         instructionsVi: "Chọn cụm từ dùng để đưa ra lý do.",
-        content: { options: ["because", "hello", "blue"], answer: "because" },
+        // The fallback catalog is learner-facing only. The published database
+        // activity supplies the authoritative answer to the server.
+        content: { options: ["because", "hello", "blue"] },
         evidenceEligible: false,
       },
     ],

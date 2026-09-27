@@ -67,6 +67,18 @@ try {
   assert.equal(afterReload, html, "Reload cannot inject a stale successful choice");
   const teen = await fetch(`${origin}/interactive-books/my-compass`);
   assert.equal(teen.status, 200, "Existing teen book route must remain available");
+  assert.match(await teen.text(), /Self-reported practice on this device/, "Teen self-check must identify its evidence level");
+  for (const endpoint of ["attempt", "unit-1/attempt"]) {
+    const response = await fetch(`${origin}/api/learning/${endpoint}`, {
+      method: "POST", headers: { "content-type": "application/json" }, body: "null",
+    });
+    assert.equal(response.status, 400, `Null input must be rejected at ${endpoint}`);
+  }
+  const invalidBridge = await fetch(`${origin}/api/steam/bridge-attempt`, {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ ageBand: "7-9", design: { span: 999 }, outcome: { resultState: "stable" } }),
+  });
+  assert.equal(invalidBridge.status, 400, "An invalid simulated bridge cannot be saved");
   console.log(JSON.stringify({ status: "passed", objectiveActivities: definitions.length, evaluationRequests: requests, servedBookAndReload: "passed", preservedTeenRoute: "passed", learnerDatabaseWrites: 0, browserJourney: "separate verification required" }));
 } finally {
   server.kill("SIGTERM");

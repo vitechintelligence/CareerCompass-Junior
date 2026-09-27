@@ -248,7 +248,7 @@ audio.playback.show{display:block}
   <div class="overlay-card">
     <button class="close-x" id="closeBadges">✕</button>
     <h3>🏅 Huy hiệu của em</h3>
-    <p style="color:var(--muted);font-size:.85rem;margin:0">Hoàn thành nhiệm vụ để mở khoá huy hiệu mới!</p>
+    <p style="color:var(--muted);font-size:.85rem;margin:0">Tự ghi nhận luyện tập để mở khoá huy hiệu. Huy hiệu không xác nhận mức độ thành thạo.</p>
     <div class="badge-grid" id="badgeGrid"></div>
   </div>
 </div>
@@ -335,12 +335,12 @@ const BADGE_DEFS = [
   {id:'first_record', icon:'🎙️', name:'Giọng nói đầu tiên', desc:'Ghi âm lần đầu tiên', test:()=>recordedSet().size>=1},
   {id:'record10', icon:'🎤', name:'Người kể chuyện', desc:'Ghi âm 10 lần', test:()=>recordedSet().size>=10},
   {id:'record30', icon:'🌟', name:'Ngôi sao phát âm', desc:'Ghi âm 30 lần', test:()=>recordedSet().size>=30},
-  {id:'first_lesson', icon:'✅', name:'Bài học đầu tiên', desc:'Hoàn thành 1 bài học', test:()=>LESSONS.some(l=>lessonDone(l.lesson))},
-  {id:'unit1', icon:'🧩', name:'Nhà khám phá', desc:'Hoàn thành Unit 1', test:()=>unitDoneCount(1)>=8},
-  {id:'unit_half', icon:'🗺️', name:'Nửa hành trình', desc:'Hoàn thành 6 unit', test:()=>UNITS.filter(u=>unitDoneCount(u.unit)>=8).length>=6},
+  {id:'first_lesson', icon:'✅', name:'Bài học đầu tiên', desc:'Tự ghi nhận luyện tập 1 bài', test:()=>LESSONS.some(l=>lessonDone(l.lesson))},
+  {id:'unit1', icon:'🧩', name:'Nhà khám phá', desc:'Tự ghi nhận luyện tập Unit 1', test:()=>unitDoneCount(1)>=8},
+  {id:'unit_half', icon:'🗺️', name:'Nửa hành trình', desc:'Tự ghi nhận luyện tập 6 unit', test:()=>UNITS.filter(u=>unitDoneCount(u.unit)>=8).length>=6},
   {id:'streak3', icon:'🔥', name:'Chuỗi 3 ngày', desc:'Học 3 ngày liên tiếp', test:()=>getVal('streak',0)>=3},
   {id:'streak7', icon:'🔥', name:'Chuỗi 7 ngày', desc:'Học 7 ngày liên tiếp', test:()=>getVal('streak',0)>=7},
-  {id:'all_done', icon:'🏆', name:'Nhà vô địch la bàn', desc:'Hoàn thành cả 96 bài học', test:()=>LESSONS.every(l=>lessonDone(l.lesson))},
+  {id:'all_done', icon:'🏆', name:'Nhà vô địch la bàn', desc:'Tự ghi nhận luyện tập 96 bài học', test:()=>LESSONS.every(l=>lessonDone(l.lesson))},
 ];
 function earnedBadges(){ return BADGE_DEFS.filter(b=>b.test()); }
 function checkNewBadges(){
@@ -599,7 +599,7 @@ function renderHome(){
       <h3>${u.titleEn}</h3>
       <p>${u.titleVn}</p>
       <div class="prog-track"><i style="width:${pct}%;background:${col}"></i></div>
-      <div class="prog-label">${done}/8 bài học</div>
+      <div class="prog-label">${done}/8 bài tự ghi nhận luyện tập · chưa xác nhận thành thạo</div>
     </div>`;
   }).join('');
   c.innerHTML = `
