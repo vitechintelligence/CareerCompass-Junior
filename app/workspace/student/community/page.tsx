@@ -17,7 +17,7 @@ export default async function StudentCommunityPage({
   if (!user) return <Gate signedIn={false} />;
 
   const profile = await getCurrentProfile();
-  if (!profile || profile.account_type !== "student") return <Gate signedIn />;
+  if (!profile || profile.status !== "active" || profile.account_type !== "student") return <Gate signedIn />;
 
   const sql = getDb();
   const schemaRows = await sql`select to_regclass('public.community_student_access') as access_table`;
@@ -29,6 +29,11 @@ export default async function StudentCommunityPage({
     select csa.organization_id, csa.age_band, o.name as organization_name
     from community_student_access csa
     join organizations o on o.id=csa.organization_id
+    join organization_memberships om
+      on om.organization_id=csa.organization_id
+     and om.profile_id=csa.student_id
+     and om.role='student'
+     and om.status='active'
     where csa.student_id=${profile.id}
       and csa.status='enabled'
       and csa.guardian_consent_confirmed=true
