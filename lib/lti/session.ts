@@ -105,3 +105,25 @@ export async function getLtiSessionUser() {
     lti: true,
   };
 }
+
+
+export async function revokeCurrentLtiSession() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(LTI_SESSION_COOKIE)?.value;
+  let hadSession = false;
+
+  if (token) {
+    const sql = getDb();
+    const rows = await sql`
+      update lti_launch_sessions
+      set revoked_at=coalesce(revoked_at, now())
+      where session_token_hash=${stableHash(token)}
+        and revoked_at is null
+      returning id
+    `;
+    hadSession = Boolean(rows[0]);
+  }
+
+  cookieStore.delete(LTI_SESSION_COOKIE);
+  return { hadSession };
+}
