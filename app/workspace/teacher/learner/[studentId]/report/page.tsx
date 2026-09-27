@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { requireTeacherClassAccess } from "@/lib/auth/authorization";
@@ -33,7 +34,7 @@ export default async function LearnerParentReportPage({
   let scope: Record<string, unknown> | null = null;
   for (const candidate of scopes) {
     try {
-      await requireTeacherClassAccess(String(candidate.class_id), profile);
+      await requireTeacherClassAccess(String(candidate.class_id));
       scope = candidate as Record<string, unknown>;
       break;
     } catch {
@@ -176,6 +177,6 @@ export default async function LearnerParentReportPage({
   );
 }
 
-function ReportSection({ title, children }: { title: string; children: React.ReactNode }) {
+function ReportSection({ title, children }: { title: string; children: ReactNode }) {
   return <section className="panel"><div className="eyebrow">{title}</div><div className="workspaceList" style={{ marginTop: 12 }}>{children}</div></section>;
 }
