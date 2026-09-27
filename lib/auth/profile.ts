@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getAuth } from "@/lib/auth/server";
+import { getLtiSessionUser } from "@/lib/lti/session";
 
 export type LmsProfile = {
   id: string;
@@ -13,10 +14,12 @@ export type LmsProfile = {
 
 export async function getSessionUser() {
   const auth = getAuth();
-  if (!auth) return null;
+  if (auth) {
+    const { data } = await auth.getSession();
+    if (data?.user) return data.user;
+  }
 
-  const { data } = await auth.getSession();
-  return data?.user ?? null;
+  return getLtiSessionUser();
 }
 
 export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
