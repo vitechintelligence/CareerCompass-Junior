@@ -50,6 +50,47 @@ export async function requestPartnerAccess(formData: FormData) {
   revalidatePath("/workspace/partner");
 }
 
+export async function revokeLearnerConsent(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
+  const consentType = String(formData.get("consentType") || "");
+  const allowedTypes = ["digital_learning", "learning_evidence", "guardian_reporting", "ai_assistive_features"];
+
+  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId) || !allowedTypes.includes(consentType)) {
+    throw new Error("Organization, learner and consent type are required.");
+  }
+
+  await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const learner = await sql`
+    select p.id
+    from profiles p
+    join organization_memberships om
+      on om.profile_id=p.id
+     and om.organization_id=${organizationId}
+     and om.role='student'
+     and om.status='active'
+    where p.semantic_id=${semanticId}
+      and p.account_type='student'
+    limit 1
+  `;
+  const learnerId = String(learner[0]?.id || "");
+  if (!learnerId) throw new Error("Learner is not an active member of this institution.");
+
+  const revoked = await sql`
+    update learner_consent_records
+    set status='revoked', revoked_at=now()
+    where learner_id=${learnerId}
+      and organization_id=${organizationId}
+      and consent_type=${consentType}
+      and status='active'
+    returning id
+  `;
+  if (!revoked[0]) throw new Error("No active consent record exists for this learner and purpose.");
+
+  revalidatePath("/workspace/partner");
+}
+
 export async function createClass(formData: FormData) {
   const organizationId = String(formData.get("organizationId") || "");
   const name = boundedText(formData.get("name"), 120);
