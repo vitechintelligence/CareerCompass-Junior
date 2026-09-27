@@ -5,7 +5,12 @@ import { LTI_CLAIMS, LTI_MESSAGE_TYPES, LTI_SESSION_COOKIE } from "@/lib/lti/con
 import { normalizeExternalId } from "@/lib/lti/policy";
 import { validateLtiLaunch } from "@/lib/lti/launch";
 import { provisionLtiActor } from "@/lib/lti/provisioning";
-import { createLtiLaunchSession, ltiSessionCookieOptions } from "@/lib/lti/session";
+import {
+  createLtiLaunchSession,
+  LTI_FRAME_HOST_COOKIE,
+  ltiFrameCookieOptions,
+  ltiSessionCookieOptions,
+} from "@/lib/lti/session";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +38,7 @@ export async function POST(request: Request) {
       messageType: launch.messageType,
       externalContextId,
       externalResourceLinkId: launch.externalResourceLinkId,
+      launchNonce: launch.launchNonce,
       serviceClaims: launch.serviceClaims,
       deepLinkSettings: launch.deepLinkSettings,
       targetPath: launch.targetPath,
@@ -59,6 +65,9 @@ export async function POST(request: Request) {
       : absoluteUrl(launch.targetPath);
     const response = NextResponse.redirect(destination, 303);
     response.cookies.set(LTI_SESSION_COOKIE, session.token, ltiSessionCookieOptions);
+    if (launch.frameAncestorHost) {
+      response.cookies.set(LTI_FRAME_HOST_COOKIE, launch.frameAncestorHost, ltiFrameCookieOptions);
+    }
     return response;
   } catch (error) {
     const code = error instanceof Error ? error.message : "lti_launch_failed";
