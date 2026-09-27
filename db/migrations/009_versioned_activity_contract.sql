@@ -40,14 +40,8 @@ alter table classes
 
 alter table classes
   add constraint classes_grade_level_check
-  check (grade_level is null or grade_level ~ '^(?:[1-9]|1[0-2])$');
+  check (grade_level is null or grade_level ~ '^([1-9]|1[0-2])$');
 
 alter table classes
   add constraint classes_learner_age_band_check
-  check (
-    learner_age_band is null or (
-      learner_age_band ~ '^([3-9]|1[0-9]|2[01])-([3-9]|1[0-9]|2[01])
-
-      and split_part(learner_age_band, '-', 1)::int <= split_part(learner_age_band, '-', 2)::int
-    )
-  );
+  check (learner_age_band is null or learner_age_band ~ '^([3-9]|1[0-9]|2[01])-([3-9]|1[0-9]|2[01])$');
