@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ensureStudentProfile, getSessionUser } from "@/lib/auth/profile";
+import { AuthorizationError, isUuidReference, resolveStudentLearningEnrollment } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 import { EvaluationError } from "@/lib/learning/objective-evaluation";
 import { EvidencePolicyError, evaluateActivityEvidence } from "@/lib/learning/evidence-policy";
@@ -14,6 +15,7 @@ type AttemptPayload = {
   bookCode?: string;
   unitCode?: string;
   activityCode?: string;
+  enrollmentId?: string;
   locale?: "en" | "vi";
   response?: unknown;
 };
@@ -39,8 +41,12 @@ export async function POST(request: Request) {
   const bookCode = cleanCode(payload.bookCode);
   const unitCode = cleanCode(payload.unitCode);
   const activityCode = cleanCode(payload.activityCode);
+  const requestedEnrollmentId = payload.enrollmentId == null ? null : (isUuidReference(payload.enrollmentId) ? payload.enrollmentId : null);
   if (!bookCode || !unitCode || !activityCode) {
     return jsonError("Book, unit and activity codes are required.", 400);
+  }
+  if (payload.enrollmentId != null && !requestedEnrollmentId) {
+    return jsonError("Invalid enrollment reference.", 400);
   }
 
   const responseJson = JSON.stringify(payload.response ?? {});
@@ -96,36 +102,21 @@ export async function POST(request: Request) {
     throw error;
   }
 
-  let enrollments = await sql`
-    select se.id, se.class_id, c.organization_id
-    from student_enrollments se
-    left join classes c on c.id = se.class_id
-    where se.student_id = ${profile.id}
-      and se.book_id = ${String(ref.book_id)}
-      and se.status in ('active','completed')
-    order by (se.class_id is null) asc, se.enrolled_at desc
-    limit 1
-  `;
-
-  if (!enrollments[0]) {
-    await sql`
-      insert into student_enrollments (student_id, book_id, status)
-      values (${profile.id}, ${String(ref.book_id)}, 'active')
-      on conflict do nothing
-    `;
-    enrollments = await sql`
-      select se.id, se.class_id, c.organization_id
-      from student_enrollments se
-      left join classes c on c.id = se.class_id
-      where se.student_id = ${profile.id}
-        and se.book_id = ${String(ref.book_id)}
-      order by (se.class_id is null) asc, se.enrolled_at desc
-      limit 1
-    `;
+  let enrollment;
+  try {
+    enrollment = await resolveStudentLearningEnrollment({
+      profile,
+      bookId: String(ref.book_id),
+      requestedEnrollmentId,
+    });
+  } catch (error) {
+    if (error instanceof AuthorizationError) {
+      return jsonError(error.code, error.status, { localOnly: true });
+    }
+    throw error;
   }
 
-  const enrollmentId = String(enrollments[0]?.id ?? "");
-  if (!enrollmentId) return jsonError("Unable to create learner enrollment.", 500);
+  const enrollmentId = enrollment.id;
 
   const attemptRows = await sql`
     select coalesce(max(attempt_number), 0)::int + 1 as next_attempt
@@ -191,8 +182,8 @@ export async function POST(request: Request) {
         .update(`${profile.semantic_id}:${bookCode}:${unitCode}:${activityCode}:${attemptId}:completed`)
         .digest("hex");
       const capsuleSemanticId = `${profile.semantic_id}-${bookCode}-${unitCode}-${activityCode}-${attemptId}`.toLowerCase();
-      const organizationId = enrollments[0]?.organization_id ? String(enrollments[0].organization_id) : null;
-      const classId = enrollments[0]?.class_id ? String(enrollments[0].class_id) : null;
+      const organizationId = enrollment.organization_id;
+      const classId = enrollment.class_id;
 
       await sql`
         insert into learning_capsules (
@@ -219,6 +210,7 @@ export async function POST(request: Request) {
     evaluation: decision,
     progressPercent,
     capsuleCreated,
-    classScoped: Boolean(enrollments[0]?.class_id),
+    classScoped: Boolean(enrollment.class_id),
+    enrollmentId,
   }, { headers: { "Cache-Control": "no-store" } });
 }
