@@ -15,7 +15,7 @@ export async function POST() {
       select count(*)::int as count
       from admin_audit_events
       where actor_profile_id=${admin.profile.id}
-        and event_type='platform_ai_test_live'
+        and event_type='platform_ai_test_openai_attempt'
         and created_at >= date_trunc('day', now())
     `;
     const usedToday = Number(usage[0]?.count || 0);
@@ -29,6 +29,17 @@ export async function POST() {
       };
       return NextResponse.json({ ...result, usedToday, dailyRequestCap: runtime.dailyRequestCap });
     }
+
+    await sql`
+      insert into admin_audit_events (
+        actor_profile_id, event_type, target_type, target_id, detail
+      )
+      values (
+        ${admin.profile.id}, 'platform_ai_test_openai_attempt', 'platform_ai',
+        ${runtime.model},
+        ${JSON.stringify({ model: runtime.model, containsStudentContent: false })}::jsonb
+      )
+    `;
   }
 
   const result = await runPlatformOpenAiConnectivityTest();
