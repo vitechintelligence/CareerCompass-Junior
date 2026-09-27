@@ -2,11 +2,11 @@ import type { NextConfig } from "next";
 
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
-  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(self), microphone=(self), geolocation=()" },
   { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
   { key: "X-DNS-Prefetch-Control", value: "on" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
 ];
 
 const nextConfig: NextConfig = {
@@ -35,6 +35,22 @@ const nextConfig: NextConfig = {
       {
         source: "/:path*",
         headers: securityHeaders,
+      },
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "cookie",
+            key: "ccj_lti_frame_host",
+            value: "(?<ltiFrameHost>[A-Za-z0-9.-]{1,253})",
+          },
+        ],
+        headers: [
+          {
+            key: "Content-Security-Policy",
+            value: "frame-ancestors 'self' https://:ltiFrameHost",
+          },
+        ],
       },
       {
         source: "/sw.js",
