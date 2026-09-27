@@ -77,13 +77,7 @@ export async function provisionLtiActor(
   if (String(profile.status) !== "active") throw new Error("lti_profile_inactive");
 
   if (launchedRole === "teacher" && String(profile.account_type) === "student") {
-    const promoted = await sql`
-      update profiles
-      set account_type='teacher', updated_at=now()
-      where id=${String(profile.id)} and status='active' and account_type='student'
-      returning id, auth_subject, display_name, account_type, status
-    `;
-    if (promoted[0]) profile = promoted[0] as Record<string, unknown>;
+    throw new Error("lti_role_upgrade_requires_admin");
   }
 
   const organizationRole = launchedRole === "teacher" ? "teacher" : "student";
