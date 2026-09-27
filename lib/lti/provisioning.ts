@@ -76,8 +76,8 @@ export async function provisionLtiActor(
 
   if (String(profile.status) !== "active") throw new Error("lti_profile_inactive");
 
-  if (launchedRole === "teacher" && String(profile.account_type) === "student") {
-    throw new Error("lti_role_upgrade_requires_admin");
+  if (String(profile.account_type) !== launchedRole) {
+    throw new Error("lti_role_change_requires_admin");
   }
 
   const organizationRole = launchedRole === "teacher" ? "teacher" : "student";
