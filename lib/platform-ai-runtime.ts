@@ -39,11 +39,12 @@ function outputText(payload: unknown) {
 
 export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTestResult> {
   const runtime = platformAiRuntime();
+  const connectivityModel = process.env.CCJ_OPENAI_CONNECTIVITY_MODEL?.trim() || "gpt-5.6";
   if (runtime.mode === "mock") {
     return {
       ok: true,
       provider: "mock",
-      model: runtime.model,
+      model: connectivityModel,
       message: "Career Compass AI test pipeline is ready in zero-cost mock mode.",
       reason: runtime.reason,
     };
@@ -54,7 +55,7 @@ export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTes
     return {
       ok: true,
       provider: "mock",
-      model: runtime.model,
+      model: connectivityModel,
       message: "Career Compass AI test pipeline is ready in zero-cost mock mode.",
       reason: "openai_key_missing",
     };
@@ -68,7 +69,7 @@ export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTes
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: runtime.model,
+        model: connectivityModel,
         reasoning: { effort: "none" },
         max_output_tokens: 40,
         input: "Reply with exactly: CCJ OPENAI TEST OK",
@@ -80,7 +81,7 @@ export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTes
       return {
         ok: true,
         provider: "mock",
-        model: runtime.model,
+        model: connectivityModel,
         message: "OpenAI was unavailable, so Career Compass safely continued in zero-cost mock mode.",
         reason: "openai_unavailable_fallback",
         openaiStatus: response.status,
@@ -92,7 +93,7 @@ export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTes
     return {
       ok: true,
       provider: "openai",
-      model: runtime.model,
+      model: connectivityModel,
       message: text || "CCJ OPENAI TEST OK",
       reason: runtime.reason,
     };
@@ -100,7 +101,7 @@ export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTes
     return {
       ok: true,
       provider: "mock",
-      model: runtime.model,
+      model: connectivityModel,
       message: "OpenAI could not be reached, so Career Compass safely continued in zero-cost mock mode.",
       reason: "openai_network_fallback",
     };
