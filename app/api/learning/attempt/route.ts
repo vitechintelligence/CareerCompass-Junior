@@ -163,110 +163,178 @@ export async function POST(request: Request) {
   }
 
   const enrollmentId = enrollment.id;
-
-  const attemptRows = await sql`
-    select coalesce(max(attempt_number), 0)::int + 1 as next_attempt
-    from activity_attempts
-    where activity_id = ${String(ref.activity_id)}
-      and student_id = ${profile.id}
-  `;
-  const attemptNumber = Number(attemptRows[0]?.next_attempt ?? 1);
   const completed = decision.level === "DEMONSTRATED";
   const score = decision.score;
-  // Keep the raw learner response and the server's policy decision together. Never
-  // alter historic attempts that used the old client-reported completion flag.
   const evaluatedResponse = JSON.stringify({ learnerResponse: payload.response, evaluation: decision });
+  const submissionHash = createHash("sha256")
+    .update(`${profile.id}:${enrollmentId}:${String(ref.activity_id)}:${contractHash}:${evaluatedResponse}`)
+    .digest("hex");
 
-  const inserted = await sql`
-    insert into activity_attempts (
-      activity_id, student_id, enrollment_id, attempt_number, response,
-      score, completion_status, submitted_at,
-      activity_content_version, contract_version, activity_contract, contract_hash
-    ) values (
-      ${String(ref.activity_id)}, ${profile.id}, ${enrollmentId}, ${attemptNumber},
-      ${evaluatedResponse}::jsonb, ${score}, ${decision.completionStatus}, now(),
-      ${contract.contentVersion}, ${contract.contractVersion},
-      ${JSON.stringify(contract)}::jsonb, ${contractHash}
-    )
-    returning id
-  `;
+  const content = (ref.content || {}) as Record<string, unknown>;
+  const rawTags = Array.isArray(content.skillTags)
+    ? content.skillTags.map(String).filter(Boolean).slice(0, 20)
+    : [];
+  const skillTags = rawTags.length > 0 ? rawTags : ["english-communication", "future-readiness"];
+  const evidenceSummaryBase = JSON.stringify({
+    activityCode,
+    activityContentVersion: contract.contentVersion,
+    contractVersion: contract.contractVersion,
+    contractHash,
+    submissionId,
+    score,
+    level: decision.level,
+    result: decision.result,
+    completionRule: decision.completionRule,
+    evidencePolicy: decision.evidencePolicy,
+  });
+  const integrityHash = createHash("sha256")
+    .update(`${profile.semantic_id}:${bookCode}:${unitCode}:${activityCode}:${submissionId}:completed`)
+    .digest("hex");
+  const capsuleSemanticId = `${profile.semantic_id}-${bookCode}-${unitCode}-${activityCode}-${submissionId}`.toLowerCase();
+  const organizationId = enrollment.organization_id;
+  const classId = enrollment.class_id;
 
-  let progressPercent = 0;
-  let capsuleCreated = false;
+  let transactionResults;
+  for (let serializableAttempt = 0; serializableAttempt < 2; serializableAttempt += 1) {
+    try {
+      transactionResults = await sql.transaction((txn) => {
+        const queries = [
+          txn`
+            with allocated as (
+              insert into learning_attempt_counters (activity_id, student_id, next_attempt, updated_at)
+              values (${String(ref.activity_id)}, ${profile.id}, 1, now())
+              on conflict (activity_id, student_id) do update set
+                next_attempt=learning_attempt_counters.next_attempt + 1,
+                updated_at=now()
+              returning next_attempt
+            )
+            insert into activity_attempts (
+              activity_id, student_id, enrollment_id, attempt_number, response,
+              score, completion_status, submitted_at,
+              activity_content_version, contract_version, activity_contract, contract_hash,
+              submission_id, submission_hash
+            )
+            select
+              ${String(ref.activity_id)}, ${profile.id}, ${enrollmentId}, allocated.next_attempt,
+              ${evaluatedResponse}::jsonb, ${score}, ${decision.completionStatus}, now(),
+              ${contract.contentVersion}, ${contract.contractVersion},
+              ${JSON.stringify(contract)}::jsonb, ${contractHash},
+              ${submissionId}::uuid, ${submissionHash}
+            from allocated
+            on conflict (submission_id) where submission_id is not null do update set
+              submission_id=excluded.submission_id
+            where activity_attempts.student_id=excluded.student_id
+              and activity_attempts.activity_id=excluded.activity_id
+              and activity_attempts.enrollment_id is not distinct from excluded.enrollment_id
+              and activity_attempts.submission_hash=excluded.submission_hash
+            returning id, attempt_number, submitted_at
+          `,
+          txn`
+            with counts as (
+              select
+                (select count(*)::int
+                 from activities a_total
+                 where a_total.unit_id=${String(ref.unit_id)}
+                   and a_total.status='published') as total_count,
+                (select count(distinct aa.activity_id)::int
+                 from activity_attempts aa
+                 join activities a_done on a_done.id=aa.activity_id
+                 where aa.student_id=${profile.id}
+                   and aa.enrollment_id=${enrollmentId}
+                   and aa.completion_status='completed'
+                   and a_done.unit_id=${String(ref.unit_id)}
+                   and a_done.status='published') as completed_count,
+                (select count(*)::int
+                 from activity_attempts aa_count
+                 where aa_count.activity_id=${String(ref.activity_id)}
+                   and aa_count.student_id=${profile.id}
+                   and aa_count.enrollment_id=${enrollmentId}) as attempt_count
+            ),
+            upserted as (
+              insert into book_progress (enrollment_id, unit_id, completion_percent, status, last_activity_at)
+              select
+                ${enrollmentId},
+                ${String(ref.unit_id)},
+                case when counts.total_count=0 then 0
+                     else round((counts.completed_count::numeric / counts.total_count::numeric) * 100, 2)
+                end,
+                case
+                  when counts.total_count > 0 and counts.completed_count >= counts.total_count then 'completed'
+                  when counts.completed_count > 0 then 'in_progress'
+                  else 'not_started'
+                end,
+                now()
+              from counts
+              on conflict (enrollment_id, unit_id) do update set
+                completion_percent=excluded.completion_percent,
+                status=excluded.status,
+                last_activity_at=excluded.last_activity_at,
+                updated_at=now()
+              returning completion_percent, status, last_activity_at
+            )
+            select upserted.*, counts.attempt_count
+            from upserted cross join counts
+          `,
+        ];
 
-  if (completed) {
-    const progressRows = await sql`
-      select
-        (select count(*)::int from activities where unit_id = ${String(ref.unit_id)} and status = 'published') as total_count,
-        (select count(distinct aa.activity_id)::int
-          from activity_attempts aa
-          join activities a2 on a2.id = aa.activity_id
-          where aa.student_id = ${profile.id}
-            and aa.enrollment_id = ${enrollmentId}
-            and aa.completion_status = 'completed'
-            and a2.unit_id = ${String(ref.unit_id)}
-            and a2.status = 'published') as completed_count
-    `;
-    const total = Math.max(1, Number(progressRows[0]?.total_count ?? 1));
-    const completedCount = Math.min(total, Number(progressRows[0]?.completed_count ?? 0));
-    progressPercent = Math.round((completedCount / total) * 100);
+        if (completed && ref.evidence_eligible === true) {
+          queries.push(txn`
+            insert into learning_capsules (
+              semantic_id, learner_id, organization_id, class_id, source_type, source_id,
+              title_en, title_vi, evidence_summary, skill_tags, mastery_level,
+              integrity_hash, status, sharing_scope, achieved_on
+            )
+            select
+              ${capsuleSemanticId}, ${profile.id}, ${organizationId}, ${classId},
+              'activity_attempt', aa.id::text, ${String(ref.title_en)}, ${String(ref.title_vi)},
+              jsonb_set(${evidenceSummaryBase}::jsonb, '{attemptId}', to_jsonb(aa.id::text), true),
+              ${skillTags}, 'demonstrated', ${integrityHash},
+              'draft', 'learner', current_date
+            from activity_attempts aa
+            where aa.submission_id=${submissionId}::uuid
+              and aa.student_id=${profile.id}
+              and aa.activity_id=${String(ref.activity_id)}
+              and aa.enrollment_id=${enrollmentId}
+              and aa.submission_hash=${submissionHash}
+            on conflict (semantic_id) do nothing
+            returning id
+          `);
+        }
 
-    await sql`
-      insert into book_progress (enrollment_id, unit_id, completion_percent, status, last_activity_at)
-      values (${enrollmentId}, ${String(ref.unit_id)}, ${progressPercent}, ${progressPercent >= 100 ? "completed" : "in_progress"}, now())
-      on conflict (enrollment_id, unit_id) do update set
-        completion_percent = excluded.completion_percent,
-        status = excluded.status,
-        last_activity_at = excluded.last_activity_at,
-        updated_at = now()
-    `;
-
-    if (ref.evidence_eligible === true) {
-      const attemptId = String(inserted[0]?.id ?? "");
-      const content = (ref.content || {}) as Record<string, unknown>;
-      const rawTags = Array.isArray(content.skillTags) ? content.skillTags.map(String).filter(Boolean).slice(0, 20) : [];
-      const skillTags = rawTags.length > 0 ? rawTags : ["english-communication", "future-readiness"];
-      const evidenceSummary = JSON.stringify({
-        activityCode,
-        activityContentVersion: contract.contentVersion,
-        contractVersion: contract.contractVersion,
-        contractHash,
-        score,
-        level: decision.level,
-        result: decision.result,
-        completionRule: decision.completionRule,
-        evidencePolicy: decision.evidencePolicy,
-        attemptId,
-      });
-      const integrityHash = createHash("sha256")
-        .update(`${profile.semantic_id}:${bookCode}:${unitCode}:${activityCode}:${attemptId}:completed`)
-        .digest("hex");
-      const capsuleSemanticId = `${profile.semantic_id}-${bookCode}-${unitCode}-${activityCode}-${attemptId}`.toLowerCase();
-      const organizationId = enrollment.organization_id;
-      const classId = enrollment.class_id;
-
-      await sql`
-        insert into learning_capsules (
-          semantic_id, learner_id, organization_id, class_id, source_type, source_id,
-          title_en, title_vi, evidence_summary, skill_tags, mastery_level,
-          integrity_hash, status, sharing_scope, achieved_on
-        ) values (
-          ${capsuleSemanticId}, ${profile.id}, ${organizationId}, ${classId},
-          'activity_attempt', ${attemptId}, ${String(ref.title_en)}, ${String(ref.title_vi)},
-          ${evidenceSummary}::jsonb, ${skillTags}, 'demonstrated', ${integrityHash},
-          'draft', 'learner', current_date
-        )
-        on conflict (semantic_id) do nothing
-      `;
-      capsuleCreated = true;
+        return queries;
+      }, { isolationLevel: "Serializable" });
+      break;
+    } catch (error) {
+      const code = error && typeof error === "object" && "code" in error
+        ? String((error as { code?: unknown }).code || "")
+        : "";
+      if (code === "40001" && serializableAttempt === 0) continue;
+      throw error;
     }
   }
+
+  if (!transactionResults) {
+    return jsonError("learning_transaction_unavailable", 503);
+  }
+
+  const attemptResult = transactionResults[0]?.[0] as Record<string, unknown> | undefined;
+  if (!attemptResult) {
+    return jsonError("submission_id_conflict", 409);
+  }
+  const progressResult = transactionResults[1]?.[0] as Record<string, unknown> | undefined;
+  const progressPercent = Math.round(Number(progressResult?.completion_percent || 0));
+  const attemptCount = Number(progressResult?.attempt_count || 0);
+  const capsuleCreated = completed && ref.evidence_eligible === true
+    ? Boolean(transactionResults[2]?.[0])
+    : false;
 
   return NextResponse.json({
     ok: true,
     synced: true,
-    attemptNumber,
-    attemptId: String(inserted[0]?.id ?? ""),
+    submissionId,
+    attemptNumber: Number(attemptResult.attempt_number || 1),
+    attemptCount,
+    attemptId: String(attemptResult.id || ""),
     evaluation: decision,
     progressPercent,
     capsuleCreated,
