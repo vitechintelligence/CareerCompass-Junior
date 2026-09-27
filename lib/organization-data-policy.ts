@@ -31,7 +31,17 @@ export async function getOrganizationRuntimePolicy(organizationId: string): Prom
   };
 }
 
-export function serverAiPermission(policy: OrganizationRuntimePolicy) {
+export function serverAiPermission(
+  policy: OrganizationRuntimePolicy,
+  context?: { platformAdmin?: boolean; platformMode?: "openai" | "mock" },
+) {
+  if (context?.platformAdmin) {
+    return {
+      allowed: true as const,
+      provider: context.platformMode === "openai" ? "openai-platform-test" : "mock-platform-test",
+      reason: context.platformMode === "openai" ? "platform_admin_openai_test" : "platform_admin_mock_test",
+    };
+  }
   if (policy.aiMode === "off") {
     return { allowed: false as const, code: "organization_ai_disabled", reason: "Live AI is disabled by this institution." };
   }
