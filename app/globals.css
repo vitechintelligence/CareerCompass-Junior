@@ -226,3 +226,14 @@ video {
     scroll-behavior: auto !important;
   }
 }
+
+
+.earlyYearsActivity .choiceButton,
+.earlyYearsActivity .button {
+  min-height: 52px;
+  font-size: 1.05rem;
+}
+
+.earlyYearsActivity textarea {
+  font-size: 1.05rem;
+}
