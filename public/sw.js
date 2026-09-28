@@ -1,4 +1,4 @@
-const PUBLIC_CACHE = "ccj-public-v3";
+const PUBLIC_CACHE = "ccj-public-v4";
 const PUBLIC_SHELL = ["/", "/offline", "/vitech-logo.svg", "/vitech-app-icon-512.png?v=3"];
 
 self.addEventListener("install", (event) => {
@@ -28,7 +28,16 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/workspace/") ||
     url.pathname.startsWith("/learn/")
   ) {
-    event.respondWith(fetch(request));
+    // Never cache private responses. Protected navigations may fall back only to
+    // the public offline explanation so a network loss is recoverable without
+    // exposing another account's cached data.
+    if (request.mode === "navigate") {
+      event.respondWith(
+        fetch(request).catch(async () => (await caches.match("/offline")) || Response.error()),
+      );
+    } else {
+      event.respondWith(fetch(request));
+    }
     return;
   }
 

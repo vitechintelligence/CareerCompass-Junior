@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { PwaBootstrap } from "./PwaBootstrap";
+import { ConnectivityStatus } from "./ConnectivityStatus";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 import "./live-workspaces.css";
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         {children}
+        <ConnectivityStatus />
         <PwaBootstrap />
       </body>
     </html>

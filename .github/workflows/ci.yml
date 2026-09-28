@@ -60,6 +60,9 @@ jobs:
       - name: Curriculum QA regression
         run: npm run test:curriculum-qa
 
+      - name: Device audio and PWA safety regression
+        run: npm run test:device
+
       - name: Evidence and reporting regression
         run: npm run test:evidence-reporting
 
