@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireTeacherClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 import { assessmentEvidenceLevel, evidenceStatusForLevel } from "@/lib/evidence/evidence-policy";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -56,6 +56,8 @@ export async function createAssessment(formData: FormData) {
     const options = boundedText(formData.get(`q${index}Options`), 2000).split("|").map((item) => item.trim()).filter(Boolean).slice(0, 6);
     if (questionType === "multiple_choice" && options.length < 2) throw new Error(`Question ${index} needs at least two options separated by |.`);
     const correctAnswer = boundedText(formData.get(`q${index}Correct`), 500);
+    if (questionType === "multiple_choice" && !correctAnswer) throw new Error(`Question ${index} needs an authoritative correct answer.`);
+    if (questionType === "multiple_choice" && !options.includes(correctAnswer)) throw new Error(`Question ${index} correct answer must match one of its options exactly.`);
     const rawPoints = boundedText(formData.get(`q${index}Points`), 12);
     const points = rawPoints ? Number(rawPoints) : 1;
     const objectiveEn = boundedText(formData.get(`q${index}ObjectiveEn`), 800);
@@ -68,38 +70,41 @@ export async function createAssessment(formData: FormData) {
 
   const profile = await requireTeacherForClass(classId);
   const sql = getDb();
-  const rows = await sql`
-    insert into assessments (
-      class_id, created_by, assessment_type, title_en, title_vi,
-      instructions_en, instructions_vi, status, due_at, time_limit_minutes,
-      demonstrated_threshold
-    )
-    values (
-      ${classId}, ${profile.id}, ${assessmentType}, ${titleEn}, ${titleVi},
-      ${instructionsEn || null}, ${instructionsVi || null}, 'published',
-      ${dueAt || null}::timestamptz, ${timeLimit}, ${demonstratedThreshold}
-    )
-    returning id
-  `;
-  const assessmentId = String(rows[0]?.id || "");
-  if (!assessmentId) throw new Error("Could not create assessment.");
+  const assessmentId = randomUUID();
 
-  for (let index = 0; index < questions.length; index += 1) {
-    const q = questions[index];
-    await sql`
-      insert into assessment_questions (
-        assessment_id, sort_order, question_type, prompt_en, prompt_vi, options, correct_answer, points,
-        learning_objective_en, learning_objective_vi, rubric
-      )
-      values (
-        ${assessmentId}, ${index + 1}, ${q.questionType}, ${q.promptEn}, ${q.promptVi},
-        ${JSON.stringify(q.options)}::jsonb, ${q.correctAnswer || null}, ${q.points},
-        ${q.objectiveEn || null}, ${q.objectiveVi || null},
-        ${JSON.stringify(q.rubricGuidance ? { guidance: q.rubricGuidance } : {})}::jsonb
-      )
-    `;
-  }
+  await sql.transaction((txn) => {
+    const queries = [
+      txn`
+        insert into assessments (
+          id, class_id, created_by, assessment_type, title_en, title_vi,
+          instructions_en, instructions_vi, status, due_at, time_limit_minutes,
+          demonstrated_threshold
+        )
+        values (
+          ${assessmentId}, ${classId}, ${profile.id}, ${assessmentType}, ${titleEn}, ${titleVi},
+          ${instructionsEn || null}, ${instructionsVi || null}, 'draft',
+          ${dueAt || null}::timestamptz, ${timeLimit}, ${demonstratedThreshold}
+        )
+      `,
+    ];
 
+    for (let index = 0; index < questions.length; index += 1) {
+      const q = questions[index];
+      queries.push(txn`
+        insert into assessment_questions (
+          assessment_id, sort_order, question_type, prompt_en, prompt_vi, options, correct_answer, points,
+          learning_objective_en, learning_objective_vi, rubric
+        )
+        values (
+          ${assessmentId}, ${index + 1}, ${q.questionType}, ${q.promptEn}, ${q.promptVi},
+          ${JSON.stringify(q.options)}::jsonb, ${q.correctAnswer || null}, ${q.points},
+          ${q.objectiveEn || null}, ${q.objectiveVi || null},
+          ${JSON.stringify(q.rubricGuidance ? { guidance: q.rubricGuidance } : {})}::jsonb
+        )
+      `);
+    }
+    return queries;
+  }, { isolationLevel: "Serializable" });
   revalidatePath("/workspace/teacher/assessments");
   revalidatePath("/workspace/teacher/my-classroom");
   revalidatePath("/workspace/teacher");
@@ -254,10 +259,31 @@ export async function setAssessmentStatus(formData: FormData) {
   const status = boundedText(formData.get("status"), 20);
   if (!UUID_RE.test(assessmentId) || !["published", "closed", "archived"].includes(status)) throw new Error("Invalid assessment update.");
   const sql = getDb();
-  const rows = await sql`select class_id from assessments where id=${assessmentId} limit 1`;
+  const rows = await sql`
+    select a.class_id, a.status,
+      count(q.id)::int as question_count,
+      count(q.id) filter (
+        where q.question_type='multiple_choice'
+          and (
+            q.correct_answer is null
+            or not (q.options ? q.correct_answer)
+          )
+      )::int as invalid_objective_questions
+    from assessments a
+    left join assessment_questions q on q.assessment_id=a.id
+    where a.id=${assessmentId}
+    group by a.id
+    limit 1
+  `;
   const classId = String(rows[0]?.class_id || "");
   if (!classId) throw new Error("Assessment not found.");
   await requireTeacherForClass(classId);
+
+  if (status === "published") {
+    if (Number(rows[0]?.question_count || 0) < 1) throw new Error("Add at least one validated question before publishing.");
+    if (Number(rows[0]?.invalid_objective_questions || 0) > 0) throw new Error("Every multiple-choice question needs a correct answer that matches one of its options.");
+  }
+
   await sql`update assessments set status=${status}, updated_at=now() where id=${assessmentId}`;
   revalidatePath("/workspace/teacher/assessments");
 }
