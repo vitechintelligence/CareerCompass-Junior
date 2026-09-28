@@ -66,13 +66,13 @@ export function PwaBootstrap() {
   if (dismissed || (!installPrompt && !showIosHelp)) return null;
 
   return (
-    <aside className="pwaInstallToast" aria-label="Install Career Compass Junior">
+    <aside className="pwaInstallToast" role="dialog" aria-live="polite" aria-labelledby="ccj-install-title" aria-describedby="ccj-install-copy">
       <span className="pwaInstallLogo"><img src="/vitech-logo.svg" alt="" /></span>
       <div className="pwaInstallCopy">
-        <strong>Install Career Compass</strong>
+        <strong id="ccj-install-title">Install Career Compass</strong>
         {showIosHelp
-          ? <span>On iPhone: tap Share, then “Add to Home Screen”.</span>
-          : <span>Add the LMS to your phone for faster portal access.</span>}
+          ? <span id="ccj-install-copy">On iPhone: tap Share, then “Add to Home Screen”.</span>
+          : <span id="ccj-install-copy">Add the LMS to your phone for faster portal access.</span>}
       </div>
       {!showIosHelp && <button type="button" className="pwaInstallAction" onClick={install}>Install</button>}
       <button type="button" className="pwaInstallClose" onClick={dismiss} aria-label="Dismiss install prompt">×</button>
