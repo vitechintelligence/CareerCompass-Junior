@@ -7,7 +7,7 @@ export function ConnectivityStatus() {
   const [reconnected, setReconnected] = useState(false);
 
   useEffect(() => {
-    setOnline(navigator.onLine);
+    const initialFrame = window.requestAnimationFrame(() => setOnline(navigator.onLine));
     let timer: number | undefined;
 
     const onOffline = () => {
@@ -25,6 +25,7 @@ export function ConnectivityStatus() {
     window.addEventListener("offline", onOffline);
     window.addEventListener("online", onOnline);
     return () => {
+      window.cancelAnimationFrame(initialFrame);
       if (timer) window.clearTimeout(timer);
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("online", onOnline);
