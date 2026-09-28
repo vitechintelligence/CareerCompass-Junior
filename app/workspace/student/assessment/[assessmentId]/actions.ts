@@ -6,6 +6,7 @@ import { requireActiveProfile, requireStudentClassAccess } from "@/lib/auth/auth
 import { getDb } from "@/lib/db";
 import { assessmentEvidenceLevel } from "@/lib/evidence/evidence-policy";
 import { normalizeSubmissionId } from "@/lib/learning/idempotency";
+import { enforceLearningWriteQuota } from "@/lib/learning/write-quota";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -134,6 +135,13 @@ export async function submitAssessment(formData: FormData) {
       throw new Error("The time limit has expired.");
     }
   }
+
+  await enforceLearningWriteQuota({
+    profileId: profile.id,
+    organizationId: String(assessment.organization_id),
+    submissionId,
+    resource: "assessment",
+  });
 
   const questions = await sql`
     select id, question_type, correct_answer, points
