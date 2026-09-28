@@ -79,6 +79,13 @@ export default async function PartnerWorkspacePage() {
     order by c.name
   `;
 
+  const publishedBooks = await sql`
+    select code, title_en, title_vi, level_label, age_band
+    from books
+    where status='published'
+    order by title_en, code
+  `;
+
   const totals = await sql`
     select
       (select count(distinct cm.student_id)::int from class_memberships cm join classes c on c.id=cm.class_id where c.organization_id=${organizationId} and cm.status='active') as students,
@@ -212,7 +219,12 @@ export default async function PartnerWorkspacePage() {
               <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
               <button className="button" type="submit">Send institution invitation</button>
             </form>
-            {classes.length === 0 ? <EmptyState text="Create a class first." /> : <form action={enrollStudent} className="workspaceForm" style={{ marginTop: 16 }}><label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label><label><span>Accepted learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label><button className="button soft" type="submit">Enroll accepted learner</button></form>}
+            {classes.length === 0 || publishedBooks.length === 0 ? <EmptyState text={classes.length === 0 ? "Create a class first." : "No published books are available for enrollment."} /> : <form action={enrollStudent} className="workspaceForm" style={{ marginTop: 16 }}>
+              <label><span>Class</span><select name="classId">{classes.map((item) => <option key={String(item.id)} value={String(item.id)}>{String(item.name)}</option>)}</select></label>
+              <label><span>Published book / course</span><select name="bookCode">{publishedBooks.map((book) => <option key={String(book.code)} value={String(book.code)}>{String(book.title_en)} · {String(book.level_label || book.age_band || book.code)}</option>)}</select></label>
+              <label><span>Accepted learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
+              <button className="button soft" type="submit">Enroll learner in selected book</button>
+            </form>}
           </article>
 
           <article className="panel">
