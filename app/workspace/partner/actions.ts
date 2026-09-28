@@ -349,3 +349,104 @@ export async function recordLearnerConsent(formData: FormData) {
 
   revalidatePath("/workspace/partner");
 }
+
+
+export async function linkGuardianReporter(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const learnerSemanticId = boundedText(formData.get("studentSemanticId"), 100);
+  const guardianSemanticId = boundedText(formData.get("guardianSemanticId"), 100);
+  if (
+    !UUID_RE.test(organizationId) ||
+    !SEMANTIC_ID_RE.test(learnerSemanticId) ||
+    !SEMANTIC_ID_RE.test(guardianSemanticId)
+  ) {
+    throw new Error("Organization, learner ID and guardian account ID are required.");
+  }
+
+  const actor = await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  const learners = await sql`
+    select p.id
+    from profiles p
+    join organization_memberships om
+      on om.profile_id=p.id
+     and om.organization_id=${organizationId}
+     and om.role='student'
+     and om.status='active'
+    where p.semantic_id=${learnerSemanticId}
+      and p.account_type='student'
+      and p.status='active'
+      and exists (
+        select 1
+        from learner_consent_records lcr
+        where lcr.learner_id=p.id
+          and lcr.organization_id=${organizationId}
+          and lcr.consent_type='guardian_reporting'
+          and lcr.status='active'
+          and lcr.guardian_confirmation=true
+          and lcr.revoked_at is null
+      )
+    limit 1
+  `;
+  const learnerId = String(learners[0]?.id || "");
+  if (!learnerId) throw new Error("Active learner and guardian-reporting consent are required.");
+
+  const guardians = await sql`
+    select id
+    from profiles
+    where semantic_id=${guardianSemanticId}
+      and status='active'
+    limit 1
+  `;
+  const guardianProfileId = String(guardians[0]?.id || "");
+  if (!guardianProfileId || guardianProfileId === learnerId) {
+    throw new Error("Use a different active signed-in account for guardian report access.");
+  }
+
+  await sql`
+    insert into guardian_report_links (
+      learner_id, organization_id, guardian_profile_id, status, linked_by, linked_at, revoked_at
+    )
+    values (
+      ${learnerId}, ${organizationId}, ${guardianProfileId}, 'active', ${actor.id}, now(), null
+    )
+    on conflict (learner_id, organization_id, guardian_profile_id) do update set
+      status='active',
+      linked_by=excluded.linked_by,
+      linked_at=now(),
+      revoked_at=null
+  `;
+
+  revalidatePath("/workspace/partner");
+  revalidatePath("/workspace/guardian");
+}
+
+export async function revokeGuardianReporter(formData: FormData) {
+  const organizationId = String(formData.get("organizationId") || "");
+  const learnerSemanticId = boundedText(formData.get("studentSemanticId"), 100);
+  const guardianSemanticId = boundedText(formData.get("guardianSemanticId"), 100);
+  if (
+    !UUID_RE.test(organizationId) ||
+    !SEMANTIC_ID_RE.test(learnerSemanticId) ||
+    !SEMANTIC_ID_RE.test(guardianSemanticId)
+  ) {
+    throw new Error("Organization, learner ID and guardian account ID are required.");
+  }
+
+  await requirePartnerOrganization(organizationId);
+  const sql = getDb();
+  await sql`
+    update guardian_report_links grl
+    set status='revoked', revoked_at=now()
+    from profiles learner, profiles guardian
+    where grl.organization_id=${organizationId}
+      and grl.learner_id=learner.id
+      and grl.guardian_profile_id=guardian.id
+      and learner.semantic_id=${learnerSemanticId}
+      and guardian.semantic_id=${guardianSemanticId}
+      and grl.status='active'
+  `;
+
+  revalidatePath("/workspace/partner");
+  revalidatePath("/workspace/guardian");
+}
