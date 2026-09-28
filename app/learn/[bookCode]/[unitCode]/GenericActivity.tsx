@@ -10,9 +10,10 @@ type Props = {
   bookCode: string;
   unitCode: string;
   enrollmentId?: string;
+  ageBand?: string | null;
 };
 
-export default function GenericActivity({ activity, locale, bookCode, unitCode, enrollmentId }: Props) {
+export default function GenericActivity({ activity, locale, bookCode, unitCode, enrollmentId, ageBand }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [ordered, setOrdered] = useState<string[]>([]);
@@ -34,6 +35,14 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const model = typeof content.model === "string" ? content.model : null;
   const prompt = typeof content.prompt === "string" ? content.prompt : null;
   const type = activity.activityType.toLowerCase();
+  const ageMatch = String(ageBand || "").replace(/[–—]/g, "-").match(/^(\d{1,2})-(\d{1,2})$/);
+  const earlyYears = Boolean(ageMatch && Number(ageMatch[2]) <= 6);
+  const openResponseType =
+    type.includes("reflection") ||
+    type.includes("writing") ||
+    type.includes("short_answer") ||
+    type.includes("journal") ||
+    (type.includes("speaking") && !earlyYears);
 
   const selectedSequence = useMemo(() => ordered.length > 0 ? ordered : [], [ordered]);
 
@@ -175,7 +184,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   }
 
   return (
-    <article className="lessonCard genericActivityCard">
+    <article className={`lessonCard genericActivityCard${earlyYears ? " earlyYearsActivity" : ""}`}>
       <div className="lessonSectionHeader">
         <div><div className="lessonSectionLabel">{activity.code} · {activity.activityType.replaceAll("_", " ")}</div><h3>{title}</h3></div>
         <div className="tagRow">
@@ -212,7 +221,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         <div className="activityFooter"><button className="button soft" type="button" disabled={syncState === "saving"} onClick={saveSequence}>{locale === "vi" ? "Kiểm tra thứ tự" : "Check order"}</button></div>
       </div>}
 
-      {(type.includes("reflection") || type.includes("writing") || type.includes("short_answer") || type.includes("speaking") || type.includes("journal")) && (
+      {openResponseType && (
         <div>
           {type.includes("speaking") && <p className="muted">{locale === "vi" ? "Nói câu trả lời thành tiếng, sau đó viết từ khóa hoặc câu của em bên dưới." : "Say your answer aloud, then capture your key words or sentence below."}</p>}
           <textarea value={text} onChange={(event) => { setText(event.target.value); setMessage(null); }} placeholder={locale === "vi" ? "Viết câu trả lời của em…" : "Write your response…"} style={{ width: "100%", minHeight: 120, padding: 14, borderRadius: 14, border: "1px solid #cbd5e1", font: "inherit" }} />
@@ -221,7 +230,15 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
       )}
 
       {options.length > 0 && <div className="activityFooter"><button className="button soft" type="button" onClick={checkChoice} disabled={syncState === "saving"}>{locale === "vi" ? "Kiểm tra" : "Check"}</button></div>}
-      {options.length === 0 && sequence.length === 0 && !type.includes("reflection") && !type.includes("writing") && !type.includes("short_answer") && !type.includes("speaking") && !type.includes("journal") && (type === "self_check" || items.length > 0 || model) && (
+      {earlyYears && type.includes("speaking") && (
+        <div className="activityFooter">
+          <button className="button primary" type="button" disabled={syncState === "saving"} onClick={() => syncAttempt({ selfReported: true, mode: "voice_practice" })}>
+            {locale === "vi" ? "🎤 Em đã nói và luyện tập" : "🎤 I said it and practiced"}
+          </button>
+          <p className="muted">{locale === "vi" ? "Đây là dấu luyện tập, chưa phải minh chứng đã thành thạo." : "This records practice only; it does not prove mastery."}</p>
+        </div>
+      )}
+      {options.length === 0 && sequence.length === 0 && !openResponseType && !(earlyYears && type.includes("speaking")) && (type === "self_check" || items.length > 0 || model) && (
         <div className="activityFooter"><button className="button soft" type="button" disabled={syncState === "saving"} onClick={() => syncAttempt({ selfReported: true })}>{locale === "vi" ? "Tự ghi nhận đã luyện tập" : "Self-report practice"}</button></div>
       )}
       {message && <p className="activityMessage">{message}</p>}
