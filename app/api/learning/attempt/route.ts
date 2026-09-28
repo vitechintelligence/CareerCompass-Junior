@@ -13,6 +13,7 @@ import {
 } from "@/lib/learning/activity-contract";
 import { readBoundedJson } from "@/lib/learning/request-json";
 import { normalizeSubmissionId } from "@/lib/learning/idempotency";
+import { enforceLearningWriteQuota, LearningWriteQuotaError } from "@/lib/learning/write-quota";
 
 export const dynamic = "force-dynamic";
 
@@ -163,6 +164,18 @@ export async function POST(request: Request) {
   }
 
   const enrollmentId = enrollment.id;
+  try {
+    await enforceLearningWriteQuota({
+      profileId: profile.id,
+      organizationId: enrollment.organization_id,
+      submissionId,
+      resource: "activity",
+    });
+  } catch (error) {
+    if (error instanceof LearningWriteQuotaError) return jsonError(error.code, error.status);
+    throw error;
+  }
+
   const completed = decision.level === "DEMONSTRATED";
   const score = decision.score;
   const evaluatedResponse = JSON.stringify({ learnerResponse: payload.response, evaluation: decision });
