@@ -9,6 +9,8 @@ export type BookCatalogItem = {
   bilingual: boolean;
   description: string;
   accent: string;
+  conversionStatus: "lms_partial" | "lms_mapped";
+  coverageLabel: string;
   units: Array<{
     code: string;
     unitNumber: number;
@@ -31,6 +33,8 @@ export const interactiveBooks: BookCatalogItem[] = [
     bilingual: true,
     description: "English + skills adventure for curious minds, projects, communication and future readiness.",
     accent: "🧭",
+    conversionStatus: "lms_partial",
+    coverageLabel: "2 structured LMS units currently mapped; source conversion continues.",
     units: [
       { code: "U01", unitNumber: 1, titleEn: "My Big Idea", titleVi: "Ý tưởng lớn của em", objectiveEn: "Introduce an idea and explain one reason it matters.", objectiveVi: "Giới thiệu một ý tưởng và giải thích một lý do vì sao ý tưởng đó quan trọng.", careerCompassFocus: "Curiosity, idea formation and confident sharing", masteryEnglishFocus: "I think… / My idea is… / It matters because…" },
       { code: "U02", unitNumber: 2, titleEn: "People Who Help", titleVi: "Những người giúp đỡ", objectiveEn: "Describe how people use skills to help others.", objectiveVi: "Mô tả cách mọi người dùng kỹ năng để giúp người khác.", careerCompassFocus: "Roles, contribution and community awareness", masteryEnglishFocus: "He/She helps by… / They are good at…" },
@@ -45,6 +49,8 @@ export const interactiveBooks: BookCatalogItem[] = [
     bilingual: true,
     description: "Bilingual English–Vietnamese mastery journey combining communication, self-discovery and practical skills.",
     accent: "🌱",
+    conversionStatus: "lms_partial",
+    coverageLabel: "Full source interactive book available; structured LMS evidence mapping currently covers Unit 1.",
     units: [
       { code: "U01", unitNumber: 1, titleEn: "Who Am I?", titleVi: "Em là ai?", objectiveEn: "Introduce yourself with simple, usable English.", objectiveVi: "Giới thiệu bản thân bằng tiếng Anh đơn giản, có thể sử dụng ngay.", careerCompassFocus: "Identity and self-awareness", masteryEnglishFocus: "My name is… / I am… / I like…" },
       { code: "U02", unitNumber: 2, titleEn: "My Strengths", titleVi: "Điểm mạnh của em", objectiveEn: "Name strengths and give a simple example.", objectiveVi: "Gọi tên điểm mạnh và đưa ra một ví dụ đơn giản.", careerCompassFocus: "Strengths discovery", masteryEnglishFocus: "I am good at… / I can…" },
@@ -59,6 +65,8 @@ export const interactiveBooks: BookCatalogItem[] = [
     bilingual: true,
     description: "Teen learning journey for English, life skills, self-awareness and early career discovery.",
     accent: "🗺️",
+    conversionStatus: "lms_partial",
+    coverageLabel: "Full source interactive book available; structured LMS evidence mapping currently covers 2 units.",
     units: [
       { code: "U01", unitNumber: 1, titleEn: "My Direction", titleVi: "Hướng đi của tôi", objectiveEn: "Express one interest, one strength and one goal.", objectiveVi: "Diễn đạt một sở thích, một điểm mạnh và một mục tiêu.", careerCompassFocus: "Identity, agency and direction", masteryEnglishFocus: "I am interested in… / I am good at… / I want to…" },
       { code: "U02", unitNumber: 2, titleEn: "Choices & Reasons", titleVi: "Lựa chọn & Lý do", objectiveEn: "Compare choices and explain a reason.", objectiveVi: "So sánh lựa chọn và giải thích một lý do.", careerCompassFocus: "Decision-making and reflection", masteryEnglishFocus: "I prefer… because… / Another choice is…" },
@@ -73,6 +81,8 @@ export const interactiveBooks: BookCatalogItem[] = [
     bilingual: true,
     description: "Listen, move, trace, play and build early English sound confidence through action-based learning.",
     accent: "🎧",
+    conversionStatus: "lms_partial",
+    coverageLabel: "2 structured early-years LMS units currently mapped; source conversion continues.",
     units: [
       { code: "U01", unitNumber: 1, titleEn: "Hello, Action City!", titleVi: "Xin chào Action City!", objectiveEn: "Hear, repeat and respond to simple classroom action words.", objectiveVi: "Nghe, lặp lại và phản hồi các từ hành động đơn giản trong lớp học.", careerCompassFocus: "Confidence, participation and playful discovery", masteryEnglishFocus: "Listen · Move · Say · Play" },
       { code: "U02", unitNumber: 2, titleEn: "Sounds Around Me", titleVi: "Âm thanh quanh em", objectiveEn: "Notice and repeat early English sounds through movement and pictures.", objectiveVi: "Nhận biết và lặp lại âm tiếng Anh đầu đời qua vận động và hình ảnh.", careerCompassFocus: "Attention and sensory learning", masteryEnglishFocus: "Sound imitation, rhythm and simple words" },
