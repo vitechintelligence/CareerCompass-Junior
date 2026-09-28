@@ -54,6 +54,9 @@ jobs:
       - name: Classroom revision workflow regression
         run: npm run test:classroom
 
+      - name: Evidence rubric and reporting regression
+        run: npm run test:evidence-reporting
+
       - name: Evidence and reporting regression
         run: npm run test:evidence-reporting
 
