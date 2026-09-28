@@ -93,8 +93,8 @@ export default async function StudentAssignmentPage({
           <article className="panel">
             <div className="eyebrow">Instructions</div>
             <p>{String(assignment.instructions_en || "Complete the assignment and submit your best work.")}</p>
-            {assignment.instructions_vi && <p className="muted">{String(assignment.instructions_vi)}</p>}
-            {assignment.due_at && <p className="muted">Due {new Date(String(assignment.due_at)).toLocaleString("en-GB")}</p>}
+            {typeof assignment.instructions_vi === "string" && assignment.instructions_vi.length > 0 && <p className="muted">{assignment.instructions_vi}</p>}
+            {assignment.due_at != null && <p className="muted">Due {new Date(String(assignment.due_at)).toLocaleString("en-GB")}</p>}
           </article>
           <article className="panel">
             <div className="eyebrow">Current state</div>
