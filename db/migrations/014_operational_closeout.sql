@@ -74,6 +74,21 @@ create table if not exists integration_reconciliation_items (
 create index if not exists idx_integration_reconciliation_job
   on integration_reconciliation_items(sync_job_id, status, created_at);
 
+create table if not exists guardian_report_links (
+  id uuid primary key default gen_random_uuid(),
+  learner_id uuid not null references profiles(id) on delete cascade,
+  organization_id uuid not null references organizations(id) on delete cascade,
+  guardian_profile_id uuid not null references profiles(id) on delete cascade,
+  status text not null default 'active' check (status in ('active','revoked')),
+  linked_by uuid references profiles(id) on delete set null,
+  linked_at timestamptz not null default now(),
+  revoked_at timestamptz,
+  unique (learner_id, organization_id, guardian_profile_id)
+);
+
+create index if not exists idx_guardian_report_links_guardian
+  on guardian_report_links(guardian_profile_id, status, linked_at desc);
+
 create table if not exists data_lifecycle_requests (
   id uuid primary key default gen_random_uuid(),
   organization_id uuid references organizations(id) on delete set null,
