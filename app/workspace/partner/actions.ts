@@ -231,7 +231,8 @@ export async function inviteStudentToOrganization(formData: FormData) {
 export async function enrollStudent(formData: FormData) {
   const classId = String(formData.get("classId") || "");
   const semanticId = boundedText(formData.get("studentSemanticId"), 100);
-  if (!UUID_RE.test(classId) || !SEMANTIC_ID_RE.test(semanticId)) throw new Error("Class and valid learner ID are required.");
+  const bookCode = boundedText(formData.get("bookCode"), 100);
+  if (!UUID_RE.test(classId) || !SEMANTIC_ID_RE.test(semanticId) || !bookCode) throw new Error("Class, learner ID and published book are required.");
 
   const organizationId = await requirePartnerClass(classId);
   const sql = getDb();
@@ -276,14 +277,21 @@ export async function enrollStudent(formData: FormData) {
     on conflict (class_id, student_id) do update set status = 'active'
   `;
 
-  const book = await sql`select id from books where code = 'CCJ-MASTERY-BEGINNER' and status = 'published' limit 1`;
-  if (book[0]?.id) {
-    await sql`
-      insert into student_enrollments (student_id, book_id, class_id, status)
-      values (${studentId}, ${String(book[0].id)}, ${classId}, 'active')
-      on conflict (student_id, book_id, class_id) do update set status = 'active'
-    `;
-  }
+  const book = await sql`
+    select id
+    from books
+    where code=${bookCode}
+      and status='published'
+    limit 1
+  `;
+  const bookId = String(book[0]?.id || "");
+  if (!bookId) throw new Error("Published book not found.");
+
+  await sql`
+    insert into student_enrollments (student_id, book_id, class_id, status)
+    values (${studentId}, ${bookId}, ${classId}, 'active')
+    on conflict (student_id, book_id, class_id) do update set status = 'active'
+  `;
 
   revalidatePath("/workspace/partner");
 }
