@@ -1,0 +1,78 @@
+import { getDb } from "@/lib/db";
+
+export const LEARNING_WRITE_LIMITS = {
+  learnerMinute: 30,
+  learnerDay: 1000,
+  organizationMinute: 600,
+  organizationDay: 20000,
+} as const;
+
+export class LearningWriteQuotaError extends Error {
+  readonly status = 429;
+  constructor(public readonly code = "learning_write_quota_exceeded") {
+    super(code);
+  }
+}
+
+export function quotaScopeKeys(profileId: string, organizationId?: string | null) {
+  const learner = organizationId
+    ? `learner:${profileId}:org:${organizationId}`
+    : `learner:${profileId}:personal`;
+  return {
+    learner,
+    organization: organizationId ? `organization:${organizationId}` : null,
+  };
+}
+
+export async function enforceLearningWriteQuota(input: {
+  profileId: string;
+  organizationId?: string | null;
+  submissionId?: string | null;
+  resource: "activity" | "assessment" | "steam";
+}) {
+  const sql = getDb();
+
+  if (input.submissionId) {
+    const existing = input.resource === "activity"
+      ? await sql`select 1 from activity_attempts where submission_id=${input.submissionId}::uuid limit 1`
+      : input.resource === "assessment"
+        ? await sql`select 1 from assessment_attempts where submission_id=${input.submissionId}::uuid limit 1`
+        : [];
+    if (existing[0]) return { duplicate: true, allowed: true };
+  }
+
+  const scopes = quotaScopeKeys(input.profileId, input.organizationId);
+  const windows: Array<{ scopeKey: string; kind: "minute" | "day"; limit: number }> = [
+    { scopeKey: scopes.learner, kind: "minute", limit: LEARNING_WRITE_LIMITS.learnerMinute },
+    { scopeKey: scopes.learner, kind: "day", limit: LEARNING_WRITE_LIMITS.learnerDay },
+  ];
+  if (scopes.organization) {
+    windows.push(
+      { scopeKey: scopes.organization, kind: "minute", limit: LEARNING_WRITE_LIMITS.organizationMinute },
+      { scopeKey: scopes.organization, kind: "day", limit: LEARNING_WRITE_LIMITS.organizationDay },
+    );
+  }
+
+  for (const window of windows) {
+    const rows = await sql`
+      insert into learning_write_quota_windows (
+        scope_key, window_kind, window_start, write_count, updated_at
+      )
+      values (
+        ${window.scopeKey},
+        ${window.kind},
+        date_trunc(${window.kind}, now()),
+        1,
+        now()
+      )
+      on conflict (scope_key, window_kind, window_start) do update set
+        write_count=learning_write_quota_windows.write_count + 1,
+        updated_at=now()
+      where learning_write_quota_windows.write_count < ${window.limit}
+      returning write_count
+    `;
+    if (!rows[0]) throw new LearningWriteQuotaError();
+  }
+
+  return { duplicate: false, allowed: true };
+}
