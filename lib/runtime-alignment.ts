@@ -1,9 +1,10 @@
 import { CANONICAL_PRODUCTION_ORIGIN } from "@/lib/site";
+import { resolveDeploymentEnvironment } from "@/lib/runtime-environment";
 
 export const EXPECTED_NEON_PROJECT = {
   name: "Career Compass LMS",
   id: "royal-queen-79814128",
-  branchId: "br-shiny-meadow-b3ibu54",
+  branchId: "br-shiny-meadow-b3ibu54h",
   region: "aws-ap-southeast-1",
 } as const;
 
@@ -49,6 +50,7 @@ function neonEndpointFromAuthUrl(value: string | null) {
 }
 
 export type RuntimeAlignmentStatus = {
+  environment: "development" | "preview" | "production" | "test";
   production: boolean;
   canonicalOrigin: string;
   databaseConfigured: boolean;
@@ -69,7 +71,12 @@ export type RuntimeAlignmentStatus = {
 };
 
 export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
-  const production = process.env.NODE_ENV === "production";
+  const environment = resolveDeploymentEnvironment({
+    vercelEnv: process.env.VERCEL_ENV,
+    nodeEnv: process.env.NODE_ENV,
+    ci: process.env.CI,
+  });
+  const production = environment === "production";
   const databaseUrl = configured("DATABASE_URL");
   const authBaseUrl =
     configured("NEON_AUTH_BASE_URL") || configured("NEON_AUTH_URL");
@@ -170,6 +177,7 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
       (appOriginMatches === true || appOriginMatches === null));
 
   return {
+    environment,
     production,
     canonicalOrigin: CANONICAL_PRODUCTION_ORIGIN,
     databaseConfigured: Boolean(databaseUrl),
@@ -201,7 +209,7 @@ export function assertNoKnownProductionProjectMismatch() {
 
   if (status.blockingBranchMismatch) {
     throw new Error(
-      "Production Neon branch mismatch. Expected br-shiny-meadow-b3ibu54 for Career Compass LMS.",
+      "Production Neon branch mismatch. Expected br-shiny-meadow-b3ibu54h for Career Compass LMS.",
     );
   }
 
