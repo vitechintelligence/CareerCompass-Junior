@@ -6,6 +6,7 @@ import { COMMUNITY_BRIDGE_MISSIONS } from "@/lib/steam-missions";
 import { testBridge, validateBridgeDesign, type BridgeDesign } from "@/lib/steam/bridge-engine";
 import { EvaluationError } from "@/lib/learning/objective-evaluation";
 import { readBoundedJson } from "@/lib/learning/request-json";
+import { enforceLearningWriteQuota, LearningWriteQuotaError } from "@/lib/learning/write-quota";
 
 export const dynamic = "force-dynamic";
 
@@ -142,6 +143,16 @@ export async function POST(request: Request) {
   const versionId = String(versionRows[0].id);
   const organizationId = String(assignment[0].organization_id);
   const classId = assignment[0].class_id ? String(assignment[0].class_id) : null;
+  try {
+    await enforceLearningWriteQuota({
+      profileId: profile.id,
+      organizationId,
+      resource: "steam",
+    });
+  } catch (error) {
+    if (error instanceof LearningWriteQuotaError) return jsonError(error.code, error.status);
+    throw error;
+  }
   const runMode = ["small_group","large_group"].includes(String(payload.runMode)) ? payload.runMode! : "individual";
 
   let runRows = await sql`
