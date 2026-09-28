@@ -571,6 +571,7 @@ async function toggleRecord(btnEl, audioEl, recId){
     rec.onerror = e=>{
       btnEl.classList.remove('recording');
       btnEl.textContent = '🎙 Ghi lại';
+      btnEl.setAttribute('aria-pressed','false');
       stopActiveStream();
       alert(recordErrorMessage(e));
     };
@@ -596,6 +597,7 @@ async function toggleRecord(btnEl, audioEl, recId){
       }
       btnEl.classList.remove('recording');
       btnEl.textContent = '🎙 Ghi lại';
+      btnEl.setAttribute('aria-pressed','false');
       stopActiveStream();
       activeRecorder=null;
     };
@@ -606,6 +608,7 @@ async function toggleRecord(btnEl, audioEl, recId){
         }
         btnEl.classList.remove('recording');
         btnEl.textContent = '🎙 Ghi lại';
+        btnEl.setAttribute('aria-pressed','false');
       };
     });
     rec.start();
