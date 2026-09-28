@@ -282,7 +282,10 @@ export default async function StudentWorkspacePage() {
 
           <article className="panel">
             <div className="eyebrow">Learning evidence</div>
-            <h2 className="workspaceTitle">My achievements</h2>
+            <div className="workspaceRow" style={{ padding: 0 }}>
+              <h2 className="workspaceTitle">My achievements</h2>
+              <Link className="button soft" href="/workspace/student/evidence">Open timeline</Link>
+            </div>
             {capsules.length === 0 ? <EmptyState text="Evidence-eligible activities will build your learning capsule here as you complete them." /> : (
               <div className="workspaceList">
                 {capsules.map((item) => <div className="workspaceRow" key={String(item.id)}><div><strong>{String(item.title_en)}</strong><div className="muted">{String(item.mastery_level || "Learning evidence")}</div></div><span className="pill">{String(item.status)}</span></div>)}
