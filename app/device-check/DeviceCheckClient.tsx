@@ -20,17 +20,23 @@ export default function DeviceCheckClient() {
   const chunksRef=useRef<BlobPart[]>([]);
 
   useEffect(()=>{
-    const recorderAvailable=typeof MediaRecorder!=="undefined";
-    setSnapshot({
-      secureContext:window.isSecureContext,
-      mediaDevices:Boolean(navigator.mediaDevices?.getUserMedia),
-      mediaRecorder:recorderAvailable,
-      recorderMime:recorderAvailable ? chooseRecorderMime(MediaRecorder.isTypeSupported?.bind(MediaRecorder)) : "",
-      speechSynthesis:"speechSynthesis" in window,
-      serviceWorker:"serviceWorker" in navigator,
-      online:navigator.onLine,
-      standalone:window.matchMedia("(display-mode: standalone)").matches || Boolean((navigator as Navigator & {standalone?:boolean}).standalone),
+    const frame=window.requestAnimationFrame(()=>{
+      const recorderAvailable=typeof MediaRecorder!=="undefined";
+      setSnapshot({
+        secureContext:window.isSecureContext,
+        mediaDevices:Boolean(navigator.mediaDevices?.getUserMedia),
+        mediaRecorder:recorderAvailable,
+        recorderMime:recorderAvailable ? chooseRecorderMime(MediaRecorder.isTypeSupported?.bind(MediaRecorder)) : "",
+        speechSynthesis:"speechSynthesis" in window,
+        serviceWorker:"serviceWorker" in navigator,
+        online:navigator.onLine,
+        standalone:window.matchMedia("(display-mode: standalone)").matches || Boolean((navigator as Navigator & {standalone?:boolean}).standalone),
+      });
     });
+    return ()=>window.cancelAnimationFrame(frame);
+  },[]);
+
+  useEffect(()=>{
     return ()=>{
       if(audioUrl) URL.revokeObjectURL(audioUrl);
       stopStream(streamRef.current);
