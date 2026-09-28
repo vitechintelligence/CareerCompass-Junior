@@ -36,10 +36,6 @@ export async function startTimedAssessment(formData: FormData) {
   if (!assessment) throw new Error("This timed assessment is not available.");
   await requireStudentClassAccess(String(assessment.class_id), profile);
 
-  await sql`
-    select pg_advisory_xact_lock(hashtextextended(${`assessment-session:${assessmentId}:${profile.id}`}, 0))
-  `;
-
   const active = await sql`
     select id
     from assessment_sessions
@@ -74,7 +70,7 @@ export async function startTimedAssessment(formData: FormData) {
       now() + make_interval(mins => ${Number(assessment.time_limit_minutes)}),
       'started'
     )
-    on conflict (submission_id) do nothing
+    on conflict (assessment_id, student_id) where status='started' do nothing
   `;
 
   revalidatePath(`/workspace/student/assessment/${assessmentId}`);
