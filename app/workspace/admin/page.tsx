@@ -153,6 +153,13 @@ export default async function PlatformAdminPage() {
           </div>
         </section>
 
+        <section className={styles.panel} style={{ marginBottom: 18 }}>
+          <div className={styles.eyebrow}>Curriculum operations</div>
+          <h2>QA the learner contract before release</h2>
+          <p className={styles.muted}>Inspect objective, answer, feedback, language, age band, completion rule, evidence rule and content version. Run the production evaluator in no-persistence learner simulation mode.</p>
+          <Link className={`${styles.button} ${styles.buttonPrimary}`} href="/workspace/admin/curriculum-qa">Open Curriculum QA</Link>
+        </section>
+
         <section className={styles.metrics}>
           <div className={styles.metric}><span>Pending partners</span><strong>{requestRows.length}</strong></div>
           <div className={styles.metric}><span>Active institutions</span><strong>{organizationRows.length}</strong></div>
