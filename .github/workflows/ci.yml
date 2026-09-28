@@ -57,6 +57,9 @@ jobs:
       - name: Evidence rubric and reporting regression
         run: npm run test:evidence-reporting
 
+      - name: Curriculum QA regression
+        run: npm run test:curriculum-qa
+
       - name: Evidence and reporting regression
         run: npm run test:evidence-reporting
 
