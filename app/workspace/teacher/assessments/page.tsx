@@ -122,8 +122,8 @@ export default async function TeacherAssessmentsPage() {
                   const manual = answer.autoCorrect == null;
                   return <div className="miniCard light" key={String(answer.answerId)}>
                     <strong>{index + 1}. {String(answer.promptEn || "")}</strong>
-                    {answer.objectiveEn && <div className="muted">Objective: {String(answer.objectiveEn)}</div>}
-                    {rubric.guidance && <div className="muted">Rubric: {String(rubric.guidance)}</div>}
+                    {typeof answer.objectiveEn === "string" && answer.objectiveEn.length > 0 && <div className="muted">Objective: {answer.objectiveEn}</div>}
+                    {typeof rubric.guidance === "string" && rubric.guidance.length > 0 && <div className="muted">Rubric: {rubric.guidance}</div>}
                     <p style={{ whiteSpace: "pre-wrap" }}>{String(answer.answerText || "")}</p>
                     {manual ? (
                       <label><span>Points / {String(answer.points)}</span><input name={`points_${String(answer.answerId)}`} type="number" min="0" max={Number(answer.points || 0)} step="0.5" required /></label>
