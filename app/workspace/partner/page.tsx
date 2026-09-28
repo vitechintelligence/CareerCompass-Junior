@@ -4,7 +4,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
-import { activateTeacher, assignTeacher, createClass, enrollStudent, inviteStudentToOrganization, recordLearnerConsent, requestPartnerAccess, revokeLearnerConsent } from "./actions";
+import { activateTeacher, assignTeacher, createClass, enrollStudent, inviteStudentToOrganization, linkGuardianReporter, recordLearnerConsent, requestPartnerAccess, revokeGuardianReporter, revokeLearnerConsent } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -246,6 +246,23 @@ export default async function PartnerWorkspacePage() {
                 <label><span><input type="checkbox" name="guardianConfirmation" /> Parent / guardian confirmation recorded</span></label>
                 <button className="button soft" type="submit">Save consent record</button>
               </form>
+              <div className="feedbackCard" style={{ marginTop: 18 }}>
+                <strong>Authenticated guardian report viewer</strong>
+                <p className="muted">The guardian first signs in to Career Compass so they have an account semantic ID. Link that account only after guardian-reporting consent is active. This link grants report access only.</p>
+                <form action={linkGuardianReporter} className="workspaceForm">
+                  <input type="hidden" name="organizationId" value={organizationId} />
+                  <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
+                  <label><span>Guardian account semantic ID</span><input name="guardianSemanticId" maxLength={100} required placeholder="vn-learner-… or another active account" /></label>
+                  <button className="button soft" type="submit">Link guardian report access</button>
+                </form>
+                <form action={revokeGuardianReporter} className="workspaceForm" style={{ marginTop: 12 }}>
+                  <input type="hidden" name="organizationId" value={organizationId} />
+                  <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required /></label>
+                  <label><span>Guardian account semantic ID</span><input name="guardianSemanticId" maxLength={100} required /></label>
+                  <button className="button" type="submit">Revoke guardian report access</button>
+                </form>
+              </div>
+
               <form action={revokeLearnerConsent} className="workspaceForm" style={{ marginTop: 16 }}>
                 <input type="hidden" name="organizationId" value={organizationId} />
                 <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
