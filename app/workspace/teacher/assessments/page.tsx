@@ -168,7 +168,7 @@ export default async function TeacherAssessmentsPage() {
                     <div className="inlineFields"><label><span>Correct answer</span><input name={`q${index}Correct`} maxLength={500} /></label><label><span>Points</span><input name={`q${index}Points`} type="number" min="0" max="1000" step="0.5" defaultValue="1" /></label></div>
                   </fieldset>
                 ))}
-                <button className="button primary" type="submit">Publish to students</button>
+                <button className="button primary" type="submit">Save validated draft</button>
               </form>
             )}
           </article>
@@ -190,7 +190,8 @@ export default async function TeacherAssessmentsPage() {
                     </div>
                     <form action={setAssessmentStatus} className="actions" style={{ marginTop: 10 }}>
                       <input type="hidden" name="assessmentId" value={String(item.id)} />
-                      {String(item.status) !== "published" && <button className="button soft" name="status" value="published" type="submit">Reopen</button>}
+                      {String(item.status) === "draft" && <button className="button soft" name="status" value="published" type="submit">Publish</button>}
+                      {String(item.status) === "closed" && <button className="button soft" name="status" value="published" type="submit">Reopen</button>}
                       {String(item.status) === "published" && <button className="button" name="status" value="closed" type="submit">Close</button>}
                       <button className="button" name="status" value="archived" type="submit">Archive</button>
                     </form>
