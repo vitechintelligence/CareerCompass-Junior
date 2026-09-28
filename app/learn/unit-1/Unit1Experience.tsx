@@ -229,8 +229,8 @@ export default function Unit1Experience({ locale, enrollmentId, storageNamespace
       };
 
       recorder.onstop = () => {
-        const chunkType = chunksRef.current.find((chunk) => chunk instanceof Blob && chunk.type)?.type;
-        const mimeType = recorder.mimeType || chunkType || "audio/mp4";
+        const blobChunk = chunksRef.current.find((chunk): chunk is Blob => chunk instanceof Blob && Boolean(chunk.type));
+        const mimeType = recorder.mimeType || blobChunk?.type || "audio/mp4";
         const blob = new Blob(chunksRef.current, { type: mimeType });
         if (audioUrl) URL.revokeObjectURL(audioUrl);
         if (blob.size > 0) {
