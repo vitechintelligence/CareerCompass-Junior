@@ -48,6 +48,17 @@ alter table integration_sync_jobs
 create index if not exists idx_sync_jobs_runnable
   on integration_sync_jobs(status, next_attempt_at, scheduled_at);
 
+create table if not exists integration_job_events (
+  id uuid primary key default gen_random_uuid(),
+  sync_job_id uuid not null references integration_sync_jobs(id) on delete cascade,
+  event_type text not null,
+  detail jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists idx_integration_job_events_job
+  on integration_job_events(sync_job_id, created_at);
+
 create table if not exists integration_reconciliation_items (
   id uuid primary key default gen_random_uuid(),
   sync_job_id uuid not null references integration_sync_jobs(id) on delete cascade,
