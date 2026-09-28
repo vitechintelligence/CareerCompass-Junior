@@ -523,41 +523,109 @@ initVoiceControls();
 
 
 /* ---------- recording ---------- */
-let activeRecorder=null, activeChunks=[];
+let activeRecorder=null, activeChunks=[], activeStream=null;
+function preferredRecordMime(){
+  if(typeof MediaRecorder==='undefined' || typeof MediaRecorder.isTypeSupported!=='function') return '';
+  const candidates=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/aac'];
+  for(const mime of candidates){
+    try{ if(MediaRecorder.isTypeSupported(mime)) return mime; }catch(e){}
+  }
+  return '';
+}
+function recordErrorMessage(err){
+  const name=err && err.name ? String(err.name) : '';
+  if(name==='NotAllowedError' || name==='SecurityError') return 'Quyền micro đang bị chặn. Hãy cho phép micro trong cài đặt trình duyệt rồi thử lại.';
+  if(name==='NotFoundError' || name==='DevicesNotFoundError') return 'Không tìm thấy micro trên thiết bị này.';
+  if(name==='NotReadableError' || name==='TrackStartError') return 'Micro đang được ứng dụng khác sử dụng hoặc chưa sẵn sàng. Hãy đóng ứng dụng ghi âm/cuộc gọi rồi thử lại.';
+  if(name==='AbortError') return 'Phiên ghi âm bị gián đoạn. Hãy thử ghi lại.';
+  return 'Không thể mở micro. Em vẫn có thể tiếp tục bài học và thử lại sau.';
+}
+function stopActiveStream(){
+  if(activeStream){
+    activeStream.getTracks().forEach(t=>{ try{ t.stop(); }catch(e){} });
+    activeStream=null;
+  }
+}
 async function toggleRecord(btnEl, audioEl, recId){
   if(btnEl.classList.contains('recording')){
-    if(activeRecorder && activeRecorder.state!=='inactive') activeRecorder.stop();
+    if(activeRecorder && activeRecorder.state!=='inactive'){
+      try{ activeRecorder.stop(); }catch(e){ stopActiveStream(); }
+    }
     return;
   }
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+  if(!window.isSecureContext){
+    alert('Ghi âm cần kết nối HTTPS an toàn.'); return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
     alert('Trình duyệt này không hỗ trợ ghi âm.'); return;
   }
   try{
-    const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    stopActiveStream();
+    const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    activeStream=stream;
     activeChunks = [];
-    const rec = new MediaRecorder(stream);
+    const mime=preferredRecordMime();
+    const rec = mime ? new MediaRecorder(stream,{mimeType:mime}) : new MediaRecorder(stream);
     activeRecorder = rec;
     rec.ondataavailable = e=>{ if(e.data.size>0) activeChunks.push(e.data); };
-    rec.onstop = ()=>{
-      const blob = new Blob(activeChunks, {type:'audio/webm'});
-      audioEl.src = URL.createObjectURL(blob);
-      audioEl.classList.add('show');
+    rec.onerror = e=>{
       btnEl.classList.remove('recording');
       btnEl.textContent = '🎙 Ghi lại';
-      stream.getTracks().forEach(t=>t.stop());
-      markRecorded(recId);
-      playDing();
-      showToast(mascotSay('record'));
-      updateHeaderStats();
-      checkNewBadges();
+      stopActiveStream();
+      alert(recordErrorMessage(e));
     };
+    rec.onstop = ()=>{
+      const part=activeChunks.find(p=>p && typeof p.type==='string' && p.type);
+      const blobType=rec.mimeType || (part && part.type) || 'audio/mp4';
+      const blob = new Blob(activeChunks, {type:blobType});
+      if(audioEl.dataset.objectUrl){
+        try{ URL.revokeObjectURL(audioEl.dataset.objectUrl); }catch(e){}
+      }
+      if(blob.size>0){
+        const url=URL.createObjectURL(blob);
+        audioEl.dataset.objectUrl=url;
+        audioEl.src = url;
+        audioEl.classList.add('show');
+        markRecorded(recId);
+        playDing();
+        showToast(mascotSay('record'));
+        updateHeaderStats();
+        checkNewBadges();
+      }else{
+        alert('Không nhận được âm thanh. Hãy kiểm tra micro và thử lại.');
+      }
+      btnEl.classList.remove('recording');
+      btnEl.textContent = '🎙 Ghi lại';
+      stopActiveStream();
+      activeRecorder=null;
+    };
+    stream.getAudioTracks().forEach(track=>{
+      track.onended=()=>{
+        if(rec.state!=='inactive'){
+          try{ rec.stop(); }catch(e){ stopActiveStream(); }
+        }
+        btnEl.classList.remove('recording');
+        btnEl.textContent = '🎙 Ghi lại';
+      };
+    });
     rec.start();
     btnEl.classList.add('recording');
     btnEl.textContent = '⏹ Dừng lại';
+    btnEl.setAttribute('aria-pressed','true');
   }catch(err){
-    alert('Không thể mở micro. Hãy cho phép quyền micro nhé!');
+    stopActiveStream();
+    activeRecorder=null;
+    btnEl.classList.remove('recording');
+    btnEl.textContent = '🎙 Ghi lại';
+    btnEl.setAttribute('aria-pressed','false');
+    alert(recordErrorMessage(err));
   }
 }
+window.addEventListener('pagehide',()=>{
+  if(activeRecorder && activeRecorder.state!=='inactive'){
+    try{ activeRecorder.stop(); }catch(e){ stopActiveStream(); }
+  }else stopActiveStream();
+});
 
 /* ---------- router ---------- */
 function go(route){ location.hash = route; }
