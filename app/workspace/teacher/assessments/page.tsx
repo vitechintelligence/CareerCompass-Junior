@@ -2,7 +2,7 @@ import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-import { createAssessment, setAssessmentStatus } from "./actions";
+import { createAssessment, reviewAssessmentAttempt, setAssessmentStatus } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +51,39 @@ export default async function TeacherAssessmentsPage() {
     limit 30
   `;
 
+  const pendingReviews = classes.length === 0 ? [] : await sql`
+    select
+      aa.id as attempt_id, aa.submitted_at,
+      a.title_en, a.title_vi, c.name as class_name,
+      p.semantic_id as learner_semantic_id,
+      jsonb_agg(
+        jsonb_build_object(
+          'answerId', ans.id,
+          'answerText', ans.answer_text,
+          'autoCorrect', ans.auto_correct,
+          'awardedPoints', ans.awarded_points,
+          'promptEn', q.prompt_en,
+          'promptVi', q.prompt_vi,
+          'points', q.points,
+          'objectiveEn', q.learning_objective_en,
+          'objectiveVi', q.learning_objective_vi,
+          'rubric', q.rubric
+        )
+        order by q.sort_order, q.id
+      ) as answers
+    from assessment_attempts aa
+    join assessments a on a.id=aa.assessment_id
+    join classes c on c.id=a.class_id
+    join profiles p on p.id=aa.student_id
+    join assessment_answers ans on ans.attempt_id=aa.id
+    join assessment_questions q on q.id=ans.question_id
+    where aa.status='submitted'
+      and a.class_id=any(${classes.map((row) => String(row.id))}::uuid[])
+    group by aa.id, a.title_en, a.title_vi, c.name, p.semantic_id
+    order by aa.submitted_at asc
+    limit 20
+  `;
+
   return (
     <main className="workspacePage">
       <header className="topbar">
@@ -69,6 +102,44 @@ export default async function TeacherAssessmentsPage() {
           <span className="pill">{assessments.length} assessments</span>
         </section>
 
+        {pendingReviews.length > 0 && <section className="panel">
+          <div className="eyebrow">Needs review</div>
+          <h2 className="workspaceTitle">Rubric-review open responses</h2>
+          <p className="muted">Award points within each question maximum, leave actionable feedback, and verify evidence only when you have actually reviewed the learner response.</p>
+          <div className="workspaceList">
+            {pendingReviews.map((attempt) => {
+              const answers = Array.isArray(attempt.answers)
+                ? attempt.answers as Array<Record<string, unknown>>
+                : [];
+              return <form action={reviewAssessmentAttempt} className="feedbackCard" key={String(attempt.attempt_id)}>
+                <input type="hidden" name="attemptId" value={String(attempt.attempt_id)} />
+                <strong>{String(attempt.title_en)}</strong>
+                <div className="muted">{String(attempt.class_name)} · {String(attempt.learner_semantic_id)}</div>
+                {answers.map((answer, index) => {
+                  const rubric = answer.rubric && typeof answer.rubric === "object"
+                    ? answer.rubric as Record<string, unknown>
+                    : {};
+                  const manual = answer.autoCorrect == null;
+                  return <div className="miniCard light" key={String(answer.answerId)}>
+                    <strong>{index + 1}. {String(answer.promptEn || "")}</strong>
+                    {typeof answer.objectiveEn === "string" && answer.objectiveEn.length > 0 && <div className="muted">Objective: {answer.objectiveEn}</div>}
+                    {typeof rubric.guidance === "string" && rubric.guidance.length > 0 && <div className="muted">Rubric: {rubric.guidance}</div>}
+                    <p style={{ whiteSpace: "pre-wrap" }}>{String(answer.answerText || "")}</p>
+                    {manual ? (
+                      <label><span>Points / {String(answer.points)}</span><input name={`points_${String(answer.answerId)}`} type="number" min="0" max={Number(answer.points || 0)} step="0.5" required /></label>
+                    ) : (
+                      <span className="pill">Auto-scored {String(answer.awardedPoints || 0)} / {String(answer.points)}</span>
+                    )}
+                  </div>;
+                })}
+                <label><span>Feedback</span><textarea name="feedback" rows={3} maxLength={4000} required /></label>
+                <label><span><input type="checkbox" name="verifyEvidence" value="yes" /> Verify this reviewed assessment as evidence</span></label>
+                <button className="button primary" type="submit">Complete review</button>
+              </form>;
+            })}
+          </div>
+        </section>}
+
         <section className="workspaceGrid">
           <article className="panel">
             <div className="eyebrow">Create</div>
@@ -82,6 +153,7 @@ export default async function TeacherAssessmentsPage() {
                 <label><span>English instructions</span><textarea name="instructionsEn" maxLength={3000} rows={2} /></label>
                 <label><span>Vietnamese instructions</span><textarea name="instructionsVi" maxLength={3000} rows={2} /></label>
                 <div className="inlineFields"><label><span>Due</span><input name="dueAt" type="datetime-local" /></label><label><span>Time limit (min)</span><input name="timeLimitMinutes" type="number" min="1" max="300" /></label></div>
+                <label><span>Demonstrated threshold (%)</span><input name="demonstratedThreshold" type="number" min="0" max="100" step="1" defaultValue="70" /></label>
 
                 {[1,2,3,4,5].map((index) => (
                   <fieldset className="feedbackCard" key={index}>
@@ -90,6 +162,9 @@ export default async function TeacherAssessmentsPage() {
                     <label><span>English prompt</span><textarea name={`q${index}PromptEn`} rows={2} maxLength={1200} /></label>
                     <label><span>Vietnamese prompt</span><textarea name={`q${index}PromptVi`} rows={2} maxLength={1200} /></label>
                     <label><span>Options, separated by |</span><input name={`q${index}Options`} maxLength={2000} placeholder="A | B | C | D" /></label>
+                    <label><span>Learning objective (EN)</span><input name={`q${index}ObjectiveEn`} maxLength={800} /></label>
+                    <label><span>Learning objective (VI)</span><input name={`q${index}ObjectiveVi`} maxLength={800} /></label>
+                    <label><span>Rubric / review guidance</span><textarea name={`q${index}Rubric`} rows={2} maxLength={1600} placeholder="What should a strong answer show?" /></label>
                     <div className="inlineFields"><label><span>Correct answer</span><input name={`q${index}Correct`} maxLength={500} /></label><label><span>Points</span><input name={`q${index}Points`} type="number" min="0" max="1000" step="0.5" defaultValue="1" /></label></div>
                   </fieldset>
                 ))}

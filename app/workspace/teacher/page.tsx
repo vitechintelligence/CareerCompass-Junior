@@ -240,6 +240,18 @@ export default async function TeacherWorkspacePage() {
           </article>
         </section>
 
+        {roster.length > 0 && <section className="panel">
+          <div className="eyebrow">Parent / guardian reporting</div>
+          <h2 className="workspaceTitle">Bilingual evidence reports</h2>
+          <p className="muted">Reports are generated only when the learner has an active guardian-reporting consent record for the institution.</p>
+          <div className="workspaceList">
+            {roster.map((student) => <div className="workspaceRow" key={String(student.id)}>
+              <strong>{String(student.semantic_id)}</strong>
+              <Link className="button soft" href={`/workspace/teacher/learner/${String(student.id)}/report`}>Open report</Link>
+            </div>)}
+          </div>
+        </section>}
+
         <section className="workspaceGrid">
           <article className="panel">
             <div className="eyebrow">Assignments</div>

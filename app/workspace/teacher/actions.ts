@@ -1,5 +1,6 @@
 "use server";
 
+import { createHash } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { requireTeacherClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
@@ -143,9 +144,13 @@ export async function reviewSubmission(formData: FormData) {
 
   const sql = getDb();
   const submission = await sql`
-    select s.id, s.assignment_id, s.status, s.current_revision, a.class_id
+    select
+      s.id, s.assignment_id, s.student_id, s.status, s.current_revision,
+      a.class_id, a.title_en, a.title_vi,
+      c.organization_id
     from submissions s
     join assignments a on a.id=s.assignment_id
+    join classes c on c.id=a.class_id
     where s.id=${submissionId}
     limit 1
   `;
@@ -188,13 +193,56 @@ export async function reviewSubmission(formData: FormData) {
         score=excluded.score,
         visibility='student',
         updated_at=now()
-      returning id
+      returning id, submission_revision_id
     )
-    select updated.id, updated.current_revision, feedback.id as feedback_id
+    select updated.id, updated.current_revision, feedback.id as feedback_id,
+           feedback.submission_revision_id
     from updated
     join feedback on true
   `;
   if (!reviewed[0]) throw new Error("The learner submission changed before review. Refresh and try again.");
+
+  if (nextStatus === "accepted") {
+    const revisionId = String(reviewed[0].submission_revision_id || "");
+    const revisionNumber = Number(reviewed[0].current_revision || 0);
+    const semanticId = `submission-${submissionId}-revision-${revisionNumber}`;
+    const evidenceSummary = {
+      learnerId: String(submission[0].student_id),
+      assignmentId: String(submission[0].assignment_id),
+      submissionId,
+      revisionId,
+      revision: revisionNumber,
+      evaluationType: "teacher_review",
+      evaluator: profile.id,
+      result: "verified",
+      feedback: feedbackText,
+      score,
+      verifiedAt: new Date().toISOString(),
+    };
+    const integrityHash = createHash("sha256")
+      .update(JSON.stringify(evidenceSummary))
+      .digest("hex");
+
+    await sql`
+      insert into learning_capsules (
+        semantic_id, learner_id, organization_id, class_id,
+        source_type, source_id, title_en, title_vi,
+        evidence_summary, skill_tags, mastery_level, integrity_hash,
+        verified_by, verified_at, status, sharing_scope, achieved_on
+      )
+      values (
+        ${semanticId}, ${String(submission[0].student_id)},
+        ${String(submission[0].organization_id)}, ${classId},
+        'submission', ${submissionId}, ${String(submission[0].title_en)},
+        ${String(submission[0].title_vi)},
+        ${JSON.stringify(evidenceSummary)}::jsonb,
+        ${["assignment-revision", "improvement"]},
+        'verified', ${integrityHash}, ${profile.id}, now(),
+        'verified', 'learner', current_date
+      )
+      on conflict (semantic_id) do nothing
+    `;
+  }
 
   revalidatePath("/workspace/teacher");
   revalidatePath(`/workspace/student/assignment/${String(submission[0]?.assignment_id || "")}`);

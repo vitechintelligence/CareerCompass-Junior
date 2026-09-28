@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
@@ -86,6 +87,7 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
           ) : (
             <form action={submitAssessment} className="workspaceForm">
               <input type="hidden" name="assessmentId" value={assessmentId} />
+              <input type="hidden" name="submissionId" value={randomUUID()} />
               {questions.map((question, index) => {
                 const options = Array.isArray(question.options) ? question.options.map(String) : [];
                 return (
