@@ -232,14 +232,31 @@ create table if not exists submissions (
   student_id uuid not null references profiles(id) on delete cascade,
   response jsonb not null default '{}'::jsonb,
   status text not null default 'submitted' check (status in ('draft','submitted','returned','accepted')),
+  current_revision integer not null default 0 check (current_revision >= 0),
   submitted_at timestamptz,
   updated_at timestamptz not null default now(),
   unique (assignment_id, student_id)
 );
 
+create table if not exists submission_revisions (
+  id uuid primary key default gen_random_uuid(),
+  submission_id uuid not null references submissions(id) on delete cascade,
+  revision_number integer not null check (revision_number >= 1),
+  submission_key uuid not null unique,
+  response jsonb not null default '{}'::jsonb,
+  artifact_url text,
+  submitted_at timestamptz not null default now(),
+  created_at timestamptz not null default now(),
+  unique (submission_id, revision_number)
+);
+
+create index if not exists idx_submission_revisions_submission
+  on submission_revisions(submission_id, revision_number desc);
+
 create table if not exists teacher_feedback (
   id uuid primary key default gen_random_uuid(),
   submission_id uuid not null references submissions(id) on delete cascade,
+  submission_revision_id uuid references submission_revisions(id) on delete set null,
   teacher_id uuid references profiles(id) on delete set null,
   feedback_text text,
   rubric jsonb not null default '{}'::jsonb,
@@ -248,6 +265,10 @@ create table if not exists teacher_feedback (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+create unique index if not exists idx_teacher_feedback_revision_teacher
+  on teacher_feedback(submission_revision_id, teacher_id)
+  where submission_revision_id is not null and teacher_id is not null;
 
 create table if not exists payments (
   id uuid primary key default gen_random_uuid(),

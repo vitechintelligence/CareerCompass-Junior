@@ -190,7 +190,7 @@ export default async function StudentWorkspacePage() {
   const averageProgress = enrollments.length
     ? Math.round(enrollments.reduce((sum, row) => sum + Number(row.progress_percent || 0), 0) / enrollments.length)
     : 0;
-  const pendingAssignments = assignments.filter((row) => !["accepted", "returned"].includes(String(row.submission_status))).length;
+  const pendingAssignments = assignments.filter((row) => String(row.submission_status) !== "accepted").length;
   const pendingAssessments = assessments.filter((row) => !row.last_attempt).length;
 
   return (
@@ -250,7 +250,10 @@ export default async function StudentWorkspacePage() {
                 {assignments.map((item) => (
                   <div className="workspaceRow" key={String(item.id)}>
                     <div><strong>{String(item.title_en)}</strong><div className="muted">{String(item.class_name)}{item.due_at ? ` · due ${new Date(String(item.due_at)).toLocaleDateString("en-GB")}` : ""}</div></div>
-                    <span className="pill">{String(item.submission_status).replace("_", " ")}</span>
+                    <div className="actions">
+                      <span className="pill">{String(item.submission_status).replace("_", " ")}</span>
+                      <Link className="button soft" href={`/workspace/student/assignment/${String(item.id)}`}>Open</Link>
+                    </div>
                   </div>
                 ))}
               </div>

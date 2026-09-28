@@ -4,7 +4,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
-import { createAssignment, recordAttendance, saveFeedback } from "./actions";
+import { createAssignment, recordAttendance, reviewSubmission } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -82,26 +82,48 @@ export default async function TeacherWorkspacePage() {
       where teacher_id=${profile.id}
     `,
   ]);
-  const pending = isAdmin
-    ? await sql`select count(*)::int as count from submissions where status = 'submitted'`
+  const attention = classIds.length === 0
+    ? [{ pending_review: 0, learner_retry: 0, overdue_count: 0, milestone_count: 0 }]
     : await sql`
-        select count(*)::int as count
-        from submissions s
-        join assignments a on a.id = s.assignment_id
-        join teacher_assignments ta on ta.class_id = a.class_id
-        join classes c on c.id=a.class_id and c.status='active'
-        join organizations o on o.id=c.organization_id and o.status='active'
-        join organization_memberships om
-          on om.organization_id=c.organization_id
-         and om.profile_id=ta.teacher_id
-         and om.role='teacher'
-         and om.status='active'
-        where ta.teacher_id = ${profile.id} and s.status = 'submitted'
+        select
+          (
+            select count(*)::int
+            from submissions s
+            join assignments a on a.id=s.assignment_id
+            where a.class_id=any(${classIds}::uuid[])
+              and s.status='submitted'
+          ) as pending_review,
+          (
+            select count(*)::int
+            from submissions s
+            join assignments a on a.id=s.assignment_id
+            where a.class_id=any(${classIds}::uuid[])
+              and s.status='returned'
+          ) as learner_retry,
+          (
+            select count(*)::int
+            from assignments a
+            join class_memberships cm on cm.class_id=a.class_id and cm.status='active'
+            left join submissions s
+              on s.assignment_id=a.id and s.student_id=cm.student_id
+            where a.class_id=any(${classIds}::uuid[])
+              and a.status='published'
+              and a.due_at is not null
+              and a.due_at < now()
+              and (s.id is null or s.status in ('draft','returned'))
+          ) as overdue_count,
+          (
+            select count(*)::int
+            from learning_capsules lc
+            where lc.class_id=any(${classIds}::uuid[])
+              and lc.status='draft'
+          ) as milestone_count
       `;
 
   const recentSubmissions = isAdmin
     ? await sql`
-        select s.id, s.status, s.submitted_at, a.title_en, a.title_vi, c.name as class_name,
+        select s.id, s.status, s.response, s.current_revision, s.submitted_at,
+          a.id as assignment_id, a.title_en, a.title_vi, c.name as class_name,
           p.semantic_id as learner_semantic_id
         from submissions s
         join assignments a on a.id = s.assignment_id
@@ -111,7 +133,8 @@ export default async function TeacherWorkspacePage() {
         limit 8
       `
     : await sql`
-        select s.id, s.status, s.submitted_at, a.title_en, a.title_vi, c.name as class_name,
+        select s.id, s.status, s.response, s.current_revision, s.submitted_at,
+          a.id as assignment_id, a.title_en, a.title_vi, c.name as class_name,
           p.semantic_id as learner_semantic_id
         from submissions s
         join assignments a on a.id = s.assignment_id
@@ -150,9 +173,23 @@ export default async function TeacherWorkspacePage() {
           <Metric label="Program classes" value={String(programClasses.length)} detail="ViTech program delivery" />
           <Metric label="My Classroom" value={String(myClassrooms.length)} detail="Teacher-owned school classes" />
           <Metric label="Learners" value={String(classes.reduce((sum, item) => sum + Number(item.student_count || 0), 0))} detail="Across active classes" />
-          <Metric label="Needs review" value={String(pending[0]?.count || 0)} detail="Submitted assignments" />
+          <Metric label="Needs review" value={String(attention[0]?.pending_review || 0)} detail="Submitted revisions" />
+          <Metric label="Learner retry" value={String(attention[0]?.learner_retry || 0)} detail="Returned for improvement" />
+          <Metric label="Overdue" value={String(attention[0]?.overdue_count || 0)} detail="Past due and not verified" />
+          <Metric label="Evidence verify" value={String(attention[0]?.milestone_count || 0)} detail="Draft milestones" />
           <Metric label="Assessments" value={String(assessmentPulse[0]?.published_count || 0)} detail={`${String(assessmentPulse[0]?.submitted_attempts || 0)} attempts need review`} />
           <Metric label="Attendance flags" value={String(Number(attendancePulse[0]?.absent_count || 0) + Number(attendancePulse[0]?.late_count || 0))} detail="Absent / late in last 7 days" />
+        </section>
+
+        <section className="panel">
+          <div className="eyebrow">Needs My Attention</div>
+          <h2 className="workspaceTitle">Act on the learning loop, not just the task list.</h2>
+          <div className="miniGrid">
+            <div className="miniCard light"><strong>{String(attention[0]?.pending_review || 0)}</strong><span>submitted revisions waiting for review</span></div>
+            <div className="miniCard light"><strong>{String(attention[0]?.learner_retry || 0)}</strong><span>learners improving returned work</span></div>
+            <div className="miniCard light"><strong>{String(attention[0]?.overdue_count || 0)}</strong><span>overdue learner-assignment items</span></div>
+            <div className="miniCard light"><strong>{String(attention[0]?.milestone_count || 0)}</strong><span>draft evidence milestones awaiting verification</span></div>
+          </div>
         </section>
 
         <section className="panel">
@@ -225,15 +262,37 @@ export default async function TeacherWorkspacePage() {
             <h2 className="workspaceTitle">Review learner work</h2>
             {recentSubmissions.length === 0 ? <EmptyState text="No submissions are waiting yet." /> : (
               <div className="workspaceList">
-                {recentSubmissions.map((item) => (
-                  <form action={saveFeedback} className="feedbackCard" key={String(item.id)}>
-                    <input type="hidden" name="submissionId" value={String(item.id)} />
-                    <strong>{String(item.title_en)}</strong>
-                    <div className="muted">{String(item.class_name)} · {String(item.learner_semantic_id)}</div>
-                    <textarea name="feedbackText" maxLength={4000} rows={2} placeholder="Teacher feedback" required />
-                    <div className="inlineFields"><input name="score" type="number" min="0" max="100" step="0.5" placeholder="Score" /><button className="button soft" type="submit">Return feedback</button></div>
-                  </form>
-                ))}
+                {recentSubmissions.map((item) => {
+                  const response = item.response && typeof item.response === "object"
+                    ? item.response as Record<string, unknown>
+                    : {};
+                  const status = String(item.status);
+                  return (
+                    <div className="feedbackCard" key={String(item.id)}>
+                      <div className="workspaceRow" style={{ padding: 0 }}>
+                        <div>
+                          <strong>{String(item.title_en)} · Revision {String(item.current_revision || 0)}</strong>
+                          <div className="muted">{String(item.class_name)} · {String(item.learner_semantic_id)}</div>
+                        </div>
+                        <span className="pill">{status.replace("_", " ")}</span>
+                      </div>
+                      <p style={{ whiteSpace: "pre-wrap" }}>{String(response.text || "No text response.")}</p>
+                      {status === "submitted" ? (
+                        <form action={reviewSubmission} className="workspaceForm">
+                          <input type="hidden" name="submissionId" value={String(item.id)} />
+                          <textarea name="feedbackText" maxLength={4000} rows={3} placeholder="Specific feedback for this revision" required />
+                          <label><span>Score (optional)</span><input name="score" type="number" min="0" max="100" step="0.5" /></label>
+                          <div className="actions">
+                            <button className="button soft" type="submit" name="decision" value="return">Return for revision</button>
+                            <button className="button primary" type="submit" name="decision" value="verify">Verify / close</button>
+                          </div>
+                        </form>
+                      ) : (
+                        <p className="muted">{status === "returned" ? "Waiting for the learner to revise and resubmit." : "This assignment is closed."}</p>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </article>
