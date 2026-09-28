@@ -13,9 +13,77 @@ function normalized(value: string) {
   return value.trim().toLocaleLowerCase().replace(/\s+/g, " ");
 }
 
+export async function startTimedAssessment(formData: FormData) {
+  const assessmentId = String(formData.get("assessmentId") || "");
+  const submissionId = normalizeSubmissionId(formData.get("submissionId"));
+  if (!UUID_RE.test(assessmentId) || !submissionId) throw new Error("Invalid timed assessment start.");
+
+  const profile = await requireActiveProfile(["student"]);
+  const sql = getDb();
+  const rows = await sql`
+    select a.id, a.class_id, a.max_attempts, a.time_limit_minutes, a.due_at
+    from assessments a
+    join class_memberships cm on cm.class_id=a.class_id
+    where a.id=${assessmentId}
+      and a.status='published'
+      and a.time_limit_minutes is not null
+      and (a.due_at is null or a.due_at > now())
+      and cm.student_id=${profile.id}
+      and cm.status='active'
+    limit 1
+  `;
+  const assessment = rows[0];
+  if (!assessment) throw new Error("This timed assessment is not available.");
+  await requireStudentClassAccess(String(assessment.class_id), profile);
+
+  await sql`
+    select pg_advisory_xact_lock(hashtextextended(${`assessment-session:${assessmentId}:${profile.id}`}, 0))
+  `;
+
+  const active = await sql`
+    select id
+    from assessment_sessions
+    where assessment_id=${assessmentId}
+      and student_id=${profile.id}
+      and status='started'
+      and expires_at > now()
+    order by started_at desc
+    limit 1
+  `;
+  if (active[0]) {
+    revalidatePath(`/workspace/student/assessment/${assessmentId}`);
+    return;
+  }
+
+  const previous = await sql`
+    select count(*)::int as count
+    from assessment_attempts
+    where assessment_id=${assessmentId}
+      and student_id=${profile.id}
+  `;
+  if (Number(previous[0]?.count || 0) >= Number(assessment.max_attempts || 1)) {
+    throw new Error("Maximum attempts reached.");
+  }
+
+  await sql`
+    insert into assessment_sessions (
+      assessment_id, student_id, submission_id, started_at, expires_at, status
+    )
+    values (
+      ${assessmentId}, ${profile.id}, ${submissionId}::uuid, now(),
+      now() + make_interval(mins => ${Number(assessment.time_limit_minutes)}),
+      'started'
+    )
+    on conflict (submission_id) do nothing
+  `;
+
+  revalidatePath(`/workspace/student/assessment/${assessmentId}`);
+}
+
 export async function submitAssessment(formData: FormData) {
   const assessmentId = String(formData.get("assessmentId") || "");
   const submissionId = normalizeSubmissionId(formData.get("submissionId"));
+  const sessionId = String(formData.get("sessionId") || "");
   if (!UUID_RE.test(assessmentId) || !submissionId) throw new Error("Invalid assessment submission.");
 
   const profile = await requireActiveProfile(["student"]);
@@ -23,7 +91,7 @@ export async function submitAssessment(formData: FormData) {
 
   const assessments = await sql`
     select
-      a.id, a.class_id, a.status, a.max_attempts, a.due_at,
+      a.id, a.class_id, a.status, a.max_attempts, a.due_at, a.time_limit_minutes,
       a.content_version, a.demonstrated_threshold, a.title_en, a.title_vi,
       c.organization_id
     from assessments a
@@ -38,6 +106,38 @@ export async function submitAssessment(formData: FormData) {
   const assessment = assessments[0];
   if (!assessment) throw new Error("Assessment is not available to this learner.");
   await requireStudentClassAccess(String(assessment.class_id), profile);
+
+  if (assessment.due_at && new Date(String(assessment.due_at)).getTime() <= Date.now()) {
+    throw new Error("This assessment is past its due date.");
+  }
+
+  let timedSession: Record<string, unknown> | null = null;
+  if (assessment.time_limit_minutes != null) {
+    if (!UUID_RE.test(sessionId)) throw new Error("Start the timed assessment before submitting.");
+    const sessions = await sql`
+      select id, submission_id, status, started_at, expires_at
+      from assessment_sessions
+      where id=${sessionId}
+        and assessment_id=${assessmentId}
+        and student_id=${profile.id}
+        and submission_id=${submissionId}::uuid
+        and status in ('started','submitted')
+      limit 1
+    `;
+    timedSession = sessions[0] as Record<string, unknown> | undefined || null;
+    if (!timedSession) throw new Error("Timed assessment session not found.");
+    if (
+      String(timedSession.status) === "started" &&
+      new Date(String(timedSession.expires_at)).getTime() < Date.now()
+    ) {
+      await sql`
+        update assessment_sessions
+        set status='expired', updated_at=now()
+        where id=${sessionId} and status='started'
+      `;
+      throw new Error("The time limit has expired.");
+    }
+  }
 
   const questions = await sql`
     select id, question_type, correct_answer, points
@@ -199,6 +299,19 @@ export async function submitAssessment(formData: FormData) {
   `;
   const attemptId = String(attemptRows[0]?.id || "");
   if (!attemptId) throw new Error("Maximum attempts reached or this submission key conflicts with another attempt.");
+
+  if (timedSession) {
+    await sql`
+      update assessment_sessions
+      set status='submitted', submitted_at=coalesce(submitted_at, now()), updated_at=now()
+      where id=${sessionId}
+        and assessment_id=${assessmentId}
+        and student_id=${profile.id}
+        and submission_id=${submissionId}::uuid
+        and status in ('started','submitted')
+    `;
+  }
+
   revalidatePath(`/workspace/student/assessment/${assessmentId}`);
   revalidatePath("/workspace/student");
 }
