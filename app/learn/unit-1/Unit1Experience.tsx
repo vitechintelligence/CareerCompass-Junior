@@ -4,6 +4,11 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { unit1Lessons, unit1Meta, type LessonActivity, type UnitLocale } from "@/lib/unit1";
 import { practiceStorageKey } from "@/lib/learning/progress-policy";
+import {
+  createCompatibleMediaRecorder,
+  microphoneErrorMessage,
+  stopStream,
+} from "@/lib/device/media-recorder";
 
 type Props = {
   locale: UnitLocale;
@@ -84,9 +89,22 @@ export default function Unit1Experience({ locale, enrollmentId, storageNamespace
   useEffect(() => {
     return () => {
       if (audioUrl) URL.revokeObjectURL(audioUrl);
-      streamRef.current?.getTracks().forEach((track) => track.stop());
+      stopStream(streamRef.current);
     };
   }, [audioUrl]);
+
+  useEffect(() => {
+    const stopForPageHide = () => {
+      const recorder = mediaRecorderRef.current;
+      if (recorder && recorder.state !== "inactive") {
+        try { recorder.stop(); } catch { stopStream(streamRef.current); }
+      } else {
+        stopStream(streamRef.current);
+      }
+    };
+    window.addEventListener("pagehide", stopForPageHide);
+    return () => window.removeEventListener("pagehide", stopForPageHide);
+  }, []);
 
   function speak(text: string) {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -169,6 +187,14 @@ export default function Unit1Experience({ locale, enrollmentId, storageNamespace
 
   async function startRecording() {
     setRecorderError(null);
+    if (!window.isSecureContext) {
+      setRecorderError(
+        locale === "vi"
+          ? "Ghi âm cần kết nối HTTPS an toàn."
+          : "Recording requires a secure HTTPS connection.",
+      );
+      return;
+    }
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
       setRecorderError(
         locale === "vi"
@@ -179,39 +205,83 @@ export default function Unit1Experience({ locale, enrollmentId, storageNamespace
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stopStream(streamRef.current);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
       streamRef.current = stream;
       chunksRef.current = [];
-      const recorder = new MediaRecorder(stream);
+      const recorder = createCompatibleMediaRecorder(stream);
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) chunksRef.current.push(event.data);
       };
 
-      recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || "audio/webm" });
-        if (audioUrl) URL.revokeObjectURL(audioUrl);
-        setAudioUrl(URL.createObjectURL(blob));
-        stream.getTracks().forEach((track) => track.stop());
+      recorder.onerror = (event) => {
+        setRecorderError(microphoneErrorMessage(event, locale));
+        setRecording(false);
+        stopStream(stream);
         streamRef.current = null;
       };
 
+      recorder.onstop = () => {
+        const chunkType = chunksRef.current.find((chunk) => chunk instanceof Blob && chunk.type)?.type;
+        const mimeType = recorder.mimeType || chunkType || "audio/mp4";
+        const blob = new Blob(chunksRef.current, { type: mimeType });
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        if (blob.size > 0) {
+          setAudioUrl(URL.createObjectURL(blob));
+        } else {
+          setRecorderError(
+            locale === "vi"
+              ? "Không nhận được âm thanh. Hãy kiểm tra micro và thử lại."
+              : "No audio was captured. Check the microphone and retry.",
+          );
+        }
+        setRecording(false);
+        stopStream(stream);
+        streamRef.current = null;
+        mediaRecorderRef.current = null;
+      };
+
+      for (const track of stream.getAudioTracks()) {
+        track.onended = () => {
+          if (recorder.state !== "inactive") {
+            try { recorder.stop(); } catch { stopStream(stream); }
+          }
+          setRecorderError(
+            locale === "vi"
+              ? "Phiên ghi âm đã bị hệ thống hoặc thiết bị ngắt. Hãy thử lại."
+              : "Recording was interrupted by the device or browser. Please retry.",
+          );
+          setRecording(false);
+        };
+      }
+
       recorder.start();
       setRecording(true);
-    } catch {
-      setRecorderError(
-        locale === "vi"
-          ? "Không thể truy cập micro. Em có thể tiếp tục bài mà không cần ghi âm."
-          : "Microphone access was unavailable. You can continue without recording.",
-      );
+    } catch (error) {
+      stopStream(streamRef.current);
+      streamRef.current = null;
+      mediaRecorderRef.current = null;
+      setRecording(false);
+      setRecorderError(microphoneErrorMessage(error, locale));
     }
   }
 
   function stopRecording() {
     const recorder = mediaRecorderRef.current;
-    if (recorder && recorder.state !== "inactive") recorder.stop();
-    setRecording(false);
+    if (recorder && recorder.state !== "inactive") {
+      try { recorder.stop(); } catch { stopStream(streamRef.current); }
+    } else {
+      stopStream(streamRef.current);
+      streamRef.current = null;
+      setRecording(false);
+    }
   }
 
   function selectSequenceItem(item: string) {
@@ -395,13 +465,18 @@ export default function Unit1Experience({ locale, enrollmentId, storageNamespace
               </p>
               <div className="voiceActions">
                 {!recording ? (
-                  <button className="button soft" onClick={startRecording} type="button">🎙️ {locale === "vi" ? "Bắt đầu ghi" : "Start recording"}</button>
+                  <button className="button soft" onClick={startRecording} type="button" aria-pressed="false" aria-describedby="voice-lab-status">🎙️ {locale === "vi" ? "Bắt đầu ghi" : "Start recording"}</button>
                 ) : (
-                  <button className="button primary" onClick={stopRecording} type="button">■ {locale === "vi" ? "Dừng ghi" : "Stop recording"}</button>
+                  <button className="button primary" onClick={stopRecording} type="button" aria-pressed="true" aria-describedby="voice-lab-status">■ {locale === "vi" ? "Dừng ghi" : "Stop recording"}</button>
                 )}
-                {audioUrl && <audio controls src={audioUrl} className="voicePlayback" />}
+                {audioUrl && <audio controls preload="metadata" src={audioUrl} className="voicePlayback" aria-label={locale === "vi" ? "Nghe lại bản ghi" : "Replay your recording"} />}
               </div>
-              {recorderError && <p className="activityMessage">{recorderError}</p>}
+              <p id="voice-lab-status" className="muted lessonSmallCopy" role="status" aria-live="polite">
+                {recording
+                  ? (locale === "vi" ? "Đang ghi âm. Bấm Dừng ghi khi hoàn tất." : "Recording. Press Stop recording when finished.")
+                  : (locale === "vi" ? "Bản ghi chỉ ở trên thiết bị và không được tải lên máy chủ." : "Your recording stays on this device and is not uploaded.")}
+              </p>
+              {recorderError && <p className="activityMessage" role="alert">{recorderError}</p>}
             </article>
 
             <article className="lessonCard reflectionCard">
