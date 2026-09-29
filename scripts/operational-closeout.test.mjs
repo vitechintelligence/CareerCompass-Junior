@@ -7,7 +7,26 @@ async function source(path){ return readFile(path,"utf8"); }
 test("runtime guard uses authoritative production branch and separates preview", async () => {
   const runtime=await source("lib/runtime-alignment.ts");
   assert.match(runtime,/br-shiny-meadow-b3ibu54h/);
+  assert.match(runtime,/ep-damp-bonus-b300sxd5/);
   assert.match(runtime,/resolveDeploymentEnvironment/);
+  assert.match(runtime,/blockingNonProductionProductionReuse/);
+});
+
+test("runbook risky features are independent default-off controls", async () => {
+  const flags=await source("lib/feature-flags.ts");
+  const quota=await source("lib/learning/write-quota.ts");
+  const learner=await source("app/learn/[bookCode]/[unitCode]/page.tsx");
+  const integration=await source("app/api/integrations/jobs/[jobId]/run/route.ts");
+  const guardian=await source("app/workspace/guardian/report/[learnerId]/page.tsx");
+  assert.match(flags,/CCJ_FEATURE_TIMED_ASSESSMENTS/);
+  assert.match(flags,/CCJ_FEATURE_LEARNING_WRITE_QUOTAS/);
+  assert.match(flags,/CCJ_FEATURE_OFFLINE_OUTBOX/);
+  assert.match(flags,/CCJ_FEATURE_INTEGRATION_JOB_EXECUTION/);
+  assert.match(flags,/CCJ_FEATURE_GUARDIAN_REPORTING/);
+  assert.match(quota,/learningWriteQuotas/);
+  assert.match(learner,/offlineOutbox/);
+  assert.match(integration,/integrationJobExecution/);
+  assert.match(guardian,/guardianReporting/);
 });
 
 test("assessment publishing is draft-first and timed submissions are server-owned", async () => {
