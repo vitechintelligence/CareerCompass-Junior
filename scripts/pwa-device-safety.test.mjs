@@ -16,3 +16,12 @@ test("interactive book route retains mobile recorder compatibility and self-only
   assert.ok(route.includes("SafeMediaRecorder"));
   assert.ok(route.includes('"Permissions-Policy": "microphone=(self)"'));
 });
+
+
+test("service worker pre-caches the explicit public offline practice pack", async () => {
+  const sw=await readFile("public/sw.js","utf8");
+  assert.match(sw,/["']\/offline-practice["']/);
+  const page=await readFile("app/offline-practice/page.tsx","utf8");
+  assert.match(page,/not graded/);
+  assert.match(page,/do not change your account progress/);
+});
