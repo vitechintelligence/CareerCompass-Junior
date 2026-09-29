@@ -4,6 +4,26 @@ This file is the shared operating contract and handoff point for any AI agent, d
 
 Read this file before changing code, infrastructure, authentication, database configuration, deployment settings, or production behavior.
 
+## 0. Mandatory production go-live gate
+
+Before doing **any** production rollout work for PR #50 or migration 014, read:
+
+- `docs/production/PRODUCTION_GO_LIVE_GATES.md`
+- `docs/production/evidence/README.md`
+
+The repository Markdown is the persistent, agent-visible version of the owner-supplied “Career Compass Junior — Go-Live Checklist and Migration 014 Runbook”.
+
+Production rules:
+- PR #50 remains **Draft** until Phase A is closed with linked evidence.
+- Green CI and builder-authored tests are necessary but are **not** independent go-live evidence.
+- Phase A order is: independent authz/privacy/SQL review → admin identity/break-glass → fresh-production migration rehearsal + old/new build compatibility → environment separation confirmation.
+- Migration 014 must not be applied to production until the fresh production-data rehearsal and restore-point procedure are complete.
+- Risky features remain default-off for first rollout: timed assessments, write quotas, offline outbox, integration job execution and guardian reporting.
+- Real children’s data is blocked until the children’s-data compliance gate has written sign-off and school-facing data-processing terms.
+- Every checklist item must have a named human owner before its gate begins.
+- Attach non-sensitive evidence under `docs/production/evidence/` and/or PR #50.
+- If this file, a builder report and the production gate document conflict, follow the more conservative production gate and stop for human review.
+
 ## 1. Project identity
 
 Repository:
