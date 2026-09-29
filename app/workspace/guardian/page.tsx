@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
 export default async function GuardianWorkspacePage() {
+  if (!isRiskyFeatureEnabled("guardianReporting")) return <Disabled />;
   const user=await getSessionUser();
   if(!user) return <Gate/>;
   const profile=await getCurrentProfile();
@@ -56,3 +58,6 @@ export default async function GuardianWorkspacePage() {
 }
 
 function Gate(){return <main className="workspacePage"><div className="workspaceContent"><section className="panel gatePanel"><h1>Sign in required.</h1><p className="muted">Use the account your institution linked for guardian report access.</p><Link className="button primary" href="/auth/sign-in?callbackURL=%2Fworkspace%2Fguardian">Sign in</Link></section></div></main>;}
+
+
+function Disabled(){return <main className="workspacePage"><div className="workspaceContent"><section className="panel gatePanel"><h1>Guardian reporting is currently disabled.</h1><p className="muted">The rollout flag is off. Existing links remain stored but no report data is rendered.</p></section></div></main>;}
