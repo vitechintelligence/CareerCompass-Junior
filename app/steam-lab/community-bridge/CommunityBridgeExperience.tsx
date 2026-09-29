@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { LearnerAgeBand } from "@/lib/learner-age-bands";
 import type { SteamMissionDefinition } from "@/lib/steam-missions";
 import { bridgeTargetForAge, testBridge, type BridgeDesign, type BridgeOutcome } from "@/lib/steam/bridge-engine";
@@ -28,10 +28,49 @@ export default function CommunityBridgeExperience({
   const [design, setDesign] = useState<BridgeDesign>(() => defaults(ageBand));
   const [attempts, setAttempts] = useState<Attempt[]>([]);
   const [changeNote, setChangeNote] = useState("");
-  const [syncState, setSyncState] = useState<"idle" | "saving" | "saved" | "local">("idle");
+  const [syncState, setSyncState] = useState<"idle" | "loading" | "saving" | "saved" | "local">("loading");
+  const [runId, setRunId] = useState<string | null>(null);
   const [reflection, setReflection] = useState("");
+  const [explanation, setExplanation] = useState("");
+  const [evidenceSetComplete, setEvidenceSetComplete] = useState(false);
   const target = bridgeTargetForAge(ageBand);
   const latest = attempts.at(-1);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function hydrate() {
+      setSyncState("loading");
+      try {
+        const response = await fetch(`/api/steam/bridge-attempt?ageBand=${encodeURIComponent(ageBand)}`, {
+          cache: "no-store",
+        });
+        const data = await response.json().catch(() => ({}));
+        if (cancelled) return;
+        if (!response.ok || !data?.run) {
+          setSyncState(response.ok ? "idle" : "local");
+          return;
+        }
+        const history = Array.isArray(data.run.attempts)
+          ? data.run.attempts.map((item: Record<string, unknown>) => ({
+              number: Number(item.number || 0),
+              design: item.design as BridgeDesign,
+              outcome: item.outcome as BridgeOutcome,
+            })).filter((item: Attempt) => item.number > 0 && item.design && item.outcome)
+          : [];
+        setRunId(typeof data.run.id === "string" ? data.run.id : null);
+        setAttempts(history);
+        setReflection(typeof data.run.reflection === "string" ? data.run.reflection : "");
+        setExplanation(typeof data.run.explanation === "string" ? data.run.explanation : "");
+        setEvidenceSetComplete(String(data.run.status) === "completed");
+        if (history.length > 0) setDesign(history[history.length - 1].design);
+        setSyncState("saved");
+      } catch {
+        if (!cancelled) setSyncState("local");
+      }
+    }
+    void hydrate();
+    return () => { cancelled = true; };
+  }, [ageBand]);
 
   const constraints = useMemo(() => new Map(mission.constraints.map((item) => [item.key, item])), [mission.constraints]);
   const materialOptions = constraints.get("material")?.options || ["wood","steel","composite"];
@@ -61,11 +100,37 @@ export default function CommunityBridgeExperience({
         }),
       });
       const data = await response.json().catch(() => ({}));
-      setSyncState(response.ok && data?.synced ? "saved" : "local");
+      if (response.ok && data?.synced) {
+        if (typeof data.runId === "string") setRunId(data.runId);
+        setEvidenceSetComplete(false);
+        setSyncState("saved");
+      } else {
+        setSyncState("local");
+      }
     } catch {
       setSyncState("local");
     }
     setChangeNote("");
+  }
+
+  async function saveReflectionEvidence() {
+    if (!runId) {
+      setSyncState("local");
+      return;
+    }
+    setSyncState("saving");
+    try {
+      const response = await fetch("/api/steam/bridge-attempt", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ageBand, runId, reflection, explanation }),
+      });
+      const data = await response.json().catch(() => ({}));
+      setEvidenceSetComplete(Boolean(response.ok && data?.complete));
+      setSyncState(response.ok ? "saved" : "local");
+    } catch {
+      setSyncState("local");
+    }
   }
 
   const spanRange = numberConstraint("span", 4, 80);
@@ -86,7 +151,7 @@ export default function CommunityBridgeExperience({
         <div className="steamMissionStatus">
           <strong>{attempts.length}</strong>
           <span>test attempt{attempts.length === 1 ? "" : "s"}</span>
-          <small>{syncState === "saving" ? "Saving…" : syncState === "saved" ? "Practice synced · not yet reviewed" : syncState === "local" ? "Practice in this session · not saved" : "Ready"}</small>
+          <small>{syncState === "loading" ? "Loading saved mission…" : syncState === "saving" ? "Saving…" : syncState === "saved" ? (evidenceSetComplete ? "Mission evidence set saved · not yet reviewed" : "Practice synced · not yet reviewed") : syncState === "local" ? "Practice in this session · not saved" : "Ready"}</small>
         </div>
       </section>
 
@@ -156,12 +221,27 @@ export default function CommunityBridgeExperience({
       </section>
 
       <section className="panel">
-        <div className="eyebrow">Reflect</div>
+        <div className="eyebrow">Explain & reflect</div>
         <h2 className="workspaceTitle">{mission.reflectionPromptsEn[0]}</h2>
         <div className="choiceGrid">
-          {["My structure","My materials","How people use it","My testing idea","My visual design"].map((item) => <button className={`choiceButton ${reflection === item ? "selected" : ""}`} type="button" onClick={() => setReflection(item)} key={item}>{item}</button>)}
+          {["My structure","My materials","How people use it","My testing idea","My visual design"].map((item) => <button className={`choiceButton ${reflection === item ? "selected" : ""}`} type="button" onClick={() => { setReflection(item); setEvidenceSetComplete(false); }} key={item}>{item}</button>)}
         </div>
-        <p className="muted" style={{ marginTop: 12 }}>{reflection ? `You selected: ${reflection}. Think about what you would try next.` : "Choose one part that changed your thinking."}</p>
+        <label className="workspaceForm" style={{ marginTop: 14 }}>
+          <span>Explain what happened, what you changed, and what you would try next.</span>
+          <textarea value={explanation} onChange={(event) => { setExplanation(event.target.value.slice(0, 3000)); setEvidenceSetComplete(false); }} rows={5} maxLength={3000} placeholder="My test showed… I changed… Next I would…" />
+        </label>
+        <div className="actions" style={{ marginTop: 12 }}>
+          <button className="button primary" type="button" disabled={!runId || !reflection || !explanation.trim() || syncState === "saving"} onClick={saveReflectionEvidence}>
+            {evidenceSetComplete ? "Evidence set saved" : "Save explanation & reflection"}
+          </button>
+        </div>
+        <p className="muted" style={{ marginTop: 12 }}>
+          {runId
+            ? (evidenceSetComplete
+              ? "Attempt history, reflection and explanation are saved. This is still practice evidence until reviewed."
+              : "Completion requires a saved test attempt, one reflection choice and your explanation.")
+            : "Run and sync at least one bridge test before saving the mission evidence set."}
+        </p>
       </section>
     </div>
   );
