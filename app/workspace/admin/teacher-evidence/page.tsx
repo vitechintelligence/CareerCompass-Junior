@@ -46,7 +46,7 @@ export default async function AdminTeacherEvidencePage() {
       <section className="workspaceList">
         {rows.length===0 ? <div className="panel"><p className="muted">No teacher evidence has been submitted yet.</p></div> :
         rows.map((row) => {
-          const module = moduleMap.get(String(row.module_key));
+          const learningModule = moduleMap.get(String(row.module_key));
           const evidence = row.evidence && typeof row.evidence === "object"
             ? row.evidence as Record<string, unknown>
             : {};
@@ -55,7 +55,7 @@ export default async function AdminTeacherEvidencePage() {
             <div className="workspaceRow" style={{padding:0}}>
               <div>
                 <div className="eyebrow">{String(row.semantic_id)}</div>
-                <h2 className="workspaceTitle">{module?.titleEn || String(row.module_key)}</h2>
+                <h2 className="workspaceTitle">{learningModule?.titleEn || String(row.module_key)}</h2>
                 <div className="muted">{String(row.display_name || "Teacher")} · participation {String(row.status)}</div>
               </div>
               <span className="pill">evidence · {status.replaceAll("_"," ")}</span>
