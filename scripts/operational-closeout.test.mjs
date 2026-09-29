@@ -28,6 +28,19 @@ test("partner enrollment requires explicit published book selection", async () =
   assert.doesNotMatch(actions,/where code = 'CCJ-MASTERY-BEGINNER'/);
 });
 
+test("STEAM writes use idempotency and atomic attempt numbering", async () => {
+  const api=await source("app/api/steam/bridge-attempt/route.ts");
+  const migrations=(await Promise.all([
+    source("db/migrations/011_duplicate_safe_events.sql"),
+    source("db/migrations/012_evidence_rubrics_reporting.sql"),
+  ])).join("\n");
+  assert.match(api,/pg_advisory_xact_lock/);
+  assert.match(api,/on conflict \(submission_id\)/);
+  assert.match(api,/attempt_count \+ 1/);
+  assert.match(migrations,/idx_steam_attempts_submission_id/);
+  assert.match(migrations,/idx_steam_runs_active_context/);
+});
+
 test("STEAM mission persists and hydrates reflection evidence", async () => {
   const api=await source("app/api/steam/bridge-attempt/route.ts");
   const client=await source("app/steam-lab/community-bridge/CommunityBridgeExperience.tsx");
