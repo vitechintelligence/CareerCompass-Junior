@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
 import {
+  FUTURE_SKILLS_AGE_BANDS,
   FUTURE_SKILLS_DELIVERY_MODEL,
   FUTURE_SKILLS_PATHWAYS,
   FUTURE_SKILLS_TRACKS,
@@ -9,7 +10,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const AGE_BANDS: FutureSkillsAgeBand[] = ["7-9", "10-13", "14-16", "17-18"];
+const AGE_BANDS: readonly FutureSkillsAgeBand[] = FUTURE_SKILLS_AGE_BANDS;
 
 export default async function FutureSkillsPage({
   searchParams,
