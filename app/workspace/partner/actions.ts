@@ -6,6 +6,7 @@ import { ensureStudentProfile } from "@/lib/auth/profile";
 import { requirePartnerClassAccess, requirePartnerOrganizationAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 import { explicitClassLearningContext } from "@/lib/learning/learner-context";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -352,6 +353,9 @@ export async function recordLearnerConsent(formData: FormData) {
 
 
 export async function linkGuardianReporter(formData: FormData) {
+  if (!isRiskyFeatureEnabled("guardianReporting")) {
+    throw new Error("Guardian reporting is disabled for this rollout.");
+  }
   const organizationId = String(formData.get("organizationId") || "");
   const learnerSemanticId = boundedText(formData.get("studentSemanticId"), 100);
   const guardianSemanticId = boundedText(formData.get("guardianSemanticId"), 100);
