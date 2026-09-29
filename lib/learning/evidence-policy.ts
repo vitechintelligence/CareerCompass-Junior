@@ -88,6 +88,50 @@ export function evaluateActivityEvidence(activity: ActivityDefinition, submitted
     return objective(key.every((value, index) => attempt[index] === value), activity.maxScore);
   }
 
+  if (activity.activityType === "matching" || "pairs" in content) {
+    if (!Array.isArray(content.pairs) || content.pairs.length < 2 || content.pairs.length > 30) {
+      throw new EvidencePolicyError("missing_or_invalid_answer_key", 409);
+    }
+    const key = content.pairs.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const pair = item as Record<string, unknown>;
+      const left = typeof pair.left === "string" ? pair.left.trim() : "";
+      const right = typeof pair.right === "string" ? pair.right.trim() : "";
+      return left && right ? { left, right } : null;
+    });
+    if (
+      key.some((item) => item === null) ||
+      new Set(key.map((item) => item?.left)).size !== key.length ||
+      new Set(key.map((item) => item?.right)).size !== key.length
+    ) {
+      throw new EvidencePolicyError("missing_or_invalid_answer_key", 409);
+    }
+
+    const attempt = response.matches;
+    if (!Array.isArray(attempt) || attempt.length !== key.length) {
+      throw new EvidencePolicyError("invalid_matching_response");
+    }
+    const submitted = attempt.map((item) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+      const pair = item as Record<string, unknown>;
+      return typeof pair.left === "string" && typeof pair.right === "string"
+        ? { left: pair.left.trim(), right: pair.right.trim() }
+        : null;
+    });
+    if (
+      submitted.some((item) => item === null) ||
+      new Set(submitted.map((item) => item?.left)).size !== submitted.length
+    ) {
+      throw new EvidencePolicyError("invalid_matching_response");
+    }
+
+    const answerMap = new Map((key as Array<{ left: string; right: string }>).map((item) => [item.left, item.right]));
+    const correct = (submitted as Array<{ left: string; right: string }>).every(
+      (item) => answerMap.get(item.left) === item.right,
+    );
+    return objective(correct, activity.maxScore);
+  }
+
   if (typeof response.text === "string" && response.text.trim().length > 0 && response.text.length <= 4000) {
     return recorded("PRACTICED", "Learner response retained for rubric or teacher review; no automatic mastery");
   }
