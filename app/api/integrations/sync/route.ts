@@ -4,6 +4,7 @@ import { getManagedOrganization } from "@/lib/integration-runtime";
 import { executeIntegrationJob } from "@/lib/integration-job-executor";
 import { readBoundedJson } from "@/lib/learning/request-json";
 import { randomUUID } from "node:crypto";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +62,7 @@ export async function POST(request: Request) {
   `;
 
   const jobId = String(rows[0].id);
-  if (jobType === "health_check") {
+  if (jobType === "health_check" && isRiskyFeatureEnabled("integrationJobExecution")) {
     const executed = await executeIntegrationJob({
       jobId,
       organizationId: access.organization.id,
@@ -84,6 +85,8 @@ export async function POST(request: Request) {
     jobId,
     status: String(rows[0].status),
     scheduledAt: rows[0].scheduled_at,
-    message: "Job queued. Provider execution is not considered live until authorization and transport are verified.",
+    message: isRiskyFeatureEnabled("integrationJobExecution")
+      ? "Job queued. Provider execution is not considered live until authorization and transport are verified."
+      : "Job queued but execution is disabled by rollout flag.",
   }, { status: 202, headers: { "Cache-Control": "no-store" } });
 }
