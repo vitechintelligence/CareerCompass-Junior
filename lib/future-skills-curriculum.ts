@@ -1,5 +1,8 @@
+import { LEARNER_AGE_BANDS, type LearnerAgeBand } from "@/lib/learner-age-bands";
+
 export type FutureSkillsTrack = "stem" | "steam" | "ai-foundation" | "ai-level-2" | "robotics";
-export type FutureSkillsAgeBand = "7-9" | "10-13" | "14-16" | "17-18";
+export type FutureSkillsAgeBand = LearnerAgeBand;
+export const FUTURE_SKILLS_AGE_BANDS: readonly FutureSkillsAgeBand[] = LEARNER_AGE_BANDS;
 
 export type FutureSkillsUnit = {
   code: string;
