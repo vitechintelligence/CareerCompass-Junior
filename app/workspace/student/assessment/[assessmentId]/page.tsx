@@ -18,7 +18,9 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
   const sql = getDb();
   const rows = await sql`
     select a.id, a.class_id, a.assessment_type, a.title_en, a.title_vi, a.instructions_en, a.instructions_vi,
-           a.status, a.due_at, a.time_limit_minutes, a.max_attempts, c.name as class_name
+           a.status, a.due_at, a.time_limit_minutes, a.max_attempts,
+           (a.due_at is null or a.due_at > now()) as due_open,
+           c.name as class_name
     from assessments a
     join classes c on c.id=a.class_id
     join class_memberships cm on cm.class_id=a.class_id
@@ -54,7 +56,7 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
   `;
   const activeSession = activeSessions[0];
   const vi = profile.preferred_locale === "vi";
-  const dueOpen = !assessment.due_at || new Date(String(assessment.due_at)).getTime() > Date.now();
+  const dueOpen = assessment.due_open === true;
   const attemptsRemaining = attempts.length < Number(assessment.max_attempts || 1);
   const canAttempt = String(assessment.status) === "published" && dueOpen && attemptsRemaining;
   const timed = assessment.time_limit_minutes != null;
