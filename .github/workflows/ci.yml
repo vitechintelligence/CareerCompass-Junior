@@ -63,6 +63,9 @@ jobs:
       - name: Device audio and PWA safety regression
         run: npm run test:device
 
+      - name: Operational closeout regression
+        run: npm run test:operations
+
       - name: Evidence and reporting regression
         run: npm run test:evidence-reporting
 
