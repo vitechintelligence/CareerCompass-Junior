@@ -19,3 +19,9 @@ Read-only inspection found one active `platform_admin` profile mapped to the con
 - A1.4 must not be enabled yet. Requiring verified email now could lock out administration.
 
 No production auth/profile mutation was performed by this precheck.
+
+## Prepared tightening control
+
+The branch now supports `CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN=true`. It is deliberately default-off. When enabled, both existing platform-admin sessions and allowlist promotion require the authenticated session user to report verified email.
+
+Do **not** enable it until A1.1–A1.3 pass for two controlled administrator identities.
