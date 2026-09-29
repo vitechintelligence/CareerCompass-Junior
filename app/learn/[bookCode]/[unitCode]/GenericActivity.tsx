@@ -17,6 +17,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const [selected, setSelected] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [ordered, setOrdered] = useState<string[]>([]);
+  const [matchAnswers, setMatchAnswers] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const [resolvedEnrollmentId, setResolvedEnrollmentId] = useState(enrollmentId);
   const [attemptCount, setAttemptCount] = useState(0);
@@ -31,7 +32,11 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const items = Array.isArray(content.items) ? content.items : [];
   const options = Array.isArray(content.options) ? content.options.map(String) : [];
   const sequence = Array.isArray(content.sequence) ? content.sequence.map(String) : [];
-  const pairs = Array.isArray(content.pairs) ? content.pairs as Array<Record<string, unknown>> : [];
+  const matching = content.matching && typeof content.matching === "object" && !Array.isArray(content.matching)
+    ? content.matching as Record<string, unknown>
+    : {};
+  const matchingLeft = Array.isArray(matching.left) ? matching.left.map(String) : [];
+  const matchingRight = Array.isArray(matching.right) ? matching.right.map(String) : [];
   const model = typeof content.model === "string" ? content.model : null;
   const prompt = typeof content.prompt === "string" ? content.prompt : null;
   const type = activity.activityType.toLowerCase();
@@ -183,6 +188,21 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
     setOrdered((current) => current.includes(value) ? current.filter((item) => item !== value) : [...current, value]);
   }
 
+  async function saveMatching() {
+    if (
+      matchingLeft.length < 2 ||
+      matchingRight.length !== matchingLeft.length ||
+      matchingLeft.some((left) => !matchAnswers[left]) ||
+      new Set(matchingLeft.map((left) => matchAnswers[left])).size !== matchingLeft.length
+    ) {
+      setMessage(locale === "vi" ? "Hãy ghép mỗi mục với một đáp án khác nhau." : "Match every item to a different answer.");
+      return;
+    }
+    await syncAttempt({
+      matches: matchingLeft.map((left) => ({ left, right: matchAnswers[left] })),
+    });
+  }
+
   return (
     <article className={`lessonCard genericActivityCard${earlyYears ? " earlyYearsActivity" : ""}`}>
       <div className="lessonSectionHeader">
@@ -208,11 +228,28 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         return <button className="vocabCard" type="button" key={`${word}-${index}`} onClick={() => speak(word)}><span className="vocabSpeaker">🔊</span><strong>{word}</strong>{vi && <span>{vi}</span>}{example && <small>{example}</small>}</button>;
       })}</div>}
 
-      {pairs.length > 0 && <div className="workspaceList">{pairs.map((pair, index) => {
-        const left = String(pair.left ?? pair.en ?? pair.word ?? `Item ${index + 1}`);
-        const right = String(pair.right ?? pair.vi ?? pair.meaning ?? "");
-        return <div className="workspaceRow" key={`${left}-${index}`}><button className="pill" type="button" onClick={() => speak(left)}>🔊 {left}</button><strong>{right}</strong></div>;
-      })}</div>}
+      {matchingLeft.length > 0 && matchingRight.length === matchingLeft.length && <div className="workspaceList">
+        {matchingLeft.map((left, index) => {
+          const chosenElsewhere = new Set(
+            matchingLeft.filter((item) => item !== left).map((item) => matchAnswers[item]).filter(Boolean),
+          );
+          return <label className="workspaceRow" key={`${left}-${index}`}>
+            <button className="pill" type="button" onClick={() => speak(left)} aria-label={`Hear ${left}`}>🔊 {left}</button>
+            <select
+              aria-label={`Match ${left}`}
+              value={matchAnswers[left] || ""}
+              onChange={(event) => {
+                setMatchAnswers((current) => ({ ...current, [left]: event.target.value }));
+                setMessage(null);
+              }}
+            >
+              <option value="">{locale === "vi" ? "Chọn đáp án…" : "Choose match…"}</option>
+              {matchingRight.map((right) => <option key={right} value={right} disabled={chosenElsewhere.has(right)}>{right}</option>)}
+            </select>
+          </label>;
+        })}
+        <div className="activityFooter"><button className="button soft" type="button" disabled={syncState === "saving"} onClick={saveMatching}>{locale === "vi" ? "Kiểm tra ghép đôi" : "Check matches"}</button></div>
+      </div>}
 
       {options.length > 0 && <div className="choiceGrid">{options.map((option) => <button className={`choiceButton ${selected === option ? "selected" : ""}`} type="button" key={option} onClick={() => { setSelected(option); setMessage(null); }}>{option}</button>)}</div>}
 
@@ -238,7 +275,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
           <p className="muted">{locale === "vi" ? "Đây là dấu luyện tập, chưa phải minh chứng đã thành thạo." : "This records practice only; it does not prove mastery."}</p>
         </div>
       )}
-      {options.length === 0 && sequence.length === 0 && !openResponseType && !(earlyYears && type.includes("speaking")) && (type === "self_check" || items.length > 0 || model) && (
+      {options.length === 0 && sequence.length === 0 && matchingLeft.length === 0 && !openResponseType && !(earlyYears && type.includes("speaking")) && (type === "self_check" || items.length > 0 || model) && (
         <div className="activityFooter"><button className="button soft" type="button" disabled={syncState === "saving"} onClick={() => syncAttempt({ selfReported: true })}>{locale === "vi" ? "Tự ghi nhận đã luyện tập" : "Self-report practice"}</button></div>
       )}
       {message && <p className="activityMessage">{message}</p>}
