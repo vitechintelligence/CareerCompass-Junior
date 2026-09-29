@@ -12,6 +12,10 @@ create unique index if not exists idx_steam_attempts_submission_id
   on steam_attempts(submission_id)
   where submission_id is not null;
 
+create unique index if not exists idx_steam_runs_active_context
+  on steam_mission_runs(learner_id, organization_id, mission_id, mission_version_id, run_mode)
+  where status='in_progress';
+
 alter table teacher_learning_progress
   add column if not exists evidence_status text not null default 'not_submitted',
   add column if not exists reviewed_by uuid references profiles(id) on delete set null,
