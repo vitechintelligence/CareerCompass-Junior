@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export default async function GuardianReportPage({
   params:Promise<{learnerId:string}>;
   searchParams:Promise<{organizationId?:string}>;
 }){
+  if (!isRiskyFeatureEnabled("guardianReporting")) notFound();
   const user=await getSessionUser();
   if(!user) notFound();
   const profile=await getCurrentProfile();
