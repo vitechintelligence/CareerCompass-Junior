@@ -30,10 +30,7 @@ test("partner enrollment requires explicit published book selection", async () =
 
 test("STEAM writes use idempotency and atomic attempt numbering", async () => {
   const api=await source("app/api/steam/bridge-attempt/route.ts");
-  const migrations=(await Promise.all([
-    source("db/migrations/011_duplicate_safe_events.sql"),
-    source("db/migrations/012_evidence_rubrics_reporting.sql"),
-  ])).join("\n");
+  const migrations=await source("db/migrations/014_operational_closeout.sql");
   assert.match(api,/pg_advisory_xact_lock/);
   assert.match(api,/on conflict \(submission_id\)/);
   assert.match(api,/attempt_count \+ 1/);
