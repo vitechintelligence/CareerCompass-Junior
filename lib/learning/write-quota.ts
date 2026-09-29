@@ -22,7 +22,7 @@ export async function enforceLearningWriteQuota(input: {
       ? await sql`select 1 from activity_attempts where submission_id=${input.submissionId}::uuid limit 1`
       : input.resource === "assessment"
         ? await sql`select 1 from assessment_attempts where submission_id=${input.submissionId}::uuid limit 1`
-        : [];
+        : await sql`select 1 from steam_attempts where submission_id=${input.submissionId}::uuid limit 1`;
     if (existing[0]) return { duplicate: true, allowed: true };
   }
 
