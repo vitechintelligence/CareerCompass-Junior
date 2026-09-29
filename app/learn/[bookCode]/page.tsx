@@ -26,12 +26,15 @@ export default async function BookOverviewPage({
   const fullInteractive = getFullInteractiveBook(bookCode);
   if (fullInteractive) {
     const startHash = fullInteractiveStartHash(bookCode, start);
+    const scopeQuery = learningEnrollmentId
+      ? `?scope=${encodeURIComponent(learningEnrollmentId)}`
+      : "";
     return (
       <FullInteractiveBookEmbed
         title={book.title}
         subtitle={book.subtitle}
         summary={fullInteractive.lessonSummary}
-        source={`/interactive-books/${fullInteractive.slug}${startHash}`}
+        source={`/interactive-books/${fullInteractive.slug}${scopeQuery}${startHash}`}
       />
     );
   }
