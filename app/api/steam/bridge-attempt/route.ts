@@ -16,6 +16,7 @@ type Payload = {
   observation?: string;
   changeFromPrevious?: string;
   runMode?: "individual" | "small_group" | "large_group";
+  submissionId?: string;
 };
 
 type ReflectionPayload = {
@@ -179,6 +180,8 @@ export async function POST(request: Request) {
   if (!payload.ageBand || !isLearnerAgeBand(payload.ageBand)) {
     return jsonError("Assigned age level is required.", 400);
   }
+  const submissionId = typeof payload.submissionId === "string" ? payload.submissionId : "";
+  if (!UUID_RE.test(submissionId)) return jsonError("A valid STEAM submission ID is required.", 400);
   const missionDefinition = COMMUNITY_BRIDGE_MISSIONS[payload.ageBand];
   if (!validateBridgeDesign(payload.ageBand, payload.design, missionDefinition.constraints)) {
     return jsonError("Bridge design is outside this mission's limits.", 400);
@@ -200,6 +203,26 @@ export async function POST(request: Request) {
   `;
   if (!ready[0]?.runs || !ready[0]?.learner_profiles) {
     return jsonError("STEAM sync is not activated in the production database yet.", 409, { localOnly: true });
+  }
+
+  const duplicateRows = await sql`
+    select sa.id, sa.attempt_number, sa.outcome, r.id as run_id
+    from steam_attempts sa
+    join steam_mission_runs r on r.id=sa.run_id
+    where sa.submission_id=${submissionId}::uuid
+      and r.learner_id=${profile.id}
+    limit 1
+  `;
+  if (duplicateRows[0]) {
+    return NextResponse.json({
+      ok: true,
+      synced: true,
+      duplicate: true,
+      runId: String(duplicateRows[0].run_id),
+      attemptNumber: Number(duplicateRows[0].attempt_number),
+      evidenceLabel: "practiced",
+      outcome: duplicateRows[0].outcome,
+    }, { headers: { "Cache-Control": "no-store" } });
   }
 
   let assignment = await sql`
@@ -291,6 +314,7 @@ export async function POST(request: Request) {
     await enforceLearningWriteQuota({
       profileId: profile.id,
       organizationId,
+      submissionId,
       resource: "steam",
     });
   } catch (error) {
@@ -323,19 +347,100 @@ export async function POST(request: Request) {
         ${payload.ageBand}, ${runMode}, 'in_progress', 'test', 0,
         ${JSON.stringify(missionDefinition.careerConnections)}::jsonb
       )
+      on conflict (learner_id, organization_id, mission_id, mission_version_id, run_mode)
+        where status='in_progress'
+      do nothing
       returning id, attempt_count
     `;
+    if (!runRows[0]) {
+      runRows = await sql`
+        select id, attempt_count
+        from steam_mission_runs
+        where learner_id=${profile.id}
+          and organization_id=${organizationId}
+          and mission_id=${missionId}
+          and mission_version_id=${versionId}
+          and run_mode=${runMode}
+          and status='in_progress'
+        order by started_at desc
+        limit 1
+      `;
+    }
   }
 
   const runId = String(runRows[0].id);
-  const nextAttempt = Number(runRows[0].attempt_count || 0) + 1;
   const observation = typeof payload.observation === "string" ? payload.observation.slice(0, 1200) : "";
   const changeFromPrevious = typeof payload.changeFromPrevious === "string" ? payload.changeFromPrevious.slice(0, 1200) : "";
   const designJson = JSON.stringify(payload.design);
   const outcomeJson = JSON.stringify(outcome);
+
+  const attemptRows = await sql`
+    with locked as (
+      select pg_advisory_xact_lock(hashtextextended(${runId}, 0))
+    ),
+    state as (
+      select r.attempt_count
+      from steam_mission_runs r
+      cross join locked
+      where r.id=${runId}
+        and r.learner_id=${profile.id}
+        and r.status='in_progress'
+    ),
+    inserted as (
+      insert into steam_attempts (
+        run_id, attempt_number, design_state, outcome, observation,
+        change_from_previous, result_state, submission_id
+      )
+      select
+        ${runId}, state.attempt_count + 1, ${designJson}::jsonb, ${outcomeJson}::jsonb,
+        ${observation || null}, ${changeFromPrevious || null}, ${outcome.resultState},
+        ${submissionId}::uuid
+      from state
+      on conflict (submission_id) where submission_id is not null do nothing
+      returning id, attempt_number
+    ),
+    updated as (
+      update steam_mission_runs r
+      set attempt_count=inserted.attempt_number, updated_at=now()
+      from inserted
+      where r.id=${runId}
+      returning r.id
+    )
+    select inserted.id, inserted.attempt_number
+    from inserted
+  `;
+  if (!attemptRows[0]) {
+    const duplicate = await sql`
+      select sa.id, sa.attempt_number, sa.outcome, sa.run_id
+      from steam_attempts sa
+      join steam_mission_runs r on r.id=sa.run_id
+      where sa.submission_id=${submissionId}::uuid
+        and r.learner_id=${profile.id}
+      limit 1
+    `;
+    if (duplicate[0]) {
+      return NextResponse.json({
+        ok: true,
+        synced: true,
+        duplicate: true,
+        runId: String(duplicate[0].run_id),
+        attemptNumber: Number(duplicate[0].attempt_number),
+        evidenceLabel: "practiced",
+        outcome: duplicate[0].outcome,
+      }, { headers: { "Cache-Control": "no-store" } });
+    }
+    return jsonError("steam_submission_conflict", 409);
+  }
+
+  const attemptId = String(attemptRows[0].id);
+  const nextAttempt = Number(attemptRows[0].attempt_number);
   const previousRows = await sql`
-    select design_state, outcome from steam_attempts
-    where run_id=${runId} order by attempt_number desc limit 1
+    select design_state, outcome
+    from steam_attempts
+    where run_id=${runId}
+      and attempt_number < ${nextAttempt}
+    order by attempt_number desc
+    limit 1
   `;
   const previous = previousRows[0];
   const previousOutcome = previous?.outcome as Record<string, unknown> | undefined;
@@ -344,18 +449,6 @@ export async function POST(request: Request) {
     typeof previousOutcome?.stability === "number" &&
     outcome.stability > previousOutcome.stability &&
     (typeof previousOutcome.cost !== "number" || outcome.cost <= previousOutcome.cost));
-
-  const attemptRows = await sql`
-    insert into steam_attempts (
-      run_id, attempt_number, design_state, outcome, observation, change_from_previous, result_state
-    )
-    values (
-      ${runId}, ${nextAttempt}, ${designJson}::jsonb, ${outcomeJson}::jsonb,
-      ${observation || null}, ${changeFromPrevious || null}, ${outcome.resultState}
-    )
-    returning id
-  `;
-  const attemptId = String(attemptRows[0].id);
 
   // A simulated threshold is practice. A rubric/reviewer must evaluate the
   // explanation and creation before a child is labelled demonstrated or verified.
