@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { assessmentEvidenceLevel } from "@/lib/evidence/evidence-policy";
 import { normalizeSubmissionId } from "@/lib/learning/idempotency";
 import { enforceLearningWriteQuota } from "@/lib/learning/write-quota";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -15,6 +16,9 @@ function normalized(value: string) {
 }
 
 export async function startTimedAssessment(formData: FormData) {
+  if (!isRiskyFeatureEnabled("timedAssessments")) {
+    throw new Error("Timed assessments are not enabled for this rollout.");
+  }
   const assessmentId = String(formData.get("assessmentId") || "");
   const submissionId = normalizeSubmissionId(formData.get("submissionId"));
   if (!UUID_RE.test(assessmentId) || !submissionId) throw new Error("Invalid timed assessment start.");
@@ -109,7 +113,8 @@ export async function submitAssessment(formData: FormData) {
   }
 
   let timedSession: Record<string, unknown> | null = null;
-  if (assessment.time_limit_minutes != null) {
+  const timedAssessmentsEnabled = isRiskyFeatureEnabled("timedAssessments");
+  if (timedAssessmentsEnabled && assessment.time_limit_minutes != null) {
     if (!UUID_RE.test(sessionId)) throw new Error("Start the timed assessment before submitting.");
     const sessions = await sql`
       select id, submission_id, status, started_at, expires_at
