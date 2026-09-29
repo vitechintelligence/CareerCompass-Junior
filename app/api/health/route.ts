@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthConfigurationStatus } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import { getRuntimeAlignmentStatus } from "@/lib/runtime-alignment";
+import { riskyFeatureSnapshot } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -67,6 +68,7 @@ function runtimePublicStatus() {
     blockingProjectMismatch: runtime.blockingProjectMismatch,
     blockingBranchMismatch: runtime.blockingBranchMismatch,
     blockingEndpointMismatch: runtime.blockingEndpointMismatch,
+    blockingNonProductionProductionReuse: runtime.blockingNonProductionProductionReuse,
     issues: runtime.issues,
     warnings: runtime.warnings,
   };
@@ -187,7 +189,8 @@ export async function GET() {
       remediationSchemaReady &&
       !runtime.blockingProjectMismatch &&
       !runtime.blockingBranchMismatch &&
-      !runtime.blockingEndpointMismatch;
+      !runtime.blockingEndpointMismatch &&
+      !runtime.blockingNonProductionProductionReuse;
 
     return NextResponse.json(
       {
@@ -208,6 +211,7 @@ export async function GET() {
           remediationChecks,
           latestExpectedMigration: "014_operational_closeout.sql",
         },
+        rolloutFeatures: riskyFeatureSnapshot(),
         operationalAcceptance: {
           syntheticAuthenticatedJourney: process.env.CCJ_SYNTHETIC_JOURNEY_VERIFIED === "true" ? "verified" : "not-verified",
           restoreRehearsal: process.env.CCJ_RESTORE_REHEARSAL_VERIFIED === "true" ? "verified" : "not-verified",
