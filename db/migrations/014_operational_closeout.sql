@@ -5,6 +5,13 @@ alter table steam_mission_runs
   add column if not exists reflection text,
   add column if not exists explanation text;
 
+alter table steam_attempts
+  add column if not exists submission_id uuid;
+
+create unique index if not exists idx_steam_attempts_submission_id
+  on steam_attempts(submission_id)
+  where submission_id is not null;
+
 alter table teacher_learning_progress
   add column if not exists evidence_status text not null default 'not_submitted',
   add column if not exists reviewed_by uuid references profiles(id) on delete set null,
