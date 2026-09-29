@@ -7,11 +7,16 @@ export const dynamic = "force-dynamic";
 
 const BOOK_SLUGS = new Set(["my-compass", "career-compass-junior"]);
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
+  const requestUrl = new URL(request.url);
+  const requestedScope = requestUrl.searchParams.get("scope") || "";
+  const enrollmentScope = UUID_RE.test(requestedScope) ? requestedScope : "";
   if (!BOOK_SLUGS.has(slug)) return new Response("Interactive book not found.", { status: 404 });
 
   let html: string;
@@ -23,6 +28,38 @@ export async function GET(
   } else {
     // The original compressed book remains archived under public/interactive-book-data.
     html = await readFile(path.join(process.cwd(), "content", "interactive-books", "my-compass.html"), "utf8");
+  }
+
+  const storageNamespace = `
+<script>
+(function () {
+  var assignedScope = ${JSON.stringify(enrollmentScope)};
+  var scope = assignedScope;
+  if (!scope) {
+    try {
+      scope = sessionStorage.getItem("ccj_guest_scope") || "";
+      if (!scope) {
+        scope = "guest-" + (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2));
+        sessionStorage.setItem("ccj_guest_scope", scope);
+      }
+    } catch (error) {
+      scope = "guest-session";
+    }
+  }
+  window.__CCJ_STORAGE_SCOPE__ = scope;
+})();
+</script>`;
+
+  if (slug === "career-compass-junior") {
+    html = html.replace(
+      "const STORE_KEY = 'ccjunior_v1';",
+      "const STORE_KEY = 'ccjunior_v1:' + String(window.__CCJ_STORAGE_SCOPE__ || 'guest-session');",
+    );
+  } else {
+    html = html.replace(
+      "const STORE_KEY = 'mycompass_progress_v1';",
+      "const STORE_KEY = 'mycompass_progress_v1:' + String(window.__CCJ_STORAGE_SCOPE__ || 'guest-session');",
+    );
   }
 
   // The supplied full-book editions were authored with a desktop-first MediaRecorder
@@ -87,9 +124,10 @@ export async function GET(
 })();
 </script>`;
 
+  const injectedRuntime = `${storageNamespace}${mediaRecorderCompat}`;
   const patchedHtml = html.includes("</head>")
-    ? html.replace("</head>", `${mediaRecorderCompat}</head>`)
-    : `${mediaRecorderCompat}${html}`;
+    ? html.replace("</head>", `${injectedRuntime}</head>`)
+    : `${injectedRuntime}${html}`;
 
   return new Response(patchedHtml, {
     headers: {
