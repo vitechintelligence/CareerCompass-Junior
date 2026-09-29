@@ -17,6 +17,16 @@ function userEmail(user: unknown) {
   return typeof raw === "string" ? raw.trim().toLowerCase() : "";
 }
 
+function userEmailVerified(user: unknown) {
+  return (user as { emailVerified?: unknown } | null)?.emailVerified === true;
+}
+
+export function verifiedPlatformAdminEmailRequired() {
+  return String(process.env.CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN || "")
+    .trim()
+    .toLowerCase() === "true";
+}
+
 export async function getPlatformAdminContext() {
   const user = await getSessionUser();
   if (!user?.id) return null;
@@ -26,11 +36,13 @@ export async function getPlatformAdminContext() {
   if (!profile || profile.status !== "active") return null;
 
   if (profile.account_type === "platform_admin") {
+    if (verifiedPlatformAdminEmailRequired() && !userEmailVerified(user)) return null;
     return { user, profile, email: userEmail(user) };
   }
 
   const email = userEmail(user);
   if (!email || !configuredAdminEmails().has(email)) return null;
+  if (verifiedPlatformAdminEmailRequired() && !userEmailVerified(user)) return null;
 
   const sql = getDb();
   const rows = await sql`
