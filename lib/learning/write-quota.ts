@@ -1,6 +1,7 @@
 import { getDb } from "@/lib/db";
 
 import { LEARNING_WRITE_LIMITS, quotaScopeKeys } from "@/lib/learning/write-quota-policy";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export class LearningWriteQuotaError extends Error {
   readonly status = 429;
@@ -15,6 +16,10 @@ export async function enforceLearningWriteQuota(input: {
   submissionId?: string | null;
   resource: "activity" | "assessment" | "steam";
 }) {
+  if (!isRiskyFeatureEnabled("learningWriteQuotas")) {
+    return { duplicate: false, allowed: true, featureEnabled: false };
+  }
+
   const sql = getDb();
 
   if (input.submissionId) {
