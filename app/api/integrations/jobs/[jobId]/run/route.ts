@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getManagedOrganization } from "@/lib/integration-runtime";
 import { executeIntegrationJob } from "@/lib/integration-job-executor";
 import { readBoundedJson } from "@/lib/learning/request-json";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,13 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ jobId: string }> },
 ) {
+  if (!isRiskyFeatureEnabled("integrationJobExecution")) {
+    return NextResponse.json(
+      { error: "integration_job_execution_disabled" },
+      { status: 503, headers: { "Cache-Control": "no-store" } },
+    );
+  }
+
   const { jobId } = await params;
   if (!UUID_RE.test(jobId)) {
     return NextResponse.json({ error: "Invalid job reference." }, { status: 400 });
