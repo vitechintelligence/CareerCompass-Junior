@@ -77,6 +77,28 @@ test("health and lifecycle closeout are explicit", async () => {
   assert.match(exportRoute,/learningEvidence/);
 });
 
+test("full interactive books isolate local practice by enrollment or guest session", async () => {
+  const route=await source("app/interactive-books/[slug]/route.ts");
+  const launch=await source("app/learn/[bookCode]/page.tsx");
+  assert.match(route,/__CCJ_STORAGE_SCOPE__/);
+  assert.match(route,/ccj_guest_scope/);
+  assert.match(route,/ccjunior_v1:/);
+  assert.match(route,/mycompass_progress_v1:/);
+  assert.match(launch,/scope=/);
+});
+
+test("matching keeps the answer map server-side and submits learner mappings", async () => {
+  const contract=await source("lib/learning/activity-contract.ts");
+  const policy=await source("lib/learning/evidence-policy.ts");
+  const client=await source("app/learn/[bookCode]/[unitCode]/GenericActivity.tsx");
+  assert.match(contract,/matching: \{/);
+  assert.match(contract,/pairs: _pairs/);
+  assert.match(policy,/invalid_matching_response/);
+  assert.match(policy,/answerMap/);
+  assert.match(client,/Check matches/);
+  assert.match(client,/matches:/);
+});
+
 test("catalog does not confuse source interactive book with complete LMS mapping", async () => {
   const books=await source("app/books/page.tsx");
   const catalog=await source("lib/book-catalog.ts");
