@@ -18,8 +18,152 @@ type Payload = {
   runMode?: "individual" | "small_group" | "large_group";
 };
 
+type ReflectionPayload = {
+  ageBand?: string;
+  runId?: string;
+  reflection?: string;
+  explanation?: string;
+};
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 function jsonError(message: string, status: number, extra: Record<string, unknown> = {}) {
   return NextResponse.json({ error: message, ...extra }, { status, headers: { "Cache-Control": "no-store" } });
+}
+
+export async function GET(request: Request) {
+  let profile;
+  try {
+    profile = await requireActiveProfile(["student"]);
+  } catch {
+    return jsonError("Sign in with an active student account to load STEAM history.", 401);
+  }
+
+  const url = new URL(request.url);
+  const ageBand = url.searchParams.get("ageBand") || "";
+  if (!isLearnerAgeBand(ageBand)) return jsonError("Assigned age level is required.", 400);
+
+  const missionDefinition = COMMUNITY_BRIDGE_MISSIONS[ageBand];
+  const sql = getDb();
+  const runRows = await sql`
+    select r.id, r.status, r.current_step, r.attempt_count, r.reflection, r.explanation
+    from steam_mission_runs r
+    join steam_missions m on m.id=r.mission_id
+    where r.learner_id=${profile.id}
+      and r.age_band=${ageBand}
+      and m.mission_key=${missionDefinition.key}
+      and r.status in ('in_progress','completed')
+    order by r.updated_at desc
+    limit 1
+  `;
+  const run = runRows[0];
+  if (!run) {
+    return NextResponse.json({ ok: true, run: null }, { headers: { "Cache-Control": "no-store" } });
+  }
+
+  const attempts = await sql`
+    select attempt_number, design_state, outcome, observation, change_from_previous, result_state, created_at
+    from steam_attempts
+    where run_id=${String(run.id)}
+    order by attempt_number
+  `;
+
+  return NextResponse.json({
+    ok: true,
+    run: {
+      id: String(run.id),
+      status: String(run.status),
+      currentStep: String(run.current_step),
+      attemptCount: Number(run.attempt_count || 0),
+      reflection: typeof run.reflection === "string" ? run.reflection : "",
+      explanation: typeof run.explanation === "string" ? run.explanation : "",
+      attempts: attempts.map((item) => ({
+        number: Number(item.attempt_number),
+        design: item.design_state,
+        outcome: item.outcome,
+        observation: item.observation,
+        changeFromPrevious: item.change_from_previous,
+        resultState: item.result_state,
+        createdAt: item.created_at,
+      })),
+    },
+  }, { headers: { "Cache-Control": "no-store" } });
+}
+
+export async function PUT(request: Request) {
+  let payload: ReflectionPayload;
+  try {
+    const value = await readBoundedJson(request, 16 * 1024);
+    if (!value || typeof value !== "object" || Array.isArray(value)) return jsonError("Invalid payload.", 400);
+    payload = value as ReflectionPayload;
+  } catch (error) {
+    return jsonError(error instanceof EvaluationError ? error.code : "invalid_json", error instanceof EvaluationError ? error.status : 400);
+  }
+
+  const ageBand = typeof payload.ageBand === "string" ? payload.ageBand : "";
+  const runId = typeof payload.runId === "string" ? payload.runId : "";
+  const reflection = typeof payload.reflection === "string" ? payload.reflection.trim().slice(0, 1200) : "";
+  const explanation = typeof payload.explanation === "string" ? payload.explanation.trim().slice(0, 3000) : "";
+  if (!isLearnerAgeBand(ageBand) || !UUID_RE.test(runId)) return jsonError("Valid mission run and age level are required.", 400);
+
+  let profile;
+  try {
+    profile = await requireActiveProfile(["student"]);
+  } catch {
+    return jsonError("Sign in with an active student account to save STEAM reflection.", 401);
+  }
+
+  const missionDefinition = COMMUNITY_BRIDGE_MISSIONS[ageBand];
+  const sql = getDb();
+  const rows = await sql`
+    select r.id, r.organization_id, r.attempt_count
+    from steam_mission_runs r
+    join steam_missions m on m.id=r.mission_id
+    where r.id=${runId}
+      and r.learner_id=${profile.id}
+      and r.age_band=${ageBand}
+      and m.mission_key=${missionDefinition.key}
+      and r.status in ('in_progress','completed')
+    limit 1
+  `;
+  const run = rows[0];
+  if (!run) return jsonError("STEAM mission run not found.", 404);
+
+  try {
+    await enforceLearningWriteQuota({
+      profileId: profile.id,
+      organizationId: run.organization_id ? String(run.organization_id) : null,
+      resource: "steam",
+    });
+  } catch (error) {
+    if (error instanceof LearningWriteQuotaError) return jsonError(error.code, error.status);
+    throw error;
+  }
+
+  const complete = Number(run.attempt_count || 0) > 0 && Boolean(reflection) && Boolean(explanation);
+  await sql`
+    update steam_mission_runs
+    set
+      reflection=${reflection || null},
+      explanation=${explanation || null},
+      current_step=${complete ? "reflect" : "explain"},
+      status=${complete ? "completed" : "in_progress"},
+      completed_at=case when ${complete} then coalesce(completed_at, now()) else null end,
+      updated_at=now()
+    where id=${runId}
+      and learner_id=${profile.id}
+  `;
+
+  return NextResponse.json({
+    ok: true,
+    saved: true,
+    complete,
+    evidenceSet: {
+      attemptRecorded: Number(run.attempt_count || 0) > 0,
+      reflectionRecorded: Boolean(reflection),
+      explanationRecorded: Boolean(explanation),
+    },
+  }, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function POST(request: Request) {
