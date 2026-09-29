@@ -1,6 +1,32 @@
 -- Phase 11 closeout: operational hardening, quotas, integration execution and lifecycle requests.
 -- Verify on isolated branch first. Do not apply to production without explicit approval.
 
+alter table steam_mission_runs
+  add column if not exists reflection text,
+  add column if not exists explanation text;
+
+alter table teacher_learning_progress
+  add column if not exists evidence_status text not null default 'not_submitted',
+  add column if not exists reviewed_by uuid references profiles(id) on delete set null,
+  add column if not exists reviewed_at timestamptz,
+  add column if not exists review_notes text;
+
+do $
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname='teacher_learning_progress_evidence_status_check'
+  ) then
+    alter table teacher_learning_progress
+      add constraint teacher_learning_progress_evidence_status_check
+      check (evidence_status in ('not_submitted','submitted','verified','changes_requested'));
+  end if;
+end
+$;
+
+create index if not exists idx_teacher_learning_evidence_review
+  on teacher_learning_progress(evidence_status, updated_at desc);
+
 create table if not exists assessment_sessions (
   id uuid primary key default gen_random_uuid(),
   assessment_id uuid not null references assessments(id) on delete cascade,
