@@ -17,9 +17,10 @@ type Props = {
   unitCode: string;
   enrollmentId?: string;
   ageBand?: string | null;
+  offlineOutboxEnabled?: boolean;
 };
 
-export default function GenericActivity({ activity, locale, bookCode, unitCode, enrollmentId, ageBand }: Props) {
+export default function GenericActivity({ activity, locale, bookCode, unitCode, enrollmentId, ageBand, offlineOutboxEnabled = false }: Props) {
   const [selected, setSelected] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [ordered, setOrdered] = useState<string[]>([]);
@@ -104,7 +105,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   }, [activity.code, activity.contentVersion, bookCode, locale, resolvedEnrollmentId, unitCode]);
 
   useEffect(() => {
-    if (!resolvedEnrollmentId) return;
+    if (!resolvedEnrollmentId || !offlineOutboxEnabled) return;
     let cancelled = false;
 
     async function flushOutbox() {
@@ -148,7 +149,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
       cancelled = true;
       window.removeEventListener("online", onOnline);
     };
-  }, [locale, resolvedEnrollmentId]);
+  }, [locale, offlineOutboxEnabled, resolvedEnrollmentId]);
 
   function speak(value: string) {
     if (!("speechSynthesis" in window)) return;
@@ -205,6 +206,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         return;
       }
       if (
+        offlineOutboxEnabled &&
         resolvedEnrollmentId &&
         (res.status >= 500 || !navigator.onLine) &&
         responseIsSafeForOfflineQueue(response) &&
@@ -228,6 +230,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
       setSyncState("failed");
     } catch {
       if (
+        offlineOutboxEnabled &&
         resolvedEnrollmentId &&
         responseIsSafeForOfflineQueue(response) &&
         enqueueLearningWrite(resolvedEnrollmentId, {
