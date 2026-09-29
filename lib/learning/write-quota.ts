@@ -1,27 +1,12 @@
 import { getDb } from "@/lib/db";
 
-export const LEARNING_WRITE_LIMITS = {
-  learnerMinute: 30,
-  learnerDay: 1000,
-  organizationMinute: 600,
-  organizationDay: 20000,
-} as const;
+import { LEARNING_WRITE_LIMITS, quotaScopeKeys } from "@/lib/learning/write-quota-policy";
 
 export class LearningWriteQuotaError extends Error {
   readonly status = 429;
   constructor(public readonly code = "learning_write_quota_exceeded") {
     super(code);
   }
-}
-
-export function quotaScopeKeys(profileId: string, organizationId?: string | null) {
-  const learner = organizationId
-    ? `learner:${profileId}:org:${organizationId}`
-    : `learner:${profileId}:personal`;
-  return {
-    learner,
-    organization: organizationId ? `organization:${organizationId}` : null,
-  };
 }
 
 export async function enforceLearningWriteQuota(input: {
