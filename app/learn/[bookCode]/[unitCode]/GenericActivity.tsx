@@ -2,6 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { reuseOrCreateSubmission, type PendingSubmission } from "@/lib/learning/idempotency";
+import {
+  enqueueLearningWrite,
+  readLearningOutbox,
+  removeLearningWrite,
+  responseIsSafeForOfflineQueue,
+} from "@/lib/learning/offline-outbox";
 import type { CurriculumActivity } from "@/lib/curriculum";
 
 type Props = {
@@ -23,7 +29,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
   const [attemptCount, setAttemptCount] = useState(0);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const pendingSubmissionRef = useRef<PendingSubmission | null>(null);
-  const [syncState, setSyncState] = useState<"checking" | "idle" | "saving" | "synced" | "failed">(
+  const [syncState, setSyncState] = useState<"checking" | "idle" | "saving" | "queued" | "synced" | "failed">(
     enrollmentId ? "checking" : "idle",
   );
   const title = locale === "vi" ? activity.titleVi : activity.titleEn;
@@ -97,6 +103,53 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
     return () => { cancelled = true; };
   }, [activity.code, activity.contentVersion, bookCode, locale, resolvedEnrollmentId, unitCode]);
 
+  useEffect(() => {
+    if (!resolvedEnrollmentId) return;
+    let cancelled = false;
+
+    async function flushOutbox() {
+      if (!navigator.onLine) return;
+      const queued = readLearningOutbox(resolvedEnrollmentId as string);
+      if (queued.length === 0) return;
+
+      let flushed = 0;
+      for (const item of queued) {
+        try {
+          const response = await fetch(item.url, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(item.body),
+          });
+          if (response.ok) {
+            removeLearningWrite(resolvedEnrollmentId as string, item.id);
+            flushed += 1;
+            continue;
+          }
+          if ([401, 403, 409, 422].includes(response.status)) break;
+          if (response.status >= 500) break;
+        } catch {
+          break;
+        }
+      }
+
+      if (!cancelled && flushed > 0) {
+        const remaining = readLearningOutbox(resolvedEnrollmentId as string);
+        setSyncState(remaining.length > 0 ? "queued" : "synced");
+        setMessage(remaining.length > 0
+          ? (locale === "vi" ? "Một số bài đang chờ đồng bộ lại." : "Some attempts are still waiting to sync.")
+          : (locale === "vi" ? "Các bài chờ đã đồng bộ với máy chủ." : "Queued attempts synced to the server."));
+      }
+    }
+
+    const onOnline = () => { void flushOutbox(); };
+    if (navigator.onLine) void flushOutbox();
+    window.addEventListener("online", onOnline);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("online", onOnline);
+    };
+  }, [locale, resolvedEnrollmentId]);
+
   function speak(value: string) {
     if (!("speechSynthesis" in window)) return;
     window.speechSynthesis.cancel();
@@ -123,21 +176,23 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
       return;
     }
 
+    const requestBody = {
+      bookCode,
+      unitCode,
+      activityCode: activity.code,
+      contentVersion: activity.contentVersion,
+      submissionId: pending.submissionId,
+      enrollmentId: resolvedEnrollmentId,
+      locale,
+      response,
+    };
+
     setSyncState("saving");
     try {
       const res = await fetch("/api/learning/attempt", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          bookCode,
-          unitCode,
-          activityCode: activity.code,
-          contentVersion: activity.contentVersion,
-          submissionId: pending.submissionId,
-          enrollmentId: resolvedEnrollmentId,
-          locale,
-          response,
-        }),
+        body: JSON.stringify(requestBody),
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data?.evaluation?.feedback) {
@@ -149,11 +204,45 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
         setSyncState("synced");
         return;
       }
+      if (
+        resolvedEnrollmentId &&
+        (res.status >= 500 || !navigator.onLine) &&
+        responseIsSafeForOfflineQueue(response) &&
+        enqueueLearningWrite(resolvedEnrollmentId, {
+          id: pending.submissionId,
+          url: "/api/learning/attempt",
+          body: requestBody,
+        })
+      ) {
+        pendingSubmissionRef.current = null;
+        setMessage(locale === "vi"
+          ? "Đã xếp hàng trên thiết bị. Bài chưa được lưu trên máy chủ và sẽ thử đồng bộ khi có mạng."
+          : "Queued on this device. It is not server-saved yet and will retry when online.");
+        setSyncState("queued");
+        return;
+      }
+
       setMessage(data?.error === "missing_or_invalid_answer_key"
         ? (locale === "vi" ? "Hoạt động thiếu đáp án được xác minh. Hãy báo cho giáo viên." : "This activity needs a verified answer key. Ask your teacher.")
         : (locale === "vi" ? "Chưa lưu được. Vui lòng thử lại." : "Save failed. Please retry."));
       setSyncState("failed");
     } catch {
+      if (
+        resolvedEnrollmentId &&
+        responseIsSafeForOfflineQueue(response) &&
+        enqueueLearningWrite(resolvedEnrollmentId, {
+          id: pending.submissionId,
+          url: "/api/learning/attempt",
+          body: requestBody,
+        })
+      ) {
+        pendingSubmissionRef.current = null;
+        setMessage(locale === "vi"
+          ? "Đã xếp hàng trên thiết bị. Bài chưa được lưu trên máy chủ và sẽ thử đồng bộ khi có mạng."
+          : "Queued on this device. It is not server-saved yet and will retry when online.");
+        setSyncState("queued");
+        return;
+      }
       setMessage(locale === "vi" ? "Chưa lưu được. Vui lòng thử lại." : "Save failed. Please retry.");
       setSyncState("failed");
     }
@@ -211,6 +300,7 @@ export default function GenericActivity({ activity, locale, bookCode, unitCode, 
           {activity.evidenceEligible && <span className="pill">{locale === "vi" ? "Có thể xét minh chứng" : "Eligible for review"}</span>}
           {syncState === "checking" && <span className="pill">{locale === "vi" ? "Đang tải tiến độ…" : "Loading saved progress…"}</span>}
           {syncState === "saving" && <span className="pill">{locale === "vi" ? "Đang lưu…" : "Saving…"}</span>}
+          {syncState === "queued" && <span className="pill">{locale === "vi" ? "Đang chờ mạng · chưa lưu máy chủ" : "Queued offline · not server-saved"}</span>}
           {syncState === "synced" && <span className="pill">{locale === "vi" ? `Đã lưu · ${attemptCount} lần` : `Saved · ${attemptCount} attempt${attemptCount === 1 ? "" : "s"}`}</span>}
           {syncState === "failed" && <span className="pill">{locale === "vi" ? "Chưa lưu / chưa tải được — thử lại" : "Not saved / could not load — retry"}</span>}
         </div>
