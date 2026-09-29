@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { LEARNING_WRITE_LIMITS, quotaScopeKeys } from "../lib/learning/write-quota";
+import { LEARNING_WRITE_LIMITS, quotaScopeKeys } from "../lib/learning/write-quota-policy";
 
 test("quota scopes separate personal and organization learner writes", () => {
   assert.deepEqual(quotaScopeKeys("student-1", null), {
