@@ -32,3 +32,17 @@ PR #50 remains **Draft**.
 11. A2 old-build/new-build authenticated synthetic and restore drill require a fresh rehearsal environment.
 
 **Decision:** Phase A remains OPEN. Do not convert PR #50 from Draft and do not run migration 014 on production.
+
+## Rollout controls added after initial status record
+
+The five runbook-risk features now have independent, default-off server controls:
+
+- `CCJ_FEATURE_TIMED_ASSESSMENTS`
+- `CCJ_FEATURE_LEARNING_WRITE_QUOTAS`
+- `CCJ_FEATURE_OFFLINE_OUTBOX`
+- `CCJ_FEATURE_INTEGRATION_JOB_EXECUTION`
+- `CCJ_FEATURE_GUARDIAN_REPORTING`
+
+The platform-admin verified-email requirement is also prepared behind `CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN=true`, but remains intentionally off because the current production admin is not yet email-verified and there is no tested second admin.
+
+Current Neon Auth inspection also found that the canonical production origin is not present in the returned trusted-origin list. This must be reviewed/remediated by the named Product/Ops owner before A1.1 can close.
