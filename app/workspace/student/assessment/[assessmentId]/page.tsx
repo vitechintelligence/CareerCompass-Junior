@@ -5,6 +5,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { startTimedAssessment, submitAssessment } from "./actions";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,8 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
     where assessment_id=${assessmentId} and student_id=${profile.id}
     order by attempt_number desc
   `;
-  const activeSessions = assessment.time_limit_minutes == null ? [] : await sql`
+  const timedAssessmentsEnabled = isRiskyFeatureEnabled("timedAssessments");
+  const activeSessions = !timedAssessmentsEnabled || assessment.time_limit_minutes == null ? [] : await sql`
     select id, submission_id, started_at, expires_at
     from assessment_sessions
     where assessment_id=${assessmentId}
@@ -59,7 +61,7 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
   const dueOpen = assessment.due_open === true;
   const attemptsRemaining = attempts.length < Number(assessment.max_attempts || 1);
   const canAttempt = String(assessment.status) === "published" && dueOpen && attemptsRemaining;
-  const timed = assessment.time_limit_minutes != null;
+  const timed = timedAssessmentsEnabled && assessment.time_limit_minutes != null;
 
   return (
     <main className="workspacePage">
@@ -77,7 +79,7 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
             <p className="muted">{vi ? String(assessment.instructions_vi || "") : String(assessment.instructions_en || "")}</p>
           </div>
           <div className="actions">
-            {assessment.time_limit_minutes && <span className="pill">{String(assessment.time_limit_minutes)} min</span>}
+            {timed && <span className="pill">{String(assessment.time_limit_minutes)} min</span>}
             {assessment.due_at && <span className="pill">{vi ? "Hạn" : "Due"} {new Date(String(assessment.due_at)).toLocaleString("en-GB")}</span>}
           </div>
         </section>
