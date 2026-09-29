@@ -22,7 +22,7 @@ alter table teacher_learning_progress
   add column if not exists reviewed_at timestamptz,
   add column if not exists review_notes text;
 
-do $
+do $$
 begin
   if not exists (
     select 1 from pg_constraint
@@ -33,7 +33,7 @@ begin
       check (evidence_status in ('not_submitted','submitted','verified','changes_requested'));
   end if;
 end
-$;
+$$;
 
 create index if not exists idx_teacher_learning_evidence_review
   on teacher_learning_progress(evidence_status, updated_at desc);
@@ -74,7 +74,7 @@ alter table integration_sync_jobs
   add column if not exists worker_key text,
   add column if not exists result_detail jsonb;
 
-do $
+do $$
 begin
   if not exists (
     select 1 from pg_constraint
@@ -94,7 +94,7 @@ begin
       check (max_attempts >= 1 and max_attempts <= 10);
   end if;
 end
-$;
+$$;
 
 create index if not exists idx_sync_jobs_runnable
   on integration_sync_jobs(status, next_attempt_at, scheduled_at);
