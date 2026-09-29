@@ -37,13 +37,27 @@ alter table integration_sync_jobs
   add column if not exists worker_key text,
   add column if not exists result_detail jsonb;
 
-alter table integration_sync_jobs
-  add constraint integration_sync_jobs_attempt_count_check
-  check (attempt_count >= 0);
+do $
+begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname='integration_sync_jobs_attempt_count_check'
+  ) then
+    alter table integration_sync_jobs
+      add constraint integration_sync_jobs_attempt_count_check
+      check (attempt_count >= 0);
+  end if;
 
-alter table integration_sync_jobs
-  add constraint integration_sync_jobs_max_attempts_check
-  check (max_attempts >= 1 and max_attempts <= 10);
+  if not exists (
+    select 1 from pg_constraint
+    where conname='integration_sync_jobs_max_attempts_check'
+  ) then
+    alter table integration_sync_jobs
+      add constraint integration_sync_jobs_max_attempts_check
+      check (max_attempts >= 1 and max_attempts <= 10);
+  end if;
+end
+$;
 
 create index if not exists idx_sync_jobs_runnable
   on integration_sync_jobs(status, next_attempt_at, scheduled_at);
