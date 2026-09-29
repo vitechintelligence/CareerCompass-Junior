@@ -35,14 +35,20 @@ jobs:
       - name: Commit generated dependency lock
         if: github.event_name == 'pull_request' && github.head_ref == 'feat/operational-integration-closeout' && github.event.pull_request.head.repo.full_name == github.repository
         run: |
-          if git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
-            exit 0
+          if git ls-remote --exit-code origin "refs/heads/${{ github.head_ref }}" >/dev/null 2>&1; then
+            cp package-lock.json /tmp/package-lock.json
+            git fetch origin "${{ github.head_ref }}"
+            git checkout -B "${{ github.head_ref }}" "origin/${{ github.head_ref }}"
+            if git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+              exit 0
+            fi
+            cp /tmp/package-lock.json package-lock.json
+            git add package-lock.json
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -m "Lock Node dependencies for reproducible CI"
+            git push origin "${{ github.head_ref }}"
           fi
-          git add package-lock.json
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Lock Node dependencies for reproducible CI"
-          git push origin HEAD:${{ github.head_ref }}
 
       - name: Typecheck
         run: npm run typecheck
