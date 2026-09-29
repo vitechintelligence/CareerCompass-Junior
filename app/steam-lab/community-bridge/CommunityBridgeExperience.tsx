@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { LearnerAgeBand } from "@/lib/learner-age-bands";
 import type { SteamMissionDefinition } from "@/lib/steam-missions";
 import { bridgeTargetForAge, testBridge, type BridgeDesign, type BridgeOutcome } from "@/lib/steam/bridge-engine";
+import { reuseOrCreateSubmission, type PendingSubmission } from "@/lib/learning/idempotency";
 
 type Attempt = {
   number: number;
@@ -33,6 +34,7 @@ export default function CommunityBridgeExperience({
   const [reflection, setReflection] = useState("");
   const [explanation, setExplanation] = useState("");
   const [evidenceSetComplete, setEvidenceSetComplete] = useState(false);
+  const pendingSubmissionRef = useRef<PendingSubmission | null>(null);
   const target = bridgeTargetForAge(ageBand);
   const latest = attempts.at(-1);
 
@@ -86,6 +88,20 @@ export default function CommunityBridgeExperience({
     setAttempts((current) => [...current, attempt]);
     setSyncState("saving");
 
+    let pending: PendingSubmission;
+    try {
+      const signature = JSON.stringify({ ageBand, design, changeNote, runMode: "individual" });
+      pending = reuseOrCreateSubmission(
+        pendingSubmissionRef.current,
+        signature,
+        () => crypto.randomUUID(),
+      );
+      pendingSubmissionRef.current = pending;
+    } catch {
+      setSyncState("local");
+      return;
+    }
+
     try {
       const response = await fetch("/api/steam/bridge-attempt", {
         method: "POST",
@@ -97,12 +113,14 @@ export default function CommunityBridgeExperience({
           observation: outcome.observations.join(" "),
           changeFromPrevious: changeNote,
           runMode: "individual",
+          submissionId: pending.submissionId,
         }),
       });
       const data = await response.json().catch(() => ({}));
       if (response.ok && data?.synced) {
         if (typeof data.runId === "string") setRunId(data.runId);
         setEvidenceSetComplete(false);
+        pendingSubmissionRef.current = null;
         setSyncState("saved");
       } else {
         setSyncState("local");
