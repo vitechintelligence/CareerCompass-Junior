@@ -5,6 +5,7 @@ export const EXPECTED_NEON_PROJECT = {
   name: "Career Compass LMS",
   id: "royal-queen-79814128",
   branchId: "br-shiny-meadow-b3ibu54h",
+  endpointId: "ep-damp-bonus-b300sxd5",
   region: "aws-ap-southeast-1",
 } as const;
 
@@ -65,6 +66,7 @@ export type RuntimeAlignmentStatus = {
   blockingProjectMismatch: boolean;
   blockingBranchMismatch: boolean;
   blockingEndpointMismatch: boolean;
+  blockingNonProductionProductionReuse: boolean;
   identityVerified: boolean;
   issues: string[];
   warnings: string[];
@@ -147,6 +149,20 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     );
   }
 
+  const nonProduction = environment !== "production" && environment !== "test";
+  const blockingNonProductionProductionReuse =
+    nonProduction && (
+      branchId === EXPECTED_NEON_PROJECT.branchId ||
+      databaseEndpoint === EXPECTED_NEON_PROJECT.endpointId ||
+      authEndpoint === EXPECTED_NEON_PROJECT.endpointId
+    );
+
+  if (blockingNonProductionProductionReuse) {
+    issues.push(
+      "Preview/Development must not use the Career Compass production Neon branch or endpoint.",
+    );
+  }
+
   if (databaseUrl && !databaseEndpoint) {
     warnings.push(
       "DATABASE_URL does not expose a recognizable Neon endpoint identity.",
@@ -170,7 +186,9 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
   }
 
   const identityVerified =
-    !production ||
+    blockingNonProductionProductionReuse
+      ? false
+      : !production ||
     (projectIdentityMatches === true &&
       branchIdentityMatches === true &&
       databaseAuthEndpointMatches === true &&
@@ -192,6 +210,7 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     blockingProjectMismatch,
     blockingBranchMismatch,
     blockingEndpointMismatch,
+    blockingNonProductionProductionReuse,
     identityVerified,
     issues,
     warnings,
@@ -216,6 +235,12 @@ export function assertNoKnownProductionProjectMismatch() {
   if (status.blockingEndpointMismatch) {
     throw new Error(
       "Production Neon backend mismatch. DATABASE_URL and NEON_AUTH_BASE_URL must belong to the same Neon branch.",
+    );
+  }
+
+  if (status.blockingNonProductionProductionReuse) {
+    throw new Error(
+      "Preview/Development is blocked from using the Career Compass production Neon branch/endpoint.",
     );
   }
 }
