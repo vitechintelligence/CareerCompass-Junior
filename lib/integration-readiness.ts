@@ -2,6 +2,7 @@ export type ConnectorReadinessStage =
   | "canonical_contract"
   | "dedicated_normalizer"
   | "standard_transport"
+  | "tool_runtime"
   | "provider_authorization"
   | "live_verified";
 
@@ -32,16 +33,16 @@ const READY: Record<string, ConnectorReadiness> = {
     missing: ["OneRoster OAuth/client-credentials transport", "pagination and delta sync", "CSV ingestion path", "live SIS verification"],
   },
   "canvas": {
-    stage: "standard_transport",
-    label: "Standard selected · LTI runtime pending",
-    summary: "Canvas has a clear LTI 1.3 / LTI Advantage path, but Career Compass does not yet expose the required LTI runtime endpoints.",
-    missing: ["OIDC login initiation", "JWT/JWKS validation", "LTI resource launch", "Deep Linking", "AGS grade passback", "NRPS roster service"],
+    stage: "tool_runtime",
+    label: "LTI Tool runtime implemented · sandbox pending",
+    summary: "Career Compass now exposes LTI 1.3 OIDC/JWKS launch plus Deep Linking, NRPS and AGS service clients for Canvas-style LTI Advantage deployments.",
+    missing: ["migration 008 review/application", "LTI RSA signing key configuration", "Canvas developer-key registration", "live sandbox launch + service verification"],
   },
   "moodle": {
-    stage: "standard_transport",
-    label: "Standard selected · LTI runtime pending",
-    summary: "Moodle can consume LTI external tools, but Career Compass does not yet expose a complete LTI 1.3 tool runtime.",
-    missing: ["OIDC login initiation", "JWT/JWKS validation", "LTI resource launch", "Deep Linking", "AGS grade passback", "NRPS roster service"],
+    stage: "tool_runtime",
+    label: "LTI Tool runtime implemented · sandbox pending",
+    summary: "Career Compass now exposes LTI 1.3 OIDC/JWKS launch plus Deep Linking, NRPS and AGS service clients for Moodle external-tool deployments.",
+    missing: ["migration 008 review/application", "LTI RSA signing key configuration", "Moodle tool registration", "live sandbox launch + service verification"],
   },
   "scorm-package": {
     stage: "standard_transport",

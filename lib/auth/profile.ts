@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getAuth } from "@/lib/auth/server";
+import { getLtiSessionUser } from "@/lib/lti/session";
 
 export type LmsProfile = {
   id: string;
@@ -12,9 +13,11 @@ export type LmsProfile = {
 };
 
 export async function getSessionUser() {
+  const ltiUser = await getLtiSessionUser();
+  if (ltiUser) return ltiUser;
+
   const auth = getAuth();
   if (!auth) return null;
-
   const { data } = await auth.getSession();
   return data?.user ?? null;
 }

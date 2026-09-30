@@ -13,9 +13,11 @@ export function LogoutButton({ className = "" }: { className?: string }) {
     setMessage(null);
 
     try {
+      const ltiResponse = await fetch("/api/lti/session/logout", { method: "POST" });
+      const ltiResult = await ltiResponse.json().catch(() => ({ hadSession: false }));
       const result = await authClient.signOut();
 
-      if (result.error) {
+      if (result.error && !ltiResult?.hadSession) {
         setMessage(result.error.message || "Could not sign out. Please try again.");
         return;
       }
