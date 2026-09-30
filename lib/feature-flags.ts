@@ -4,18 +4,28 @@ export const RISKY_FEATURE_ENV = {
   offlineOutbox: "CCJ_FEATURE_OFFLINE_OUTBOX",
   integrationJobExecution: "CCJ_FEATURE_INTEGRATION_JOB_EXECUTION",
   guardianReporting: "CCJ_FEATURE_GUARDIAN_REPORTING",
+} as const;
+
+export const PHASE_A_EXTENSION_ENV = {
   professorViAiStudy: "CCJ_FEATURE_PROFESSOR_VI_AI_STUDY",
   reportCardBuilder: "CCJ_FEATURE_REPORT_CARD_BUILDER",
 } as const;
 
-export type RiskyFeature = keyof typeof RISKY_FEATURE_ENV;
+export type RiskyFeature = keyof typeof RISKY_FEATURE_ENV | keyof typeof PHASE_A_EXTENSION_ENV;
 
 export function parseFeatureFlag(value: string | undefined | null) {
   return String(value || "").trim().toLowerCase() === "true";
 }
 
+function featureEnvName(feature: RiskyFeature) {
+  if (feature in RISKY_FEATURE_ENV) {
+    return RISKY_FEATURE_ENV[feature as keyof typeof RISKY_FEATURE_ENV];
+  }
+  return PHASE_A_EXTENSION_ENV[feature as keyof typeof PHASE_A_EXTENSION_ENV];
+}
+
 export function isRiskyFeatureEnabled(feature: RiskyFeature) {
-  return parseFeatureFlag(process.env[RISKY_FEATURE_ENV[feature]]);
+  return parseFeatureFlag(process.env[featureEnvName(feature)]);
 }
 
 export function riskyFeatureSnapshot() {
