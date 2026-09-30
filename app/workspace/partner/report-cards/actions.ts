@@ -55,7 +55,7 @@ export async function saveSchoolGradingPolicy(formData: FormData) {
       ${JSON.stringify({ description: gradingScale })}::jsonb,
       ${JSON.stringify({ description: calculationRules })}::jsonb,
       ${JSON.stringify(academicPeriods)}::jsonb,
-      'draft', ${actor.id}
+      'draft', ${actor.profile.id}
     )
   `;
 
@@ -81,7 +81,7 @@ export async function activateSchoolGradingPolicy(formData: FormData) {
     txn`update school_grading_policies set status='archived' where organization_id=${organizationId} and status='active'`,
     txn`
       update school_grading_policies
-      set status='active', approved_by=${actor.id}, approved_at=now(), updated_at=now()
+      set status='active', approved_by=${actor.profile.id}, approved_at=now(), updated_at=now()
       where id=${policyId} and organization_id=${organizationId}
     `,
   ]);
@@ -108,7 +108,7 @@ export async function activateReportCardTemplate(formData: FormData) {
     txn`update report_card_templates set status='archived' where organization_id=${organizationId} and status='active'`,
     txn`
       update report_card_templates
-      set status='active', approved_by=${actor.id}, approved_at=now(), updated_at=now()
+      set status='active', approved_by=${actor.profile.id}, approved_at=now(), updated_at=now()
       where id=${templateId} and organization_id=${organizationId}
     `,
   ]);
