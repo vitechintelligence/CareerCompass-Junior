@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireProfessorViStudentAccess } from "@/lib/professor-vi/access";
 import { loadProfessorViInstitutionPolicy } from "@/lib/professor-vi/context";
-import { sourceHash, uploadProfessorViSource } from "@/lib/professor-vi/runtime";
+import { deleteProfessorViSource, sourceHash, uploadProfessorViSource } from "@/lib/professor-vi/runtime";
 import { getDb } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -93,5 +93,50 @@ export async function POST(request: Request) {
       "byok_runtime_not_connected",
     ].some((item) => code.includes(item));
     return jsonError(forbidden ? code : "study_source_upload_failed", forbidden ? 403 : 503);
+  }
+}
+
+
+export async function DELETE(request: Request) {
+  try {
+    const body = await request.json() as Record<string, unknown>;
+    const organizationId = String(body.organizationId || "");
+    const sourceId = String(body.sourceId || "");
+    const { profile } = await requireProfessorViStudentAccess(organizationId);
+    const sql = getDb();
+
+    const rows = await sql`
+      select provider_file_id
+      from ai_study_sources
+      where id=${sourceId}
+        and learner_id=${profile.id}
+        and organization_id=${organizationId}
+        and status='ready'
+      limit 1
+    `;
+    if (!rows[0]) return jsonError("study_source_not_available", 404);
+
+    const providerFileId = rows[0].provider_file_id ? String(rows[0].provider_file_id) : "";
+    if (providerFileId) {
+      const deleted = await deleteProfessorViSource(providerFileId);
+      if (!deleted) return jsonError("study_source_provider_delete_failed", 503);
+    }
+
+    await sql`
+      update ai_study_sources
+      set status='deleted', deleted_at=now(), provider_file_id=null
+      where id=${sourceId}
+        and learner_id=${profile.id}
+        and organization_id=${organizationId}
+    `;
+
+    return NextResponse.json(
+      { ok: true, sourceId },
+      { headers: { "Cache-Control": "no-store" } },
+    );
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "study_source_delete_failed";
+    const forbidden = code.includes("disabled") || code.includes("not_authorized") || code.includes("not_available");
+    return jsonError(forbidden ? code : "study_source_delete_failed", forbidden ? 403 : 503);
   }
 }
