@@ -9,7 +9,6 @@ import {
 import { getDb } from "@/lib/db";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 import { getOrganizationRuntimePolicy, serverAiPermission } from "@/lib/organization-data-policy";
-import { platformAiRuntime } from "@/lib/platform-ai-runtime";
 
 export async function requireProfessorViStudentAccess(organizationId: string) {
   if (!isUuidReference(organizationId)) throw new Error("invalid_organization_reference");
@@ -44,10 +43,13 @@ export async function requireProfessorViStudentAccess(organizationId: string) {
   if (!rows[0]) throw new Error("professor_vi_not_authorized");
 
   const runtimePolicy = await getOrganizationRuntimePolicy(organizationId);
-  const platformRuntime = platformAiRuntime();
+  const learnerAiLive =
+    process.env.CCJ_PROFESSOR_VI_LIVE_ENABLED === "true" &&
+    process.env.CCJ_PLATFORM_AI_FORCE_MOCK !== "true" &&
+    Boolean(process.env.OPENAI_API_KEY?.trim());
   const permission = serverAiPermission(runtimePolicy, {
     institutionFeatureEnabled: true,
-    platformMode: platformRuntime.mode,
+    platformMode: learnerAiLive ? "openai" : "mock",
   });
   if (!permission.allowed) throw new Error(permission.code || "professor_vi_ai_not_available");
 
