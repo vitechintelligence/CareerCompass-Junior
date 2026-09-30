@@ -51,7 +51,7 @@ export default function ReportCardBuilderClient({ organizationId }: { organizati
         <h3>What are we building for?</h3>
         <label><span>Country / regulatory framework</span><select name="countryCode" defaultValue="VN"><option value="VN">Vietnam</option><option value="PH">Philippines</option><option value="MY">Malaysia</option><option value="SG">Singapore</option><option value="TH">Thailand</option><option value="ID">Indonesia</option><option value="CUSTOM">Other / custom</option></select></label>
         <label><span>Education level</span><select name="educationLevel" defaultValue="lower_secondary"><option value="primary">Primary</option><option value="lower_secondary">Lower secondary</option><option value="upper_secondary">Upper secondary</option><option value="custom">Custom / mixed</option></select></label>
-        <label><span>How do you want to start?</span><select name="startMode" defaultValue="country_template"><option value="country_template">Country starting template</option><option value="school_import">Migrate my school's existing form</option><option value="ai_builder">AI Builder from my answers</option><option value="vitech_template">ViTech neutral template</option><option value="blank">Blank</option><option value="remix">Remix a starting template</option></select></label>
+        <label><span>How do you want to start?</span><select name="startMode" defaultValue="country_template"><option value="country_template">Country starting template</option><option value="school_import">Migrate my school&apos;s existing form</option><option value="ai_builder">AI Builder from my answers</option><option value="vitech_template">ViTech neutral template</option><option value="blank">Blank</option><option value="remix">Remix a starting template</option></select></label>
         <label><span>School name</span><input name="schoolName" maxLength={200} /></label>
         <label><span>Report title (optional)</span><input name="title" maxLength={200} /></label>
         <button className="button" type="button" onClick={() => setStep(2)}>Continue →</button>
@@ -74,7 +74,7 @@ export default function ReportCardBuilderClient({ organizationId }: { organizati
         <label><span>Print requirements</span><textarea name="printNotes" rows={4} placeholder="A4, portrait/landscape, logo/seal, photo, page numbering…" /></label>
         <label><span>Anything else the builder must not miss?</span><textarea name="additionalRequirements" rows={5} placeholder="State school or government requirements here. The builder will not invent them." /></label>
         <label><span>Existing school report-card file (optional)</span><input name="schoolTemplate" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md" /></label>
-        <p className="muted">For migration mode, upload the school's current approved form. The builder uses it as the primary visual/field reference; the original file is not stored by this workflow.</p>
+        <p className="muted">For migration mode, upload the school&apos;s current approved form. The builder uses it as the primary visual/field reference; the original file is not stored by this workflow.</p>
         <button className="button primary" type="submit" disabled={busy}>Build report-card draft</button>
       </section>
 
