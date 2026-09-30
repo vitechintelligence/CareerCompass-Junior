@@ -3,7 +3,7 @@ import {
   type ReportCardField,
   type ReportCardSection,
   type ReportCardTemplateSchema,
-} from "@/lib/report-cards/templates";
+} from "./templates";
 
 export type ReportCardBuilderAnswers = {
   countryCode: string;
