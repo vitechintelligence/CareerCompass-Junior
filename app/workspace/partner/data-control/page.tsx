@@ -115,6 +115,7 @@ export default async function PartnerDataControlPage() {
               </select></label>
               <label><span>Live AI mode</span><select name="aiMode" defaultValue={aiMode}>
                 <option value="off">Off / manual</option>
+                <option value="platform_managed">Platform-managed · school-approved Professor Vi</option>
                 <option value="byok">BYOK · school supplies provider key</option>
                 <option value="local_browser">Local browser AI when supported</option>
               </select></label>
@@ -135,6 +136,7 @@ export default async function PartnerDataControlPage() {
             <p className="muted">BYOK means the institution chooses the model provider and supplies its own key through a secure secret configuration path. Raw keys must never be written into the Career Compass application database, community posts or learner records.</p>
             <div className="miniGrid">
               <div className="miniCard light"><strong>AI Off</strong><span>Everything remains teacher/manual where possible.</span></div>
+              <div className="miniCard light"><strong>Platform-managed</strong><span>School-approved Professor Vi using ViTech&apos;s controlled server AI runtime. Separate from BYOK.</span></div>
               <div className="miniCard light"><strong>BYOK</strong><span>Optional live AI with institution-selected provider and spending controls.</span></div>
               <div className="miniCard light"><strong>Local browser</strong><span>Supported local models can run without sending the task to a remote provider.</span></div>
               <div className="miniCard light"><strong>Human control</strong><span>No autonomous grading, diagnosis or fixed career prediction.</span></div>
