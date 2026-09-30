@@ -10,7 +10,10 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function list(form: FormData, key: string) {
-  return form.getAll(key).map((value) => String(value).trim()).filter(Boolean);
+  return form.getAll(key)
+    .flatMap((value) => String(value).split(/[,\n]/))
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function yes(value: FormDataEntryValue | null) {
