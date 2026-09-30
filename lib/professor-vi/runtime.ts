@@ -1,7 +1,6 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { platformAiRuntime } from "@/lib/platform-ai-runtime";
 import {
   buildProfessorViSystemPrompt,
   decideProfessorViMove,
@@ -55,14 +54,15 @@ function outputText(payload: unknown) {
 }
 
 function requireLivePlatformAi() {
-  const runtime = platformAiRuntime();
   const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (runtime.mode !== "openai" || !apiKey) {
+  const liveEnabled = process.env.CCJ_PROFESSOR_VI_LIVE_ENABLED === "true";
+  const forceMock = process.env.CCJ_PLATFORM_AI_FORCE_MOCK === "true";
+  if (!liveEnabled || forceMock || !apiKey) {
     throw new Error("professor_vi_live_ai_unavailable");
   }
   return {
     apiKey,
-    model: process.env.CCJ_PROFESSOR_VI_MODEL?.trim() || runtime.model,
+    model: process.env.CCJ_PROFESSOR_VI_MODEL?.trim() || process.env.CCJ_OPENAI_TEST_MODEL?.trim() || "gpt-6-luna",
   };
 }
 
