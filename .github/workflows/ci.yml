@@ -69,6 +69,9 @@ jobs:
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 
+      - name: Phase A additions regression
+        run: npm run test:phase-a-additions
+
       - name: Production build
         run: npm run build
 

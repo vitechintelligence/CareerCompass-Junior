@@ -38,6 +38,8 @@ export const PLATFORM_FEATURES: PlatformFeatureDefinition[] = [
   { key: "intelligence_search", label: "Intelligence: search", description: "Context-aware search over allowed institutional content.", category: "intelligence" },
   { key: "intelligence_summary", label: "Intelligence: summarize", description: "Human-reviewed summaries of permitted learning and operational signals.", category: "intelligence" },
   { key: "intelligence_recommendations", label: "Intelligence: recommendations", description: "Assistive recommendations with administrator/teacher control.", category: "intelligence" },
+  { key: "professor_vi_ai_study_lab", label: "Professor Vi · AI Study Lab", description: "Learner-facing grounded study support: sources, summaries, study guides, generated quizzes, Socratic tutoring and personalized Math/Science explanations.", category: "intelligence" },
+  { key: "school_report_card_builder", label: "School grading + report cards", description: "Institution-owned grading policy and report-card templates with migration, remix, blank-start and guided AI builder paths.", category: "operations" },
 
   { key: "program_stem", label: "Legacy STEM curriculum metadata", description: "Compatibility flag for earlier STEM pathway metadata. New learner-facing experiential delivery should use STEAM Lab.", category: "future_skills" },
   { key: "program_steam", label: "STEAM Lab", description: "First-class experiential missions combining science, technology, engineering, arts and mathematics through design, testing, iteration and reflection.", category: "future_skills" },
@@ -63,8 +65,8 @@ export function defaultFeaturesForOrganization(organizationType: string) {
   const base = PLATFORM_FEATURES.filter((feature) => feature.essential).map((feature) => feature.key);
   const optional =
     organizationType === "school"
-      ? ["parent_reporting", "announcements", "integrations", "industry_connector", "vinaskilltrust_services", "custom_integration_requests", "program_steam", "community_challenges", "institution_data_modes", "program_ai_foundation", "program_robotics", "intelligence_search", "intelligence_summary"]
-      : ["payments", "announcements", "integrations", "industry_connector", "vinaskilltrust_services", "custom_integration_requests", "program_steam", "community_challenges", "institution_data_modes", "program_ai_foundation", "program_robotics", "intelligence_search", "intelligence_summary", "intelligence_recommendations"];
+      ? ["parent_reporting", "announcements", "integrations", "industry_connector", "vinaskilltrust_services", "custom_integration_requests", "program_steam", "community_challenges", "institution_data_modes", "program_ai_foundation", "program_robotics", "intelligence_search", "intelligence_summary", "professor_vi_ai_study_lab", "school_report_card_builder"]
+      : ["payments", "announcements", "integrations", "industry_connector", "vinaskilltrust_services", "custom_integration_requests", "program_steam", "community_challenges", "institution_data_modes", "program_ai_foundation", "program_robotics", "intelligence_search", "intelligence_summary", "intelligence_recommendations", "professor_vi_ai_study_lab", "school_report_card_builder"];
   return Array.from(new Set([...base, ...optional]));
 }
 

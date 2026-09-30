@@ -319,3 +319,31 @@ Institution BYOK:
 - Never copy a platform OpenAI key into organization policy rows or label a platform key as school BYOK.
 
 If OpenAI credit is unavailable, the test lane must fall back to deterministic mock mode instead of breaking the platform or retrying without a cap.
+
+
+## 16. Professor Vi and school report-card extension
+
+The Professor Vi AI Study Lab and School Report Card Studio are additive Phase A extensions. They are not production-live merely because their code exists.
+
+Required rollout switches default OFF:
+
+```
+CCJ_FEATURE_PROFESSOR_VI_AI_STUDY=false
+CCJ_PROFESSOR_VI_LIVE_ENABLED=false
+CCJ_FEATURE_REPORT_CARD_BUILDER=false
+CCJ_REPORT_CARD_AI_BUILDER_LIVE_ENABLED=false
+```
+
+Architecture rules:
+
+- Professor Vi is instructional intelligence, not a generic answer engine.
+- The deterministic teaching/policy layer controls permissions, safety, answer release and escalation.
+- Generated objective quizzes use the existing versioned Activity Contract.
+- AI-generated learner work does not automatically mean mastery.
+- The School Report Card Studio is separate from Professor Vi.
+- ViTech platform admin allocates the capability; the school admin owns the active grading policy and report-card template.
+- AI may generate a report-card draft, but cannot activate it or decide official school grading rules.
+- School/imported government-mandated formats take precedence over generic ViTech presets.
+- Migration 015 must follow the same rehearsal/restore discipline as the current production runbook and must not be applied directly to production while the gate remains open.
+
+See `docs/PROFESSOR_VI_AI_STUDY_REPORT_CARDS.md`.

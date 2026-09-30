@@ -250,7 +250,7 @@ export async function updateOrganizationDataPolicy(formData: FormData) {
   if (!["platform_metadata","school_capsule","vng_cloud","local_browser","manual"].includes(storageMode)) {
     throw new Error("Invalid evidence storage mode.");
   }
-  if (!["off","byok","local_browser"].includes(aiMode)) throw new Error("Invalid AI mode.");
+  if (!["off","byok","local_browser","platform_managed"].includes(aiMode)) throw new Error("Invalid AI mode.");
   if (!["metadata_only","disabled","self_hosted"].includes(observabilityMode)) {
     throw new Error("Invalid observability mode.");
   }

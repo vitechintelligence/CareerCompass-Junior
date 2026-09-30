@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 
 export type OrganizationRuntimePolicy = {
   evidenceStorageMode: "platform_metadata" | "school_capsule" | "vng_cloud" | "local_browser" | "manual";
-  aiMode: "off" | "byok" | "local_browser";
+  aiMode: "off" | "byok" | "local_browser" | "platform_managed";
   aiProvider: string | null;
   byokConfigured: boolean;
   observabilityMode: "metadata_only" | "disabled" | "self_hosted";
@@ -33,13 +33,26 @@ export async function getOrganizationRuntimePolicy(organizationId: string): Prom
 
 export function serverAiPermission(
   policy: OrganizationRuntimePolicy,
-  context?: { platformAdmin?: boolean; platformMode?: "openai" | "mock" },
+  context?: { platformAdmin?: boolean; institutionFeatureEnabled?: boolean; platformMode?: "openai" | "mock" },
 ) {
   if (context?.platformAdmin) {
     return {
       allowed: true as const,
       provider: context.platformMode === "openai" ? "openai-platform-test" : "mock-platform-test",
       reason: context.platformMode === "openai" ? "platform_admin_openai_test" : "platform_admin_mock_test",
+    };
+  }
+  if (policy.aiMode === "platform_managed") {
+    if (!context?.institutionFeatureEnabled) {
+      return { allowed: false as const, code: "institution_ai_feature_disabled", reason: "The institution has not enabled this AI feature." };
+    }
+    if (context.platformMode !== "openai") {
+      return { allowed: false as const, code: "platform_managed_ai_unavailable", reason: "Platform-managed AI is not enabled in this deployment." };
+    }
+    return {
+      allowed: true as const,
+      provider: "openai-platform-managed",
+      reason: "institution_approved_platform_managed_ai",
     };
   }
   if (policy.aiMode === "off") {
