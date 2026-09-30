@@ -84,13 +84,80 @@ export default function ReportCardBuilderClient({ organizationId }: { organizati
         {preview && <>
           <div className="statusBanner"><strong>{preview.title || "Report card"}</strong><span>{generationMode === "ai" ? "AI-assisted draft" : "Rule-based draft"} · school approval still required</span></div>
           <p className="muted">{preview.sourceNote}</p>
-          <div className="workspaceList">
-            {(preview.sections || []).map((section, index) => <article className="feedbackCard" key={section.key || index}><strong>{section.title || "Section"}</strong><div className="muted">{(section.fields || []).map((field) => field.label).filter(Boolean).join(" · ")}</div></article>)}
-          </div>
+          <TemplatePreview preview={preview} />
         </>}
       </section>
 
       {status && <div className="statusBanner"><strong>Builder</strong><span>{status}</span></div>}
     </form>
+  );
+}
+
+
+function TemplatePreview({ preview }: { preview: Preview }) {
+  return (
+    <div style={{ overflowX: "auto", padding: 12 }}>
+      <article
+        aria-label="Printable report-card preview"
+        style={{
+          width: "min(794px, 100%)",
+          margin: "0 auto",
+          padding: "36px 32px",
+          background: "white",
+          color: "#111",
+          border: "1px solid #bbb",
+          minHeight: 900,
+          fontFamily: "Arial, sans-serif",
+        }}
+      >
+        <header style={{ textAlign: "center", marginBottom: 28 }}>
+          <div style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: 0.6 }}>School / Trường</div>
+          <h2 style={{ margin: "16px 0 6px", fontSize: 24 }}>{preview.title || "REPORT CARD / HỌC BẠ"}</h2>
+          <div style={{ fontSize: 13 }}>Academic year / Năm học: ....................................</div>
+        </header>
+
+        {(preview.sections || []).map((section, sectionIndex) => (
+          <section key={section.key || sectionIndex} style={{ marginBottom: 24 }}>
+            <h3 style={{ fontSize: 15, textTransform: "uppercase", borderBottom: "1.5px solid #111", paddingBottom: 5, marginBottom: 10 }}>
+              {section.title || "Section"}
+            </h3>
+            {(section.fields || []).map((field, fieldIndex) => {
+              if (field.type === "table") {
+                const columns = Array.isArray((field as { columns?: Array<{ key?: string; label?: string }> }).columns)
+                  ? (field as { columns: Array<{ key?: string; label?: string }> }).columns
+                  : [];
+                return (
+                  <div key={field.key || fieldIndex} style={{ marginBottom: 14 }}>
+                    <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 5 }}>{field.label}</div>
+                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+                      <thead><tr>{columns.map((column, index) => <th key={column.key || index} style={{ border: "1px solid #555", padding: 6, textAlign: "center" }}>{column.label || "Column"}</th>)}</tr></thead>
+                      <tbody>{[0,1,2].map((row) => <tr key={row}>{columns.map((column, index) => <td key={(column.key || index) + "-" + row} style={{ border: "1px solid #777", padding: 10 }}>&nbsp;</td>)}</tr>)}</tbody>
+                    </table>
+                  </div>
+                );
+              }
+              if (field.type === "signature") {
+                return (
+                  <div key={field.key || fieldIndex} style={{ display: "inline-block", width: "48%", verticalAlign: "top", textAlign: "center", minHeight: 90, paddingTop: 10 }}>
+                    <strong style={{ fontSize: 12 }}>{field.label}</strong>
+                    <div style={{ marginTop: 44, borderBottom: "1px dotted #555" }} />
+                  </div>
+                );
+              }
+              return (
+                <div key={field.key || fieldIndex} style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 8, alignItems: "end", margin: "8px 0", fontSize: 12 }}>
+                  <strong>{field.label}</strong>
+                  <span style={{ borderBottom: "1px dotted #555", minHeight: 18 }} />
+                </div>
+              );
+            })}
+          </section>
+        ))}
+
+        <footer style={{ marginTop: 24, fontSize: 10, lineHeight: 1.4 }}>
+          Draft preview only. The institution must approve the grading policy and active report-card template before official use.
+        </footer>
+      </article>
+    </div>
   );
 }
