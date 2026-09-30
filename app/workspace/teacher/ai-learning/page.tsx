@@ -99,8 +99,8 @@ export default async function TeacherAiLearningPage() {
                   <div><div className="eyebrow">{String(pack.pack_type).replace("_"," ")}</div><h2 className="workspaceTitle">{String(pack.title)}</h2><div className="muted">Learner: {String(pack.display_name || pack.semantic_id || "Student")}</div></div>
                   <span className="pill">{String(pack.review_status).replace("_"," ")}</span>
                 </div>
-                {content.contentMarkdown && <p style={{ whiteSpace: "pre-wrap" }}>{String(content.contentMarkdown).slice(0, 12000)}</p>}
-                {content.questionCount && <p className="muted">Generated quiz · {String(content.questionCount)} questions. Objective answers remain server-owned and are not shown in the learner launch contract.</p>}
+                {typeof content.contentMarkdown === "string" && content.contentMarkdown.length > 0 && <p style={{ whiteSpace: "pre-wrap" }}>{content.contentMarkdown.slice(0, 12000)}</p>}
+                {typeof content.questionCount === "number" && content.questionCount > 0 && <p className="muted">Generated quiz · {String(content.questionCount)} questions. Objective answers remain server-owned and are not shown in the learner launch contract.</p>}
                 <form action={reviewProfessorViPack} className="workspaceForm">
                   <input type="hidden" name="organizationId" value={organizationId} />
                   <input type="hidden" name="packId" value={String(pack.id)} />
