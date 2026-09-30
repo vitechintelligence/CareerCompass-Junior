@@ -83,7 +83,7 @@ export async function POST(request: Request) {
           answers, generated_template_id, status
         )
         values (
-          ${sessionId}, ${organizationId}, ${actor.id},
+          ${sessionId}, ${organizationId}, ${actor.profile.id},
           ${startMode === "school_import" ? "import" : startMode === "remix" ? "remix" : startMode === "blank" ? "blank" : "guided"},
           ${answers.countryCode}, ${answers.educationLevel},
           ${JSON.stringify({ ...answers, generationMode: result.generationMode, model: result.model })}::jsonb,
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
           ${answers.countryCode}, ${answers.educationLevel}, ${sourceType},
           1, 1, ${JSON.stringify(result.schema)}::jsonb, '{}'::jsonb,
           ${JSON.stringify({ pageSize: result.schema.pageSize, orientation: result.schema.orientation })}::jsonb,
-          'draft', ${actor.id}
+          'draft', ${actor.profile.id}
         )
       `,
     ]);
