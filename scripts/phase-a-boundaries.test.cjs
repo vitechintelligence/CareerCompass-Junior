@@ -103,8 +103,8 @@ test('export ignores foreign learner/tenant parameters and binds every query to 
   const response = await load('app/api/account/export/route.ts').GET(new Request(`https://synthetic.test/api/account/export?learnerId=${foreignLearner}&organizationId=foreign`));
   assert.equal(response.status, 200);
   assert.equal((await response.json()).profile.id, learner.id);
-  assert.equal(queries.length, 11);
-  for (const query of queries) { assert.deepEqual(query.values, [learner.id]); }
+  assert.equal(queries.length, 12);
+  for (const query of queries.filter(query=>!query.text.includes('to_regclass'))) { assert.deepEqual(query.values, [learner.id]); }
   assert.ok(queries.some(query => query.text.includes("tf.visibility='student'")));
   assert.match(response.headers.get('Content-Disposition'), /attachment/);
   assert.match(response.headers.get('Cache-Control'), /no-store/);

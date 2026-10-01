@@ -1,7 +1,8 @@
 import { ensureStudentProfile, getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-import { configuredAdminEmails } from "@/lib/auth/admin-identity-policy";
+import { configuredAdminEmails, verifiedPlatformAdminEmailRequired } from "@/lib/auth/admin-identity-policy";
 export { DEFAULT_PLATFORM_ADMIN_EMAIL } from "@/lib/auth/admin-identity-policy";
+export { verifiedPlatformAdminEmailRequired } from "@/lib/auth/admin-identity-policy";
 
 function userEmail(user: unknown) {
   const raw = (user as { email?: unknown } | null)?.email;
@@ -10,12 +11,6 @@ function userEmail(user: unknown) {
 
 function userEmailVerified(user: unknown) {
   return (user as { emailVerified?: unknown } | null)?.emailVerified === true;
-}
-
-export function verifiedPlatformAdminEmailRequired() {
-  return String(process.env.CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN || "")
-    .trim()
-    .toLowerCase() === "true";
 }
 
 export async function getPlatformAdminContext() {

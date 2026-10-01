@@ -9,6 +9,7 @@ const secret = "synthetic-boundary-secret-at-least-32-characters";
 const flags = Object.fromEntries([
   "TIMED_ASSESSMENTS", "LEARNING_WRITE_QUOTAS", "OFFLINE_OUTBOX",
   "INTEGRATION_JOB_EXECUTION", "GUARDIAN_REPORTING", "LEARNER_DATA_EXPORT", "DELETION_REVIEW",
+  "PROFESSOR_VI_AI_STUDY", "REPORT_CARD_BUILDER",
 ].map(name => [`CCJ_FEATURE_${name}`, "false"]));
 let requests = 0;
 
@@ -20,6 +21,8 @@ async function exercise(port, overrides, check) {
     env: { ...process.env, ...flags, NODE_ENV: "production", VERCEL_ENV: "preview",
       DATABASE_URL: "", NEON_AUTH_BASE_URL: "", NEON_AUTH_COOKIE_SECRET: "",
       NEON_PROJECT_ID: "royal-queen-79814128", NEON_BRANCH_ID: "br-synthetic-preview",
+      CCJ_REAL_LEARNER_ONBOARDING_ENABLED: "false", CCJ_CHILD_DATA_GOVERNANCE_APPROVED: "false",
+      CCJ_INTELLIGENCE_RUNTIME_MODE: "disabled",
       ...overrides },
   });
   let log = "";
@@ -60,6 +63,16 @@ await exercise(3231, {}, async request => {
   const guardian = await request("/workspace/guardian");
   assert.equal(guardian.response.status, 200);
   assert.match(guardian.text, /Guardian reporting is currently disabled/);
+  for(const path of ['/privacy/learner-data','/privacy/school-processing','/privacy/professor-vi','/privacy/consent-form']){
+    const notice=await request(path);assert.equal(notice.response.status,200);assert.match(notice.text,/VN-2026-10-01-v1/);
+  }
+  const signup=await request('/auth/sign-up');assert.equal(signup.response.status,200);assert.match(signup.text,/awaiting school privacy approval/);
+  const blockedSignup=await request('/api/auth/sign-up/email',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  assert.equal(blockedSignup.response.status,403);assert.equal(JSON.parse(blockedSignup.text).error,'learner_onboarding_not_approved');
+  for(const[path,method]of [['/api/ai-study/source','DELETE'],['/api/ai-study/generate','POST'],['/api/ai-study/tutor','POST']]){
+    const result=await request(path,{method,headers:{'Content-Type':'application/json'},body:'{}'});
+    assert.equal(result.response.status,401);assert.equal(JSON.parse(result.text).error,'authentication_required');
+  }
 });
 
 await exercise(3232, {
