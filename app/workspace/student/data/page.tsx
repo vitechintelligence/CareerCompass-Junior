@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 import { requestDeletionReview } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -11,33 +12,35 @@ export default async function StudentDataPage() {
   const profile=await getCurrentProfile();
   if(!profile || profile.status!=="active" || profile.account_type!=="student") return <Gate/>;
 
+  const exportEnabled=isRiskyFeatureEnabled("learnerDataExport");
+  const deletionEnabled=isRiskyFeatureEnabled("deletionReview");
   const sql=getDb();
-  const requests=await sql`
+  const requests=deletionEnabled ? await sql`
     select id, request_type, status, requested_at, resolved_at
     from data_lifecycle_requests
     where learner_id=${profile.id}
     order by requested_at desc
     limit 10
-  `;
+  ` : [];
 
   return <main className="workspacePage">
     <header className="topbar"><Link className="brand" href="/workspace/student">Career Compass Junior</Link><strong>My Data</strong><Link className="pill" href="/privacy/learner-data">Data notice</Link></header>
     <div className="workspaceContent">
-      <section className="panel">
+      {exportEnabled ? <section className="panel">
         <div className="eyebrow">Export</div>
         <h1 className="workspaceHeroTitle">Download a copy of your Career Compass records.</h1>
         <p className="muted">The export is generated from your authenticated learner account and is never shared with another learner.</p>
         <a className="button primary" href="/api/account/export">Download my JSON export</a>
-      </section>
+      </section> : <section className="panel"><p>Data export is currently paused.</p></section>}
 
-      <section className="panel">
+      {deletionEnabled ? <section className="panel">
         <div className="eyebrow">Deletion review</div>
         <h2 className="workspaceTitle">Request review before destructive deletion.</h2>
         <p className="muted">Educational records may be linked to a school class, feedback, consent, or verified evidence. This request starts a review; it does not silently erase data or bypass the institution’s retention responsibilities.</p>
         <form action={requestDeletionReview}>
           <button className="button" type="submit">Request deletion review</button>
         </form>
-      </section>
+      </section> : <section className="panel"><p>Deletion review requests are currently paused.</p></section>}
 
       <section className="panel">
         <div className="eyebrow">Request history</div>

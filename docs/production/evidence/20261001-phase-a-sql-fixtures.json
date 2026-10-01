@@ -1,0 +1,117 @@
+{
+  "executedAt": "2026-10-01",
+  "executor": "Codex (builder)",
+  "projectId": "royal-queen-79814128",
+  "branchId": "br-polished-snow-b337xdoy",
+  "fixtureOnly": true,
+  "applicationRowsRead": 0,
+  "applicationRowsWritten": 0,
+  "independentReview": false,
+  "results": [
+    {
+      "test": "guardian-own-linked-learner",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "test": "guardian-foreign-learner",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "guardian-foreign-tenant",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "learner-cannot-use-guardian-link",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "teacher-cannot-use-guardian-link",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "platform-admin-cannot-use-guardian-link",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "revoked-guardian-link",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "revoked-guardian-consent",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "withdrawn-institution-membership",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "suspended-learner",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "guardian-shareable-reviewed-evidence-only",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "test": "teacher-own-scope",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "test": "teacher-foreign-scope",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "teacher-inactive-scope",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "partner_admin-own-scope",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "test": "partner_admin-foreign-scope",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "partner_admin-inactive-scope",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "steam-reflection-own",
+      "actual": 1,
+      "expected": 1
+    },
+    {
+      "test": "steam-reflection-foreign-learner",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "steam-reflection-withdrawn",
+      "actual": 0,
+      "expected": 0
+    },
+    {
+      "test": "steam-reflection-inactive-tenant",
+      "actual": 0,
+      "expected": 0
+    }
+  ]
+}

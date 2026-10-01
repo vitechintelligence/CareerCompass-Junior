@@ -149,7 +149,7 @@ export function getRuntimeAlignmentStatus(): RuntimeAlignmentStatus {
     );
   }
 
-  const nonProduction = environment !== "production" && environment !== "test";
+  const nonProduction = environment !== "production";
   const blockingNonProductionProductionReuse =
     nonProduction && (
       branchId === EXPECTED_NEON_PROJECT.branchId ||
