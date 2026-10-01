@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { requireActiveProfile } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export async function requestDeletionReview() {
   const profile = await requireActiveProfile(["student"]);
+  if (!isRiskyFeatureEnabled("deletionReview")) {
+    throw new Error("Deletion review requests are currently disabled.");
+  }
   const sql = getDb();
 
   const orgs = await sql`

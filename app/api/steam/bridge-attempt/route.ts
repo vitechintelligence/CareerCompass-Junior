@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireActiveProfile } from "@/lib/auth/authorization";
+import { AuthorizationError, requireActiveProfile, requireStudentClassAccess } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
 import { isLearnerAgeBand } from "@/lib/learner-age-bands";
 import { COMMUNITY_BRIDGE_MISSIONS } from "@/lib/steam-missions";
@@ -117,7 +117,7 @@ export async function PUT(request: Request) {
   const missionDefinition = COMMUNITY_BRIDGE_MISSIONS[ageBand];
   const sql = getDb();
   const rows = await sql`
-    select r.id, r.organization_id, r.attempt_count
+    select r.id, r.organization_id, r.class_id, r.attempt_count
     from steam_mission_runs r
     join steam_missions m on m.id=r.mission_id
     where r.id=${runId}
@@ -125,10 +125,28 @@ export async function PUT(request: Request) {
       and r.age_band=${ageBand}
       and m.mission_key=${missionDefinition.key}
       and r.status in ('in_progress','completed')
+      and (
+        (r.organization_id is null and r.class_id is null)
+        or exists (
+          select 1 from organization_memberships om
+          join organizations o on o.id=om.organization_id and o.status='active'
+          where om.organization_id=r.organization_id
+            and om.profile_id=r.learner_id and om.role='student' and om.status='active'
+        )
+      )
     limit 1
   `;
   const run = rows[0];
   if (!run) return jsonError("STEAM mission run not found.", 404);
+  if (run.class_id) {
+    try {
+      const scope = await requireStudentClassAccess(String(run.class_id), profile);
+      if (scope.organizationId !== String(run.organization_id)) return jsonError("STEAM mission run not found.", 404);
+    } catch (error) {
+      if (error instanceof AuthorizationError) return jsonError("STEAM mission run not found.", 404);
+      throw error;
+    }
+  }
 
   try {
     await enforceLearningWriteQuota({
@@ -142,8 +160,8 @@ export async function PUT(request: Request) {
   }
 
   const complete = Number(run.attempt_count || 0) > 0 && Boolean(reflection) && Boolean(explanation);
-  await sql`
-    update steam_mission_runs
+  const saved = await sql`
+    update steam_mission_runs r
     set
       reflection=${reflection || null},
       explanation=${explanation || null},
@@ -153,7 +171,24 @@ export async function PUT(request: Request) {
       updated_at=now()
     where id=${runId}
       and learner_id=${profile.id}
+      and (
+        (r.organization_id is null and r.class_id is null)
+        or exists (
+          select 1 from organization_memberships om
+          join organizations o on o.id=om.organization_id and o.status='active'
+          where om.organization_id=r.organization_id
+            and om.profile_id=r.learner_id and om.role='student' and om.status='active'
+            and (r.class_id is null or exists (
+              select 1 from class_memberships cm
+              join classes c on c.id=cm.class_id and c.status='active'
+              where cm.class_id=r.class_id and cm.student_id=r.learner_id
+                and cm.status='active' and c.organization_id=r.organization_id
+            ))
+        )
+      )
+    returning id
   `;
+  if (!saved[0]) return jsonError("STEAM mission run not found.", 404);
 
   return NextResponse.json({
     ok: true,

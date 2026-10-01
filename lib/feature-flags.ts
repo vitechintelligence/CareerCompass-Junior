@@ -4,6 +4,8 @@ export const RISKY_FEATURE_ENV = {
   offlineOutbox: "CCJ_FEATURE_OFFLINE_OUTBOX",
   integrationJobExecution: "CCJ_FEATURE_INTEGRATION_JOB_EXECUTION",
   guardianReporting: "CCJ_FEATURE_GUARDIAN_REPORTING",
+  learnerDataExport: "CCJ_FEATURE_LEARNER_DATA_EXPORT",
+  deletionReview: "CCJ_FEATURE_DELETION_REVIEW",
 } as const;
 
 export type RiskyFeature = keyof typeof RISKY_FEATURE_ENV;
@@ -23,5 +25,7 @@ export function riskyFeatureSnapshot() {
     offlineOutbox: isRiskyFeatureEnabled("offlineOutbox"),
     integrationJobExecution: isRiskyFeatureEnabled("integrationJobExecution"),
     guardianReporting: isRiskyFeatureEnabled("guardianReporting"),
+    learnerDataExport: isRiskyFeatureEnabled("learnerDataExport"),
+    deletionReview: isRiskyFeatureEnabled("deletionReview"),
   };
 }
