@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
+import { sourceRetentionSeconds } from "@/lib/privacy/policy";
+import { requireSyntheticProviderRuntime } from "@/lib/exchange/runtime-policy";
 import {
   buildProfessorViSystemPrompt,
   decideProfessorViMove,
@@ -54,6 +56,7 @@ function outputText(payload: unknown) {
 }
 
 function requireLivePlatformAi() {
+  requireSyntheticProviderRuntime();
   const apiKey = process.env.OPENAI_API_KEY?.trim();
   const liveEnabled = process.env.CCJ_PROFESSOR_VI_LIVE_ENABLED === "true";
   const forceMock = process.env.CCJ_PLATFORM_AI_FORCE_MOCK === "true";
@@ -68,16 +71,16 @@ function requireLivePlatformAi() {
 
 export async function uploadProfessorViSource(file: File, retentionDays: number) {
   const { apiKey } = requireLivePlatformAi();
-  const maxBytes = 50 * 1024 * 1024;
+  const maxBytes = 3 * 1024 * 1024;
   if (file.size < 1 || file.size > maxBytes) throw new Error("study_source_size_invalid");
 
   const form = new FormData();
   form.set("purpose", "user_data");
-  form.set("file", file, file.name || "study-source");
+  form.set("file", file, "study-source." + (file.name.split('.').pop()?.replace(/[^a-z0-9]/gi,'')||'txt'));
   form.set("expires_after[anchor]", "created_at");
   form.set(
     "expires_after[seconds]",
-    String(Math.max(86400, Math.min(31536000, Math.trunc(retentionDays) * 86400))),
+    String(sourceRetentionSeconds(retentionDays)),
   );
 
   const response = await fetch("https://api.openai.com/v1/files", {
@@ -85,6 +88,7 @@ export async function uploadProfessorViSource(file: File, retentionDays: number)
     headers: { Authorization: "Bearer " + apiKey },
     body: form,
     cache: "no-store",
+    signal: AbortSignal.timeout(60000),
   });
   if (!response.ok) throw new Error("study_source_upload_failed_" + response.status);
 
@@ -94,16 +98,18 @@ export async function uploadProfessorViSource(file: File, retentionDays: number)
 }
 
 export async function deleteProfessorViSource(providerFileId: string) {
-  const { apiKey } = requireLivePlatformAi();
+  const apiKey=process.env.OPENAI_API_KEY?.trim();
+  if(!apiKey) throw new Error("study_source_delete_credential_unavailable");
   const response = await fetch(
     "https://api.openai.com/v1/files/" + encodeURIComponent(providerFileId),
     {
       method: "DELETE",
       headers: { Authorization: "Bearer " + apiKey },
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     },
   );
-  return response.ok;
+  return response.ok || response.status===404;
 }
 
 export async function runProfessorVi(input: RunInput): Promise<ProfessorViRunResult> {
@@ -136,6 +142,8 @@ export async function runProfessorVi(input: RunInput): Promise<ProfessorViRunRes
     },
     body: JSON.stringify({
       model,
+      store: false,
+      background: false,
       max_output_tokens: Math.max(120, Math.min(2400, input.maxOutputTokens ?? 1000)),
       input: [
         { role: "system", content: [{ type: "input_text", text: systemPrompt }] },
@@ -143,6 +151,7 @@ export async function runProfessorVi(input: RunInput): Promise<ProfessorViRunRes
       ],
     }),
     cache: "no-store",
+    signal: AbortSignal.timeout(60000),
   });
   if (!response.ok) throw new Error("professor_vi_response_failed_" + response.status);
 

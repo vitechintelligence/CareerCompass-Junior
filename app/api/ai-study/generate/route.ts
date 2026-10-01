@@ -5,6 +5,8 @@ import { loadProfessorViInstitutionPolicy, loadProfessorViLearnerState } from "@
 import { runProfessorVi, safeJsonFromModel } from "@/lib/professor-vi/runtime";
 import { buildActivityContract, activityContractHash } from "@/lib/learning/activity-contract";
 import { getDb } from "@/lib/db";
+import { AuthorizationError, requireActiveProfile, isUuidReference } from "@/lib/auth/authorization";
+import { readBoundedJson } from "@/lib/learning/request-form";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -92,12 +94,14 @@ function promptFor(packType: PackType, sourceTitle: string, learnerNote: string)
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as Record<string, unknown>;
+    await requireActiveProfile(['student']);
+    const body = await readBoundedJson(request);
     const organizationId = String(body.organizationId || "");
     const sourceId = String(body.sourceId || "");
     const packType = body.packType;
     const learnerNote = String(body.learnerNote || "").trim().slice(0, 1000);
     if (!validPackType(packType)) return errorJson("invalid_study_pack_type", 400);
+    if(!isUuidReference(sourceId)||!isUuidReference(organizationId))return errorJson('invalid_study_reference',400);
 
     const { profile } = await requireProfessorViStudentAccess(organizationId);
     const policy = await loadProfessorViInstitutionPolicy(organizationId);
@@ -152,7 +156,7 @@ export async function POST(request: Request) {
         )
       `;
       return NextResponse.json(
-        { ok: true, packId, packType, title, reviewStatus, contentMarkdown, groundingRefs },
+        { ok: true, packId, packType, title, reviewStatus, ...(reviewStatus==='released'?{contentMarkdown}:{}), groundingRefs },
         { status: 201, headers: { "Cache-Control": "no-store" } },
       );
     }
@@ -236,7 +240,11 @@ export async function POST(request: Request) {
       { status: 201, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if(error instanceof AuthorizationError)return errorJson(error.code,error.status);
     const code = error instanceof Error ? error.message : "study_pack_generation_failed";
+    if(code==='request_body_too_large')return errorJson(code,413);
+    if(code==='request_origin_not_authorized')return errorJson(code,403);
+    if(error instanceof SyntaxError||code==='invalid_request_body')return errorJson('invalid_request_body',400);
     const denied = code.includes("disabled") || code.includes("not_authorized") || code.includes("not_available");
     return errorJson(denied ? code : "study_pack_generation_failed", denied ? 403 : 503);
   }

@@ -5,6 +5,8 @@ import { loadProfessorViInstitutionPolicy, loadProfessorViLearnerState } from "@
 import { runProfessorVi } from "@/lib/professor-vi/runtime";
 import { getDb } from "@/lib/db";
 import type { ProfessorViLessonMode, ProfessorViLearnerState } from "@/lib/professor-vi/protocol";
+import { AuthorizationError, requireActiveProfile, isUuidReference } from "@/lib/auth/authorization";
+import { readBoundedJson } from "@/lib/learning/request-form";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +19,8 @@ function errorJson(error: string, status: number) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json() as Record<string, unknown>;
+    await requireActiveProfile(['student']);
+    const body = await readBoundedJson(request);
     const organizationId = String(body.organizationId || "");
     const message = String(body.message || "").trim().slice(0, 6000);
     const sourceId = body.sourceId ? String(body.sourceId) : null;
@@ -26,6 +29,7 @@ export async function POST(request: Request) {
       ? body.lessonMode as ProfessorViLessonMode
       : "ai";
     if (!message) return errorJson("professor_vi_message_required", 400);
+    if(!isUuidReference(organizationId)||(sourceId&&!isUuidReference(sourceId))||(requestedSessionId&&!isUuidReference(requestedSessionId)))return errorJson('invalid_study_reference',400);
 
     const { profile } = await requireProfessorViStudentAccess(organizationId);
     const policy = await loadProfessorViInstitutionPolicy(organizationId);
@@ -156,7 +160,11 @@ export async function POST(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if(error instanceof AuthorizationError)return errorJson(error.code,error.status);
     const code = error instanceof Error ? error.message : "professor_vi_unavailable";
+    if(code==='request_body_too_large')return errorJson(code,413);
+    if(code==='request_origin_not_authorized')return errorJson(code,403);
+    if(error instanceof SyntaxError||code==='invalid_request_body')return errorJson('invalid_request_body',400);
     const denied = code.includes("disabled") || code.includes("not_authorized") || code.includes("not_available");
     return errorJson(denied ? code : "professor_vi_unavailable", denied ? 403 : 503);
   }

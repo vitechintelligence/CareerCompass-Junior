@@ -70,11 +70,14 @@ export async function runPlatformOpenAiConnectivityTest(): Promise<PlatformAiTes
       },
       body: JSON.stringify({
         model: connectivityModel,
+        store: false,
+        background: false,
         reasoning: { effort: "none" },
         max_output_tokens: 40,
         input: "Reply with exactly: CCJ OPENAI TEST OK",
       }),
       cache: "no-store",
+      signal: AbortSignal.timeout(15000),
     });
 
     if (!response.ok) {

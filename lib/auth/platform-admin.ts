@@ -1,16 +1,7 @@
 import { ensureStudentProfile, getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-
-export const DEFAULT_PLATFORM_ADMIN_EMAIL = "labellesolutionservices@gmail.com";
-
-function configuredAdminEmails() {
-  const configured = String(process.env.PLATFORM_ADMIN_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-
-  return new Set([DEFAULT_PLATFORM_ADMIN_EMAIL, ...configured]);
-}
+import { configuredAdminEmails } from "@/lib/auth/admin-identity-policy";
+export { DEFAULT_PLATFORM_ADMIN_EMAIL } from "@/lib/auth/admin-identity-policy";
 
 function userEmail(user: unknown) {
   const raw = (user as { email?: unknown } | null)?.email;
@@ -42,7 +33,9 @@ export async function getPlatformAdminContext() {
 
   const email = userEmail(user);
   if (!email || !configuredAdminEmails().has(email)) return null;
-  if (verifiedPlatformAdminEmailRequired() && !userEmailVerified(user)) return null;
+  // New promotions always require ownership proof. Existing admins above keep
+  // the temporary recovery path until the two-admin gate permits tightening it.
+  if (!userEmailVerified(user)) return null;
 
   const sql = getDb();
   const rows = await sql`

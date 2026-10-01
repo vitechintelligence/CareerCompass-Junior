@@ -1,10 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { requirePartnerOrganizationAccess } from "@/lib/auth/authorization";
+import { AuthorizationError, requirePartnerOrganizationAccess, requireActiveProfile } from "@/lib/auth/authorization";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 import { getDb } from "@/lib/db";
 import { runReportCardBuilder } from "@/lib/report-cards/ai-builder";
 import type { ReportCardBuilderAnswers } from "@/lib/report-cards/builder";
+import { readBoundedForm } from "@/lib/learning/request-form";
+import { requireSchoolAgreement } from "@/lib/privacy/access";
+import { intelligenceRuntimeAvailability } from "@/lib/exchange/runtime-policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,7 +30,8 @@ function errorJson(error: string, status: number) {
 export async function POST(request: Request) {
   try {
     if (!isRiskyFeatureEnabled("reportCardBuilder")) return errorJson("report_card_builder_rollout_disabled", 403);
-    const form = await request.formData();
+    await requireActiveProfile(["partner_admin","platform_admin"]);
+    const form = await readBoundedForm(request);
     const organizationId = String(form.get("organizationId") || "");
     const actor = await requirePartnerOrganizationAccess(organizationId);
     const sql = getDb();
@@ -65,10 +69,12 @@ export async function POST(request: Request) {
 
     const upload = form.get("schoolTemplate");
     const uploadedTemplate = upload instanceof File && upload.size > 0 ? upload : null;
-    if (uploadedTemplate && uploadedTemplate.size > 10 * 1024 * 1024) {
+    if (uploadedTemplate && uploadedTemplate.size > 3 * 1024 * 1024) {
       return errorJson("report_card_import_too_large", 413);
     }
 
+    if(form.get('noPersonalData')!=='on' && form.get('noPersonalData')!=='true')return errorJson('blank_template_no_personal_data_attestation_required',400);
+    if(intelligenceRuntimeAvailability().available && process.env.CCJ_REPORT_CARD_AI_BUILDER_LIVE_ENABLED==='true')await requireSchoolAgreement(organizationId,true);
     const result = await runReportCardBuilder({ answers, uploadedTemplate });
     const templateId = randomUUID();
     const sessionId = randomUUID();
@@ -114,8 +120,12 @@ export async function POST(request: Request) {
       { status: 201, headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if(error instanceof AuthorizationError)return errorJson(error.code,error.status);
     const code = error instanceof Error ? error.message : "report_card_builder_failed";
-    const denied = code.includes("access") || code.includes("disabled") || code.includes("not_allocated");
+    if(code==='request_body_too_large')return errorJson(code,413);
+    if(code==='request_origin_not_authorized')return errorJson(code,403);
+    if(code==='report_card_import_requires_connected_runtime')return errorJson(code,409);
+    const denied = code.includes("access") || code.includes("disabled") || code.includes("not_allocated") || code === 'school_processing_not_approved';
     return errorJson(denied ? code : "report_card_builder_failed", denied ? 403 : 503);
   }
 }

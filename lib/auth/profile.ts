@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getAuth } from "@/lib/auth/server";
+import { newProfileProvisioningAllowed } from "@/lib/auth/admin-identity-policy";
 
 export type LmsProfile = {
   id: string;
@@ -54,6 +55,8 @@ export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
 
     return (rows[0] ?? null) as LmsProfile | null;
   }
+
+  if (!newProfileProvisioningAllowed(user)) return null;
 
   const rows = await sql`
     insert into profiles (

@@ -1,4 +1,5 @@
 import { getAuth, getAuthConfigurationStatus } from "@/lib/auth/server";
+import { learnerOnboardingApproved } from "@/lib/privacy/policy";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,10 @@ export async function GET(request: Request, context: AuthRouteContext) {
 }
 
 export async function POST(request: Request, context: AuthRouteContext) {
+  const { path } = await context.params;
+  if (path.join("/").startsWith("sign-up") && !learnerOnboardingApproved()) {
+    return Response.json({error:"learner_onboarding_not_approved"},{status:403,headers:{"Cache-Control":"no-store"}});
+  }
   const auth = getAuth();
   if (!auth) return unavailable();
   const handlers = auth.handler();

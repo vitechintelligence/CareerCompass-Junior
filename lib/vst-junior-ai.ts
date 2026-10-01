@@ -1,4 +1,5 @@
 import "server-only";
+import { intelligenceRuntimeAvailability } from "@/lib/exchange/runtime-policy";
 
 type ContactSuggestion = {
   email: string | null;
@@ -36,7 +37,7 @@ export async function findPublicCompanyContact(
   const model = options?.model || process.env.MR_VI_MODEL || "gpt-6-luna";
   const apiKey = process.env.OPENAI_API_KEY?.trim();
 
-  if (mode !== "openai" || !apiKey || options?.allowWebSearch !== true) {
+  if (mode !== "openai" || !apiKey || options?.allowWebSearch !== true || !intelligenceRuntimeAvailability().available) {
     return {
       email: null,
       sourceUrl: null,
@@ -69,11 +70,14 @@ Rules:
       },
       body: JSON.stringify({
         model,
+        store: false,
+        background: false,
         reasoning: { effort: "none" },
         tools: [{ type: "web_search", search_context_size: "low" }],
         input: prompt,
       }),
       cache: "no-store",
+      signal: AbortSignal.timeout(30000),
     });
     if (!response.ok) {
       return {
