@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
+import { optionalProcessingAllowed, privacySchemaReady } from "@/lib/privacy/access";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +12,10 @@ export default async function GuardianWorkspacePage() {
   if(!user) return <Gate/>;
   const profile=await getCurrentProfile();
   if(!profile || profile.status!=="active") return <Gate/>;
+  if(!await privacySchemaReady())return <Disabled/>;
 
   const sql=getDb();
-  const links=await sql`
+  const candidates=await sql`
     select
       grl.learner_id, grl.organization_id,
       learner.semantic_id as learner_semantic_id,
@@ -26,19 +28,12 @@ export default async function GuardianWorkspacePage() {
       and om.profile_id=grl.learner_id and om.role='student' and om.status='active'
     where grl.guardian_profile_id=${profile.id}
       and grl.status='active'
-      and exists (
-        select 1
-        from learner_consent_records lcr
-        where lcr.learner_id=grl.learner_id
-          and lcr.organization_id=grl.organization_id
-          and lcr.consent_type='guardian_reporting'
-          and lcr.status='active'
-          and lcr.guardian_confirmation=true
-          and lcr.revoked_at is null
-      )
+
     order by o.name, learner.semantic_id
   `;
 
+  const links=[];
+  for(const candidate of candidates){if(await optionalProcessingAllowed(String(candidate.organization_id),String(candidate.learner_id),'guardian_reporting',profile.id))links.push(candidate);}
   return <main className="workspacePage">
     <header className="topbar"><Link className="brand" href="/">Career Compass Junior</Link><strong>Guardian Reports</strong><Link className="pill" href="/">Home</Link></header>
     <div className="workspaceContent">

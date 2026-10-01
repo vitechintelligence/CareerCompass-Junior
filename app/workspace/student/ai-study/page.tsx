@@ -3,7 +3,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
-import { platformAiRuntime } from "@/lib/platform-ai-runtime";
+import { requireProfessorViStudentAccess } from "@/lib/professor-vi/access";
 import StudyLabClient from "./StudyLabClient";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +17,7 @@ export default async function AiStudyPage() {
     return <Gate copy="An active learner account is required." />;
   }
   if (!isRiskyFeatureEnabled("professorViAiStudy")) {
-    return <Gate copy="Professor Vi is built behind the Phase A rollout switch and remains off until the production gates authorize it." />;
+    return <Gate copy="Think Beyond is not available for this rollout yet. Your books and core practice remain available." />;
   }
 
   const sql = getDb();
@@ -28,7 +28,7 @@ export default async function AiStudyPage() {
       to_regclass('public.ai_study_packs') as pack_table
   `;
   if (!schema[0]?.policy_table || !schema[0]?.source_table || !schema[0]?.pack_table) {
-    return <Gate copy="Professor Vi migration 015 is prepared but is not active in this environment yet." />;
+    return <Gate copy="Think Beyond is being prepared for your learning environment. Your school will announce when it is ready." />;
   }
 
   const organizations = await sql`
@@ -52,28 +52,10 @@ export default async function AiStudyPage() {
   if (!organization) return <Gate copy="Your school has not enabled Professor Vi for this learner account." />;
 
   const organizationId = String(organization.id);
-  const consent = await sql`
-    select id
-    from learner_consent_records
-    where learner_id=${profile.id}
-      and organization_id=${organizationId}
-      and consent_type='ai_assistive_features'
-      and status='active'
-      and revoked_at is null
-    order by captured_at desc
-    limit 1
-  `;
-
-  const runtime = platformAiRuntime();
-  const aiMode = String(organization.ai_mode || "off");
-  const ready = Boolean(consent[0]) && aiMode === "platform_managed" && runtime.mode === "openai";
-  const readinessMessage = !consent[0]
-    ? "The institution must record the required AI-assistive-feature consent before learner AI can run."
-    : aiMode !== "platform_managed"
-      ? "The institution has not selected the platform-managed Professor Vi runtime. BYOK remains a separate fail-closed boundary until its secret runtime is connected."
-      : runtime.mode !== "openai"
-        ? "Live platform AI is disabled in this deployment. No learner request will silently fall back to fake AI."
-        : "Ready.";
+  let ready=false;
+  let readinessMessage="Think Beyond is awaiting school approval and current privacy choices. You can continue your regular learning activities.";
+  try { await requireProfessorViStudentAccess(organizationId); ready=true; readinessMessage="Ready for the approved internal test."; }
+  catch { /* Rendering the existing library does not authorize new remote processing. */ }
 
   const sources = await sql`
     select id, title, source_type, original_filename, created_at
@@ -101,7 +83,7 @@ export default async function AiStudyPage() {
     <main className="workspacePage">
       <header className="topbar">
         <Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link>
-        <div><strong>Professor Vi</strong><div className="muted" style={{ fontSize: 12 }}>AI Study Lab · guided learning</div></div>
+        <div><strong>Professor Vi</strong><div className="muted" style={{ fontSize: 12 }}>Think Beyond · guided learning</div></div>
         <Link className="pill" href="/workspace/student">Student Workspace</Link>
       </header>
       <div className="workspaceContent">

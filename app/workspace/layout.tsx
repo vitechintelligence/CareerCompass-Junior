@@ -1,3 +1,4 @@
+import { DataCaptureNotice } from "@/app/privacy/PrivacyNotice";
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/app/auth/LogoutButton";
 import { getSessionUser } from "@/lib/auth/profile";
@@ -21,6 +22,7 @@ export default async function WorkspaceLayout({ children }: { children: ReactNod
           <LogoutButton />
         </div>
       )}
+      <DataCaptureNotice />
       {children}
     </>
   );

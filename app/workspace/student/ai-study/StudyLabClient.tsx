@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
+import DeleteStudySource from "@/app/workspace/privacy/DeleteStudySource";
 
 type Source = { id: string; title: string; source_type: string; original_filename?: string | null; created_at?: string };
 type Pack = {
@@ -105,7 +106,7 @@ export default function StudyLabClient({
     <>
       <section className="workspaceIdentity">
         <div>
-          <div className="eyebrow">Professor Vi · AI Study Lab</div>
+          <div className="eyebrow">Think Beyond · Professor Vi / Intelligence Instructor</div>
           <h1 className="workspaceHeroTitle">Think first. Build understanding. Improve.</h1>
           <p className="muted">Upload class material, create grounded study aids and quizzes, or work through a question with Professor Vi. School policy controls AI use and answer-release behavior.</p>
         </div>
@@ -123,10 +124,11 @@ export default function StudyLabClient({
           <form className="workspaceForm" onSubmit={upload}>
             <label><span>Title</span><input name="title" maxLength={200} placeholder="e.g. Biology Chapter 3" /></label>
             <label><span>File</span><input name="file" type="file" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt,.md" required /></label>
+            <label className="communityCheck"><input type="checkbox" name="sourcePermission" required/><span>I have permission to use this material. It contains no other learner&apos;s personal data, identity documents or confidential records. Maximum 3 MiB. / Tôi có quyền sử dụng; không chứa dữ liệu cá nhân học sinh khác, giấy tờ hoặc hồ sơ mật.</span></label>
             <button className="button primary" type="submit" disabled={!ready || busy === "upload"}>{busy === "upload" ? "Uploading…" : "Upload source"}</button>
           </form>
           {sources.length > 0 && <div className="workspaceList" style={{ marginTop: 16 }}>
-            {sources.map((source) => <div className="workspaceRow" key={source.id}><div><strong>{source.title}</strong><div className="muted">{source.original_filename || source.source_type}</div></div><span className="pill">{source.source_type}</span></div>)}
+            {sources.map((source) => <div className="workspaceRow" key={source.id}><div><strong>{source.title}</strong><div className="muted">{source.original_filename || source.source_type}</div><DeleteStudySource organizationId={organizationId} sourceId={source.id}/></div><span className="pill">{source.source_type}</span></div>)}
           </div>}
         </article>
 

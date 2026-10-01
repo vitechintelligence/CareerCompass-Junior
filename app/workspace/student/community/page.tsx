@@ -5,6 +5,8 @@ import { getDb } from "@/lib/db";
 import { LEARNER_AGE_PROFILES, type LearnerAgeBand } from "@/lib/learner-age-bands";
 import { COMMUNITY_KUDOS, challengeModeLabel } from "@/lib/community-challenges";
 import { createCommunityTeam, giveCommunityKudos, joinCommunityTeam, submitCommunityProject } from "./actions";
+import { optionalProcessingAllowed } from "@/lib/privacy/access";
+import { communityTeamSharingAllowed } from "@/lib/privacy/community";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +48,7 @@ export default async function StudentCommunityPage({
   if (!accessRow) return <Gate signedIn copy="Your school or teacher has not enabled community participation for this account yet." />;
 
   const organizationId = String(accessRow.organization_id);
+  if(!await optionalProcessingAllowed(organizationId,profile.id,'community_showcase'))return <Gate signedIn copy="Current learner and verified representative choices are required. Manage these in Privacy & choices."/>;
   const ageBand = String(accessRow.age_band) as LearnerAgeBand;
   const ageProfile = LEARNER_AGE_PROFILES[ageBand];
   const params = await searchParams;
@@ -61,7 +64,7 @@ export default async function StudentCommunityPage({
   const selectedSeason = seasons.find((item) => String(item.id) === params.season) ?? seasons[0] ?? null;
   const seasonId = selectedSeason ? String(selectedSeason.id) : "";
 
-  const [challenges, myTeams, showcases, results] = await Promise.all([
+  const [challenges, myTeams, showcaseCandidates, resultCandidates] = await Promise.all([
     seasonId ? sql`
       select cc.*,
         (select count(*)::int from community_teams ct where ct.challenge_id=cc.id and ct.status <> 'archived') as team_count
@@ -110,7 +113,7 @@ export default async function StudentCommunityPage({
       order by ct.updated_at desc
     ` : [],
     seasonId ? sql`
-      select cr.placement, cr.award_label, ct.team_name, cc.title_en as challenge_title
+      select ct.id, cr.placement, cr.award_label, ct.team_name, cc.title_en as challenge_title
       from community_results cr
       join community_teams ct on ct.id=cr.team_id
       join community_challenges cc on cc.id=ct.challenge_id
@@ -120,6 +123,12 @@ export default async function StudentCommunityPage({
       order by cr.placement asc nulls last, cr.created_at
     ` : [],
   ]);
+  const eligibleTeams=new Map<string,boolean>();
+  await Promise.all([...new Set([...showcaseCandidates,...resultCandidates].map(item=>String(item.id)))].map(async teamId=>{
+    eligibleTeams.set(teamId,await communityTeamSharingAllowed(organizationId,teamId));
+  }));
+  const showcases=showcaseCandidates.filter(item=>eligibleTeams.get(String(item.id))===true);
+  const results=resultCandidates.filter(item=>eligibleTeams.get(String(item.id))===true);
 
   const leaderboardMode = String(selectedSeason?.leaderboard_mode || "hidden");
   const visibleResults = leaderboardMode === "hidden"

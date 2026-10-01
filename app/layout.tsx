@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { PwaBootstrap } from "./PwaBootstrap";
 import { ConnectivityStatus } from "./ConnectivityStatus";
 import { SITE_URL } from "@/lib/site";
+import Link from "next/link";
 import "./globals.css";
 import "./live-workspaces.css";
 import "./brand-mobile.css";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         {children}
+        <footer className="privacyNotice"><Link href="/privacy/learner-data">Privacy & choices / Quyền riêng tư</Link> · <Link href="/privacy/school-processing">School processing terms / Điều khoản cơ sở</Link> · <Link href="/privacy/professor-vi">Professor Vi terms / Điều khoản AI</Link></footer>
         <ConnectivityStatus />
         <PwaBootstrap />
       </body>
