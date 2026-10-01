@@ -14,7 +14,7 @@ export default function LearnerDataNoticePage(){
       <section className="workspaceGrid">
         <article className="panel"><h2>AI and uploaded content</h2><p className="muted">Assistive AI features are controlled separately from ordinary learning records. Institution AI mode and consent/policy controls apply where those features are enabled. The platform should not treat AI-generated output as verified learner mastery.</p></article>
         <article className="panel"><h2>Who can see records</h2><p className="muted">Access is role-, organization-, class-, enrollment- and resource-scoped. Institution reports require the relevant relationship and product consent controls. Advertised public previews are separate from protected learner records.</p></article>
-        <article className="panel"><h2>Export and review</h2><p className="muted">Signed-in learners can download an account-scoped JSON export. A deletion request starts a review instead of automatically destroying linked educational evidence or institution records.</p></article>
+        <article className="panel"><h2>Export and review</h2><p className="muted">When enabled, signed-in learners can download an account-scoped JSON export of the record categories listed in that file. A deletion request starts a review instead of automatically destroying linked educational evidence or institution records.</p></article>
         <article className="panel"><h2>Institution responsibilities</h2><p className="muted">ViTech provides product controls; schools and training centers remain responsible for their own notices, legal basis, guardian/learner approvals, retention choices, and local implementation requirements.</p></article>
       </section>
     </div>

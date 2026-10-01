@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
-import { requireActiveProfile } from "@/lib/auth/authorization";
+import { AuthorizationError, requireActiveProfile } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const profile = await requireActiveProfile(["student"]);
+  let profile;
+  try {
+    profile = await requireActiveProfile(["student"]);
+  } catch (error) {
+    if (!(error instanceof AuthorizationError)) throw error;
+    return NextResponse.json({ error: error.code }, {
+      status: error.status,
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  }
+  if (!isRiskyFeatureEnabled("learnerDataExport")) {
+    return NextResponse.json({ error: "learner_data_export_disabled" }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  }
   const sql = getDb();
 
   const [

@@ -62,6 +62,10 @@ export function getAuthConfigurationStatus() {
     invalid.push("NEON_BACKEND_ALIGNMENT");
   }
 
+  if (runtime.blockingNonProductionProductionReuse) {
+    invalid.push("NEON_PRODUCTION_REUSE");
+  }
+
   const configured = missing.length === 0 && invalid.length === 0;
   const baseUrlValid = isValidAuthBaseUrl(baseUrl);
   const cookieSecretValid = typeof secret === "string" && secret.length >= MIN_COOKIE_SECRET_LENGTH;
@@ -80,12 +84,12 @@ export function getAuthConfigurationStatus() {
 }
 
 export function getAuth() {
-  if (cachedAuth) return cachedAuth;
-
   const configuration = getAuthConfigurationStatus();
   if (!configuration.configured || !configuration.baseUrl || !configuration.secret) {
     return null;
   }
+
+  if (cachedAuth) return cachedAuth;
 
   cachedAuth = createNeonAuth({
     baseUrl: configuration.baseUrl,
