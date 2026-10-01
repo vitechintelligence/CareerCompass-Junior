@@ -124,3 +124,23 @@ Changing an `organization_data_policies` setting does not relocate existing clou
 | Device offline / cache eviction | Existing public-asset PWA safety retained; risky outbox flag default off | Real iOS eviction/reconnect/idempotency testing still required; local cache is not a backup |
 
 Remaining gaps: real two-admin verification/login; fresh production-data rehearsal of 014–016 and old/new-code compatibility; correct Vercel project/secrets inventory; authenticated multi-role/multi-tenant browser journeys; actual iOS device tests; measured restore/reconciliation; named independent reviewer; signed Vietnamese school/processor documents and real contact/retention/location inventory; institution-bound age-aware signup before enabling public onboarding; production egress transport and provider abstraction; LTI branch reconciliation/contract acceptance; BYOK custody/rotation tests; complete multi-processor rights execution. Keep new onboarding and risky features off until their separate acceptance gates close.
+
+## Production readiness by pathway
+
+These statuses describe the recovered release candidate in Draft PR #54, not a verified deployment of that release to production. Passing unit/SQL/local HTTP checks are technical evidence; authenticated institutional acceptance and independent review remain separate gates. Exact results are in the [verification ledger](../production/evidence/20261002-privacy-recovery.md).
+
+| Pathway | Verified evidence | Production readiness of recovered release |
+|---|---|---|
+| Public curriculum and objective practice | 31 objective definitions; 223 production-build HTTP evaluations; book/reload and existing teen route checks | Technical checks pass; existing curriculum retained; release awaits Phase A |
+| Durable progress, duplicate-safe attempts and evidence semantics | Existing progress, idempotency, contract and evidence suites pass | Controlled signed-in persistence/reconnect and resulting-row acceptance still required |
+| Assignment, submission, teacher feedback and revision | Existing classroom and evidence-reporting regressions pass; scope preserved | Full controlled teacher/learner journey still required |
+| Authentication and admin recovery | Shared boundary regression; known production endpoint denied in synthetic preview; canonical Auth origin repaired | Blocked: primary verification, second controlled admin, real login/recovery and actual preview secrets |
+| Family consent, representative authority and rights review | 33 privacy regressions; 28 actual PostgreSQL assertions; dual signatures, stale/revoked/foreign scope denial | Schema and authenticated journey acceptance plus signed school/legal review missing; onboarding off |
+| Guardian reporting and community release | Current family/recipient/contributor predicates; SQL negatives and flag-off HTTP rejection | Default off; controlled readback/withdrawal acceptance and governance approval required |
+| Learner export and deletion | Owned export regressions; anonymous denial; scoped durable review and execution-reference controls | Export completeness and multi-processor deletion/reconciliation remain operational acceptance tasks; review is not erasure |
+| Report-card builder | Deterministic template/builder tests; tenant authorization and bounded input | Blank/built-in fallback retained; real school journey required; uploaded AI conversion unavailable without approved runtime |
+| Professor Vi / Intelligence Instructor | Production egress denied; non-production adult/class policy and source/context bounds tested | Production remote intelligence disabled; no real minor or paid-provider acceptance claimed |
+| Swoosh, Halibut OS and Intelligence Capsule | Unsupported connection/deployment modes fail closed; defined classification and target responsibility | Disconnected / not production ready; no transport, orchestration or local custody claim |
+| LTI / LMS / SIS and other integration jobs | Existing adapter diagnostics pass for 13 provider profiles | Recorded contract and real sandbox acceptance still required; LTI development branch is not in this recovered stack |
+| Offline/PWA/audio | Existing device regressions pass; risky outbox default off | Physical iOS eviction, replay, idempotency and audio journeys remain unverified |
+| Restore and deployment isolation | Read-only duplicate preflight, recorded restore point and synthetic endpoint rejection | Fresh rehearsal blocked by branch quota; actual secret scopes and measured recovery remain open |

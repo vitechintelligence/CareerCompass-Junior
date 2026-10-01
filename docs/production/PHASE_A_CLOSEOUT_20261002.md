@@ -2,6 +2,8 @@
 
 **Decision: NO-GO for production migration/deploy or real children's onboarding. PR #50 remains Draft.** This is implementation/evidence recovery, not a repeated audit or a replacement LMS. [Implemented runtime and matrices](../architecture/CCJ_IMPLEMENTED_ARCHITECTURE_20261002.md) distinguish enforced code from disconnected targets.
 
+Published as [Draft PR #54](https://github.com/vitechintelligence/CareerCompass-Junior/pull/54), stacked on the existing Professor Vi PR #51. Application commit `7019cda008f2f3c4d0c7ee445ff4fe44676a735d`, tree `b44298b3fa45f4bf7f5bba5ff902d8cc7ba9f31c`, passed [GitHub CI run 36913079952](https://github.com/vitechintelligence/CareerCompass-Junior/actions/runs/36913079952) on Node 20.19.0, including all sixteen suites and both HTTP checks. Local checks also passed; lint has four existing image warnings. [Exact verification evidence](evidence/20261002-privacy-recovery.md) records limits. Both Vercel projects reported successful preview deployment; connected-account reads returned 403/404, so actual secrets, database scope and authenticated preview behavior remain unverified. PR #53 is an overlapping earlier Phase A subset; reconcile that stack before merging.
+
 ## Recovered and implemented
 
 - Published Professor Vi/report-card baseline restored from `6d8f114`; Phase A fixes retained, including auth/database preview-production reuse denial and owned export/deletion-review boundaries.
@@ -30,7 +32,7 @@ Human names remain **required**, as the existing runbook requires named owners a
 
 | Item | Accountable owner to nominate | Exit criterion | Rollback / fallback | Current status |
 |---|---|---|---|---|
-| Recovered source and quality | Human engineering/release owner + independent reviewer | Review the recovered stack and passing exact commit/tree evidence; retain curriculum/portals | Keep drafts; retain published baselines; revert reviewed code commit only | Implemented/tested locally; publication/CI evidence recorded separately |
+| Recovered source and quality | Human engineering/release owner + independent reviewer | Review the recovered stack and passing exact commit/tree evidence; retain curriculum/portals | Keep drafts; retain published baselines; revert reviewed code commit only | Published in Draft PR #54; local and exact-tree CI pass; independent review open |
 | Role/tenant/class and privacy journeys | Independent QA + privacy owner | Controlled learner, verified representative, teacher, partner and two-admin accounts; negative cross-tenant/class/recipient tests plus resulting rows | Flags off; suspend optional approval; preserve records for investigation | Automated/SQL negatives pass; real authenticated/browser journey missing |
 | Fresh 014–016 rehearsal | Database owner + watcher | Fresh production clone; duplicate preflight; migration; old deployed/new code; lock/index timings and scoped read/write checks | Abort clone rehearsal; use verified restore point; do not repair production duplicates blindly | Blocked by branch quota; 016 tested only on older QA |
 | Primary admin identity | Controlled account owner + security owner | Own the primary mailbox; provider verification; successful canonical-site login/recovery/logout | Keep `CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN=false` until safe; use existing controlled recovery | Exact origin fixed; verification/login open |

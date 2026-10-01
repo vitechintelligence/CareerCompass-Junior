@@ -1,5 +1,7 @@
 # Phase A implementation recovery — 2026-10-01
 
+**Historical checkpoint:** the privacy implementation was subsequently restored as a tested continuation on the published Professor Vi baseline in [Draft PR #54](https://github.com/vitechintelligence/CareerCompass-Junior/pull/54). See [2 October evidence](20261002-privacy-recovery.md) for current results and remaining gates. The statements below refer to this earlier patch only.
+
 **Status: technical preparation published for review; Phase A OPEN; production rollout BLOCKED.** PR #50 must remain Draft. This patch does not implement or restore the later unpublished privacy/governance work described in Draft PR #52.
 
 ## Source recovered

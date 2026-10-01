@@ -4,6 +4,14 @@ This directory is the evidence ledger for `docs/production/PRODUCTION_GO_LIVE_GA
 
 Do not mark a gate closed merely because CI is green or a builder says it passed.
 
+## Current recovery evidence
+
+- [2 October privacy implementation and verification](20261002-privacy-recovery.md) and its [machine-readable results](20261002-privacy-recovery.json): Draft PR #54, restored Professor Vi baseline, enforced privacy boundaries, exact tested tree, local/CI/HTTP/QA SQL results and open production dependencies.
+- [Phase A closeout checklist](../PHASE_A_CLOSEOUT_20261002.md): required human owners, exit criteria and rollback/fallback for each remaining gate.
+- [Implemented architecture and readiness](../../architecture/CCJ_IMPLEMENTED_ARCHITECTURE_20261002.md): actual runtime paths, data and trust boundaries, deployment modes and disconnected targets.
+
+Earlier dated files describe their own tested snapshots. In particular, the missing-privacy-source statement in the 1 October recovery record is historical; PR #54 now supplies the tested continuation from published source. It does not retroactively validate the lost implementation or close Phase A.
+
 ## Naming convention
 
 Use dated, descriptive Markdown/text artifacts. Never commit secrets, tokens, cookies, connection strings or learner-identifying raw exports.
