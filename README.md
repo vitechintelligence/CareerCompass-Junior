@@ -68,15 +68,21 @@ The **permanent canonical public origin** for Career Compass Junior is:
 
 All public links, documentation, authentication callbacks, integrations, QR codes, school/partner onboarding, and production references should use this custom domain.
 
-The Vercel deployment hostname remains infrastructure-level hosting only and must not be treated as the public canonical URL. Any legacy Career Compass Junior hostnames should redirect to **https://careercompassjunior.vinaskilltrust.com/**. Neon Auth trusted domains must include this canonical HTTPS origin exactly.
+Career Compass Junior remains **hosted and deployed on Vercel**. The custom domain **https://careercompassjunior.vinaskilltrust.com/** is permanently routed to the Vercel-hosted application and serves as the branded public URL.
+
+**VinaSkillTrust is the parent training program**, with Career Compass Junior operating under that parent identity. Public-facing references should therefore use the VinaSkillTrust subdomain while Vercel continues to provide the application hosting and deployment layer.
+
+Neon Auth trusted domains must include the branded HTTPS origin exactly.
 
 ## Production stack alignment
 
 Career Compass Junior production must resolve through one stack:
 
 ```text
-Frontend
+Public branded domain
   https://careercompassjunior.vinaskilltrust.com/
+      ↓
+Vercel-hosted Career Compass Junior application
       ↓
 Next.js server actions / API routes
       ↓
