@@ -62,11 +62,13 @@ Open `http://localhost:3000`.
 
 ## Production URL
 
-The canonical production origin is:
+The **permanent canonical public origin** for Career Compass Junior is:
 
-`https://career-compass-junior-vitech.vercel.app`
+**https://careercompassjunior.vinaskilltrust.com/**
 
-The legacy `career-compass-junior-lake.vercel.app` host permanently redirects to the canonical origin. Neon Auth trusted domains must include the canonical HTTPS origin exactly.
+All public links, documentation, authentication callbacks, integrations, QR codes, school/partner onboarding, and production references should use this custom domain.
+
+The Vercel deployment hostname remains infrastructure-level hosting only and must not be treated as the public canonical URL. Any legacy Career Compass Junior hostnames should redirect to **https://careercompassjunior.vinaskilltrust.com/**. Neon Auth trusted domains must include this canonical HTTPS origin exactly.
 
 ## Production stack alignment
 
@@ -74,7 +76,7 @@ Career Compass Junior production must resolve through one stack:
 
 ```text
 Frontend
-  https://career-compass-junior-vitech.vercel.app
+  https://careercompassjunior.vinaskilltrust.com/
       ↓
 Next.js server actions / API routes
       ↓
@@ -91,7 +93,7 @@ NEON_BRANCH_ID=br-shiny-meadow-b3ibu54
 DATABASE_URL=<pooled URL from that same branch>
 NEON_AUTH_BASE_URL=<Auth URL from that same branch>
 NEON_AUTH_COOKIE_SECRET=<32+ character secret>
-NEXT_PUBLIC_APP_URL=https://career-compass-junior-vitech.vercel.app
+NEXT_PUBLIC_APP_URL=https://careercompassjunior.vinaskilltrust.com
 ```
 
 `/api/health` checks database reachability, core/extended schema readiness, Auth configuration and non-secret runtime identity alignment. It does not expose connection strings, passwords, cookie secrets or tokens.
