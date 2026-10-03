@@ -72,6 +72,9 @@ jobs:
       - name: Governed privacy and AI boundary regression
         run: npm run test:privacy
 
+      - name: Migration rehearsal contract regression
+        run: npm run test:migration-contract
+
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai
 

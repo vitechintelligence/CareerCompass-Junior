@@ -74,6 +74,46 @@ test('verified-admin tightening is enforced at the shared profile boundary',asyn
     {CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN:'true'})('lib/auth/profile.ts');
   assert.equal(await api.getCurrentProfile(),null);assert.equal(writes(db).length,0);
 });
+test('neither nominated unverified email can receive a new admin grant',async()=>{
+  for(const email of ['labellesolutionservices@gmail.com','vichung196@gmail.com']){
+    const db=database();
+    const api=loader({'@/lib/db':{getDb:()=>db.sql},'@/lib/auth/profile':{
+      getSessionUser:async()=>({id:'synthetic-owner',email,emailVerified:false}),
+      getCurrentProfile:async()=>({...learner,account_type:'partner_admin'}),ensureStudentProfile:async()=>null,
+    }},{PLATFORM_ADMIN_EMAILS:'labellesolutionservices@gmail.com,vichung196@gmail.com'})('lib/auth/platform-admin.ts');
+    assert.equal(await api.getPlatformAdminContext(),null);assert.equal(db.records.length,0);
+  }
+});
+test('verified nominated partner grant binds the identity and audit in one SQL statement',async()=>{
+  const promoted={...learner,account_type:'platform_admin'};
+  const db=database(()=>[promoted]);
+  const api=loader({'@/lib/db':{getDb:()=>db.sql},'@/lib/auth/profile':{
+    getSessionUser:async()=>({id:'synthetic-owner',email:'vichung196@gmail.com',emailVerified:true}),
+    getCurrentProfile:async()=>({...learner,account_type:'partner_admin'}),ensureStudentProfile:async()=>null,
+  }},{PLATFORM_ADMIN_EMAILS:'vichung196@gmail.com'})('lib/auth/platform-admin.ts');
+  assert.equal((await api.requirePlatformAdmin()).profile.account_type,'platform_admin');
+  assert.equal(db.records.length,1);assert.match(db.records[0].text,/for update/);
+  assert.match(db.records[0].text,/insert into admin_audit_events/);
+  assert.match(db.records[0].text,/auth_subject = \?/);assert.ok(db.records[0].values.includes('synthetic-owner'));
+  assert.doesNotMatch(db.records[0].text,/update organization_memberships/);
+});
+test('admin grant does not return successful access when the atomic audit query fails',async()=>{
+  const db=database(()=>{throw Error('synthetic audit unavailable');});
+  const api=loader({'@/lib/db':{getDb:()=>db.sql},'@/lib/auth/profile':{
+    getSessionUser:async()=>({id:'synthetic-owner',email:'vichung196@gmail.com',emailVerified:true}),
+    getCurrentProfile:async()=>({...learner,account_type:'partner_admin'}),ensureStudentProfile:async()=>null,
+  }},{PLATFORM_ADMIN_EMAILS:'vichung196@gmail.com'})('lib/auth/platform-admin.ts');
+  await assert.rejects(api.requirePlatformAdmin(),/synthetic audit unavailable/);assert.equal(db.records.length,1);
+});
+test('concurrent admin grant retry reads the committed role without creating another event',async()=>{
+  let reads=0;const db=database(()=>[]);
+  const api=loader({'@/lib/db':{getDb:()=>db.sql},'@/lib/auth/profile':{
+    getSessionUser:async()=>({id:'synthetic-owner',email:'vichung196@gmail.com',emailVerified:true}),
+    getCurrentProfile:async()=>({...learner,account_type:++reads===1?'partner_admin':'platform_admin'}),ensureStudentProfile:async()=>null,
+  }},{PLATFORM_ADMIN_EMAILS:'vichung196@gmail.com'})('lib/auth/platform-admin.ts');
+  assert.equal((await api.requirePlatformAdmin()).profile.account_type,'platform_admin');
+  assert.equal((await api.requirePlatformAdmin()).profile.account_type,'platform_admin');assert.equal(db.records.length,1);
+});
 for(const actor of [null,{...learner,account_type:'teacher'}, {...learner,id:staffId,account_type:'partner_admin'}, {...learner,id:representativeId}, {...learner,status:'suspended'}]){
   test(`unlinked/inactive ${actor?.account_type||'anonymous'} cannot sign a learner consent`,async()=>{
     const db=database();const api=loader(mocks(actor,db))('app/workspace/privacy/actions.ts');

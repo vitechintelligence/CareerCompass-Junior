@@ -25,7 +25,8 @@
     "test:phase-a-additions": "rm -rf .phase-a-additions-test && tsc --outDir .phase-a-additions-test --module commonjs --target es2022 --moduleResolution node --esModuleInterop --skipLibCheck --types node lib/professor-vi/protocol.ts lib/report-cards/templates.ts lib/report-cards/builder.ts scripts/professor-vi-policy.test.ts scripts/report-card-builder.test.ts && node --test .phase-a-additions-test/scripts/*.test.js && rm -rf .phase-a-additions-test",
     "test:phase-a": "node --test scripts/phase-a-boundaries.test.cjs",
     "test:phase-a:http": "node scripts/phase-a-http-selftest.mjs",
-    "test:privacy": "node --test scripts/privacy-governance.test.cjs"
+    "test:privacy": "node --test scripts/privacy-governance.test.cjs",
+    "test:migration-contract": "node --test scripts/sql-migration-contract.test.cjs"
   },
   "dependencies": {
     "@langchain/core": "1.2.11",
