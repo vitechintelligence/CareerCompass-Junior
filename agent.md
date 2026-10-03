@@ -22,6 +22,7 @@ Production rules:
 - Real children’s data is blocked until the children’s-data compliance gate has written sign-off and school-facing data-processing terms.
 - Every checklist item must have a named human owner before its gate begins.
 - Attach non-sensitive evidence under `docs/production/evidence/` and/or PR #50.
+- Snapshot drills require an explicit disposable non-production target and `finalize:false`. A new branch name alone does not isolate a restore. Capture and compare production branch flags and endpoint bindings before/after. Never finalize a drill; see `docs/production/evidence/20261003-fresh-rehearsal.md` for the recovered incident and safety helpers.
 - If this file, a builder report and the production gate document conflict, follow the more conservative production gate and stop for human review.
 
 ## 1. Project identity

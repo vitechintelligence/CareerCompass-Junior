@@ -1,0 +1,127 @@
+{
+  "local_application_commit": "4e502e9",
+  "application_tree": "2df1ad54d99deffc5e6c7cd840661d07ffc4645b",
+  "typecheck": "passed",
+  "lint": {
+    "errors": 0,
+    "existing_image_warnings": 4
+  },
+  "production_build": "passed",
+  "test_results": [
+    {
+      "suite": "test:adapters",
+      "exit_code": 0,
+      "seconds": 0.78
+    },
+    {
+      "suite": "test:learning",
+      "exit_code": 0,
+      "seconds": 0.93,
+      "passed_tests": 37
+    },
+    {
+      "suite": "test:learning:http",
+      "exit_code": 0,
+      "seconds": 1.3
+    },
+    {
+      "suite": "test:evidence",
+      "exit_code": 0,
+      "seconds": 0.81,
+      "passed_tests": 8
+    },
+    {
+      "suite": "test:authorization",
+      "exit_code": 0,
+      "seconds": 0.71,
+      "passed_tests": 5
+    },
+    {
+      "suite": "test:platform-ai",
+      "exit_code": 0,
+      "seconds": 0.67,
+      "passed_tests": 6
+    },
+    {
+      "suite": "test:activity-contract",
+      "exit_code": 0,
+      "seconds": 0.83,
+      "passed_tests": 7
+    },
+    {
+      "suite": "test:progress",
+      "exit_code": 0,
+      "seconds": 0.8,
+      "passed_tests": 3
+    },
+    {
+      "suite": "test:idempotency",
+      "exit_code": 0,
+      "seconds": 0.75,
+      "passed_tests": 3
+    },
+    {
+      "suite": "test:classroom",
+      "exit_code": 0,
+      "seconds": 0.74,
+      "passed_tests": 3
+    },
+    {
+      "suite": "test:evidence-reporting",
+      "exit_code": 0,
+      "seconds": 0.74,
+      "passed_tests": 4
+    },
+    {
+      "suite": "test:curriculum-qa",
+      "exit_code": 0,
+      "seconds": 0.74,
+      "passed_tests": 3
+    },
+    {
+      "suite": "test:device",
+      "exit_code": 0,
+      "seconds": 0.8,
+      "passed_tests": 6
+    },
+    {
+      "suite": "test:operations",
+      "exit_code": 0,
+      "seconds": 0.79,
+      "passed_tests": 23
+    },
+    {
+      "suite": "test:phase-a-additions",
+      "exit_code": 0,
+      "seconds": 0.86,
+      "passed_tests": 7
+    },
+    {
+      "suite": "test:phase-a",
+      "exit_code": 0,
+      "seconds": 0.79,
+      "passed_tests": 23
+    },
+    {
+      "suite": "test:phase-a:http",
+      "exit_code": 0,
+      "seconds": 1.35
+    },
+    {
+      "suite": "test:privacy",
+      "exit_code": 0,
+      "seconds": 1.3,
+      "passed_tests": 37
+    },
+    {
+      "suite": "test:migration-contract",
+      "exit_code": 0,
+      "seconds": 0.19,
+      "passed_tests": 10
+    }
+  ],
+  "reported_unit_tests": 185,
+  "integration_adapter_profiles": 13,
+  "authenticated_journey": "not_verified",
+  "production_readiness": "NO_GO"
+}

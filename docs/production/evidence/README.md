@@ -6,6 +6,8 @@ Do not mark a gate closed merely because CI is green or a builder says it passed
 
 ## Current recovery evidence
 
+- [Fresh production rehearsal and continuation, 2–3 October](20261003-fresh-rehearsal.md): current branch capacity, migrations, admin nominations, rollback-only tests and recovered restore incident. Phase A remains open.
+
 - [2 October privacy implementation and verification](20261002-privacy-recovery.md) and its [machine-readable results](20261002-privacy-recovery.json): Draft PR #54, restored Professor Vi baseline, enforced privacy boundaries, exact tested tree, local/CI/HTTP/QA SQL results and open production dependencies.
 - [Phase A closeout checklist](../PHASE_A_CLOSEOUT_20261002.md): required human owners, exit criteria and rollback/fallback for each remaining gate.
 - [Implemented architecture and readiness](../../architecture/CCJ_IMPLEMENTED_ARCHITECTURE_20261002.md): actual runtime paths, data and trust boundaries, deployment modes and disconnected targets.
