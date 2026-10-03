@@ -122,7 +122,9 @@ The **permanent canonical public route** for Career Compass Junior is:
 
 **https://careercompassjunior.vinaskilltrust.com/**
 
-This domain is the application identity exposed to learners, parents, teachers, partner schools, integrations, QR codes, authentication callbacks, and external documentation. Vercel hostnames are deployment infrastructure only and are not the canonical public origin. Legacy application hostnames should redirect to the permanent route above.
+Career Compass Junior remains **hosted and deployed on Vercel**. The domain above is permanently routed to that Vercel-hosted application and is the branded public entry point used by learners, parents, teachers, partner schools, integrations, QR codes, authentication callbacks, and external documentation.
+
+**VinaSkillTrust is the parent training program**. Career Compass Junior sits under that parent program and uses the `vinaskilltrust.com` domain to preserve the intended product and training-program hierarchy while Vercel remains the technical hosting and deployment platform.
 
 ## Delivery rule
 
