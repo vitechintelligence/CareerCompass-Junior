@@ -3,7 +3,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { TEACHER_UPSKILL_MODULES, TEACHER_UPSKILL_NOTICE_EN, TEACHER_UPSKILL_NOTICE_VI } from "@/lib/teacher-upskill-catalog";
-import { updateTeacherLearningProgress } from "./actions";
+import { submitTeacherLearningEvidence, updateTeacherLearningProgress } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +18,15 @@ export default async function TeacherUpskillPage({ searchParams }: { searchParam
 
   const sql = getDb();
   const rows = await sql`
-    select module_key, status, completion_percent, completed_at, updated_at
+    select module_key, status, completion_percent, completed_at, updated_at,
+      evidence, evidence_status, reviewed_at, review_notes
     from teacher_learning_progress
     where teacher_id = ${profile.id}
   `;
   const progress = new Map(rows.map((row) => [String(row.module_key), row]));
   const completed = rows.filter((row) => String(row.status) === "completed").length;
   const inProgress = rows.filter((row) => String(row.status) === "in_progress").length;
+  const verified = rows.filter((row) => String(row.evidence_status) === "verified").length;
   const hours = TEACHER_UPSKILL_MODULES.filter((module) => String(progress.get(module.key)?.status) === "completed")
     .reduce((sum, module) => sum + module.estimatedHours, 0);
 
@@ -47,18 +49,23 @@ export default async function TeacherUpskillPage({ searchParams }: { searchParam
         </section>
 
         <section className="metricGrid">
-          <Metric label={vi ? "Hoàn thành" : "Completed"} value={String(completed)} detail={`${TEACHER_UPSKILL_MODULES.length} ${vi ? "mô-đun" : "modules"}`} />
+          <Metric label={vi ? "Tham gia hoàn tất" : "Participation complete"} value={String(completed)} detail={`${TEACHER_UPSKILL_MODULES.length} ${vi ? "mô-đun" : "modules"}`} />
           <Metric label={vi ? "Đang học" : "In progress"} value={String(inProgress)} detail={vi ? "Có thể tiếp tục bất kỳ lúc nào" : "Resume anytime"} />
-          <Metric label={vi ? "Giờ phát triển" : "Growth hours"} value={String(hours)} detail={vi ? "Ước tính theo mô-đun đã hoàn thành" : "Estimated completed learning time"} />
+          <Metric label={vi ? "Minh chứng đã xác minh" : "Verified evidence"} value={String(verified)} detail={vi ? "Cần người đánh giá ký duyệt" : "Requires reviewer sign-off"} />
+          <Metric label={vi ? "Giờ tham gia" : "Participation hours"} value={String(hours)} detail={vi ? "Ước tính theo mô-đun đã hoàn thành" : "Estimated completed learning time"} />
         </section>
 
         <section className="cardGrid">
           {TEACHER_UPSKILL_MODULES.map((module) => {
             const state = progress.get(module.key);
             const status = String(state?.status || "not_started");
+            const evidenceStatus = String(state?.evidence_status || "not_submitted");
+            const evidence = state?.evidence && typeof state.evidence === "object"
+              ? state.evidence as Record<string, unknown>
+              : {};
             return (
               <article className="card" key={module.key}>
-                <span className="pill">{status.replaceAll("_", " ")}</span>
+                <div className="tagRow"><span className="pill">{status.replaceAll("_", " ")}</span><span className="pill">evidence · {evidenceStatus.replaceAll("_", " ")}</span></div>
                 <h2>{vi ? module.titleVi : module.titleEn}</h2>
                 <p className="muted">{vi ? module.focusVi : module.focusEn}</p>
                 <div className="tagRow">{module.alignment.map((item) => <span className="tag" key={item}>{item}</span>)}</div>
@@ -70,9 +77,19 @@ export default async function TeacherUpskillPage({ searchParams }: { searchParam
                 <form action={updateTeacherLearningProgress} className="actions">
                   <input type="hidden" name="moduleKey" value={module.key} />
                   {status !== "in_progress" && status !== "completed" && <button className="button soft" name="status" value="in_progress" type="submit">{vi ? "Bắt đầu" : "Start"}</button>}
-                  {status !== "completed" && <button className="button primary" name="status" value="completed" type="submit">{vi ? "Đánh dấu hoàn thành" : "Mark complete"}</button>}
+                  {status !== "completed" && <button className="button primary" name="status" value="completed" type="submit">{vi ? "Đánh dấu hoàn tất tham gia" : "Mark participation complete"}</button>}
                   {status === "completed" && <button className="button" name="status" value="in_progress" type="submit">{vi ? "Học lại" : "Revisit"}</button>}
                 </form>
+                {status === "completed" && evidenceStatus !== "verified" && (
+                  <form action={submitTeacherLearningEvidence} className="workspaceForm" style={{ marginTop: 14 }}>
+                    <input type="hidden" name="moduleKey" value={module.key} />
+                    <label><span>{vi ? "Sản phẩm / minh chứng nghề nghiệp" : "Professional artifact / evidence"}</span><textarea name="artifact" rows={4} maxLength={10000} required defaultValue={typeof evidence.artifact === "string" ? evidence.artifact : ""} /></label>
+                    <label><span>{vi ? "Phản tư: bạn đã áp dụng và học được gì?" : "Reflection: what did you apply and learn?"}</span><textarea name="reflection" rows={3} maxLength={4000} required defaultValue={typeof evidence.reflection === "string" ? evidence.reflection : ""} /></label>
+                    <button className="button soft" type="submit">{evidenceStatus === "changes_requested" ? (vi ? "Nộp lại minh chứng" : "Resubmit evidence") : (vi ? "Nộp minh chứng để đánh giá" : "Submit evidence for review")}</button>
+                    {state?.review_notes && <p className="muted"><strong>{vi ? "Góp ý người đánh giá:" : "Reviewer feedback:"}</strong> {String(state.review_notes)}</p>}
+                  </form>
+                )}
+                {evidenceStatus === "verified" && <p className="muted" style={{ marginTop: 12 }}><strong>{vi ? "Đã xác minh:" : "Verified:"}</strong> {vi ? "Minh chứng đã được người đánh giá duyệt. Trạng thái này tách biệt với việc chỉ hoàn tất mô-đun." : "A reviewer verified the submitted evidence. This is separate from module participation."}</p>}
               </article>
             );
           })}

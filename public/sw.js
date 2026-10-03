@@ -1,5 +1,5 @@
-const PUBLIC_CACHE = "ccj-public-v4";
-const PUBLIC_SHELL = ["/", "/offline", "/vitech-logo.svg", "/vitech-app-icon-512.png?v=3"];
+const PUBLIC_CACHE = "ccj-public-v5";
+const PUBLIC_SHELL = ["/", "/offline", "/offline-practice", "/vitech-logo.svg", "/vitech-app-icon-512.png?v=3"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(PUBLIC_CACHE).then((cache) => cache.addAll(PUBLIC_SHELL)).then(() => self.skipWaiting()));
@@ -45,7 +45,7 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.ok && ["/", "/international", "/books", "/vn"].includes(url.pathname)) {
+          if (response.ok && ["/", "/international", "/books", "/vn", "/offline-practice"].includes(url.pathname)) {
             const copy = response.clone();
             caches.open(PUBLIC_CACHE).then((cache) => cache.put(request, copy));
           }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthConfigurationStatus } from "@/lib/auth/server";
 import { getDb } from "@/lib/db";
 import { getRuntimeAlignmentStatus } from "@/lib/runtime-alignment";
+import { riskyFeatureSnapshot } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,7 @@ function runtimePublicStatus() {
   const runtime = getRuntimeAlignmentStatus();
 
   return {
+    environment: runtime.environment,
     canonicalOrigin: runtime.canonicalOrigin,
     databaseConfigured: runtime.databaseConfigured,
     authConfigured: runtime.authConfigured,
@@ -66,6 +68,7 @@ function runtimePublicStatus() {
     blockingProjectMismatch: runtime.blockingProjectMismatch,
     blockingBranchMismatch: runtime.blockingBranchMismatch,
     blockingEndpointMismatch: runtime.blockingEndpointMismatch,
+    blockingNonProductionProductionReuse: runtime.blockingNonProductionProductionReuse,
     issues: runtime.issues,
     warnings: runtime.warnings,
   };
@@ -91,7 +94,7 @@ export async function GET() {
   try {
     const sql = getDb();
 
-    const [timeRows, schemaRows] = await Promise.all([
+    const [timeRows, schemaRows, remediationRows] = await Promise.all([
       sql`select now() as server_time`,
       sql`
         select table_name
@@ -121,6 +124,37 @@ export async function GET() {
             'vst_junior_simulations'
           )
       `,
+      sql`
+        select
+          exists (
+            select 1 from information_schema.columns
+            where table_schema='public' and table_name='activities' and column_name='content_version'
+          ) as activity_contract_v1,
+          exists (
+            select 1 from information_schema.columns
+            where table_schema='public' and table_name='activity_attempts' and column_name='submission_id'
+          ) as idempotent_attempts,
+          exists (
+            select 1 from information_schema.columns
+            where table_schema='public' and table_name='submissions' and column_name='current_revision'
+          ) as revision_workflow,
+          exists (
+            select 1 from information_schema.columns
+            where table_schema='public' and table_name='assessment_attempts' and column_name='evidence_level'
+          ) as evidence_rubrics,
+          exists (
+            select 1 from information_schema.columns
+            where table_schema='public' and table_name='activities' and column_name='qa_status'
+          ) as curriculum_qa,
+          to_regclass('public.assessment_sessions') is not null as timed_assessment_sessions,
+          to_regclass('public.learning_write_quota_windows') is not null as learning_write_quotas,
+          exists (
+            select 1 from information_schema.columns
+            where table_schema='public' and table_name='integration_sync_jobs' and column_name='attempt_count'
+          ) as integration_job_runtime,
+          to_regclass('public.integration_reconciliation_items') is not null as integration_reconciliation,
+          to_regclass('public.data_lifecycle_requests') is not null as data_lifecycle
+      `,
     ]);
 
     const availableTables = new Set(
@@ -135,12 +169,28 @@ export async function GET() {
 
     const coreSchemaReady = missingCore.length === 0;
     const extendedSchemaReady = missingExtended.length === 0;
+    const remediation = remediationRows[0] || {};
+    const remediationChecks = {
+      activityContract: remediation.activity_contract_v1 === true,
+      idempotentAttempts: remediation.idempotent_attempts === true,
+      revisionWorkflow: remediation.revision_workflow === true,
+      evidenceRubrics: remediation.evidence_rubrics === true,
+      curriculumQa: remediation.curriculum_qa === true,
+      timedAssessmentSessions: remediation.timed_assessment_sessions === true,
+      learningWriteQuotas: remediation.learning_write_quotas === true,
+      integrationJobRuntime: remediation.integration_job_runtime === true,
+      integrationReconciliation: remediation.integration_reconciliation === true,
+      dataLifecycle: remediation.data_lifecycle === true,
+    };
+    const remediationSchemaReady = Object.values(remediationChecks).every(Boolean);
     const ok =
       auth.configured &&
       coreSchemaReady &&
+      remediationSchemaReady &&
       !runtime.blockingProjectMismatch &&
       !runtime.blockingBranchMismatch &&
-      !runtime.blockingEndpointMismatch;
+      !runtime.blockingEndpointMismatch &&
+      !runtime.blockingNonProductionProductionReuse;
 
     return NextResponse.json(
       {
@@ -148,11 +198,24 @@ export async function GET() {
         app: "career-compass-junior-mastery",
         database: "connected",
         serverTime: timeRows[0]?.server_time ?? null,
+        build: {
+          commitSha: process.env.VERCEL_GIT_COMMIT_SHA || process.env.GITHUB_SHA || null,
+          vercelEnvironment: process.env.VERCEL_ENV || null,
+        },
         schema: {
           core: coreSchemaReady ? "ready" : "partial",
           extended: extendedSchemaReady ? "ready" : "partial",
           missingCore,
           missingExtended,
+          remediation: remediationSchemaReady ? "ready" : "partial",
+          remediationChecks,
+          latestExpectedMigration: "014_operational_closeout.sql",
+        },
+        rolloutFeatures: riskyFeatureSnapshot(),
+        operationalAcceptance: {
+          syntheticAuthenticatedJourney: process.env.CCJ_SYNTHETIC_JOURNEY_VERIFIED === "true" ? "verified" : "not-verified",
+          restoreRehearsal: process.env.CCJ_RESTORE_REHEARSAL_VERIFIED === "true" ? "verified" : "not-verified",
+          physicalDeviceMatrix: process.env.CCJ_DEVICE_MATRIX_VERIFIED === "true" ? "verified" : "not-verified",
         },
         auth,
         runtime,

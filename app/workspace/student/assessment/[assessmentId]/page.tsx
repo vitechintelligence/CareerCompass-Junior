@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-import { submitAssessment } from "./actions";
+import { startTimedAssessment, submitAssessment } from "./actions";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +19,9 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
   const sql = getDb();
   const rows = await sql`
     select a.id, a.class_id, a.assessment_type, a.title_en, a.title_vi, a.instructions_en, a.instructions_vi,
-           a.status, a.due_at, a.time_limit_minutes, a.max_attempts, c.name as class_name
+           a.status, a.due_at, a.time_limit_minutes, a.max_attempts,
+           (a.due_at is null or a.due_at > now()) as due_open,
+           c.name as class_name
     from assessments a
     join classes c on c.id=a.class_id
     join class_memberships cm on cm.class_id=a.class_id
@@ -42,8 +45,23 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
     where assessment_id=${assessmentId} and student_id=${profile.id}
     order by attempt_number desc
   `;
+  const timedAssessmentsEnabled = isRiskyFeatureEnabled("timedAssessments");
+  const activeSessions = !timedAssessmentsEnabled || assessment.time_limit_minutes == null ? [] : await sql`
+    select id, submission_id, started_at, expires_at
+    from assessment_sessions
+    where assessment_id=${assessmentId}
+      and student_id=${profile.id}
+      and status='started'
+      and expires_at > now()
+    order by started_at desc
+    limit 1
+  `;
+  const activeSession = activeSessions[0];
   const vi = profile.preferred_locale === "vi";
-  const canAttempt = String(assessment.status) === "published" && attempts.length < Number(assessment.max_attempts || 1);
+  const dueOpen = assessment.due_open === true;
+  const attemptsRemaining = attempts.length < Number(assessment.max_attempts || 1);
+  const canAttempt = String(assessment.status) === "published" && dueOpen && attemptsRemaining;
+  const timed = timedAssessmentsEnabled && assessment.time_limit_minutes != null;
 
   return (
     <main className="workspacePage">
@@ -61,7 +79,7 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
             <p className="muted">{vi ? String(assessment.instructions_vi || "") : String(assessment.instructions_en || "")}</p>
           </div>
           <div className="actions">
-            {assessment.time_limit_minutes && <span className="pill">{String(assessment.time_limit_minutes)} min</span>}
+            {timed && <span className="pill">{String(assessment.time_limit_minutes)} min</span>}
             {assessment.due_at && <span className="pill">{vi ? "Hạn" : "Due"} {new Date(String(assessment.due_at)).toLocaleString("en-GB")}</span>}
           </div>
         </section>
@@ -84,10 +102,25 @@ export default async function StudentAssessmentPage({ params }: { params: Promis
           <div className="eyebrow">{vi ? "Câu hỏi" : "Questions"}</div>
           {!canAttempt ? (
             <div className="emptyState"><span>✓</span><p className="muted">{vi ? "Bài kiểm tra hiện không nhận thêm lượt làm." : "This assessment is not accepting another attempt."}</p></div>
+          ) : timed && !activeSession ? (
+            <form action={startTimedAssessment} className="workspaceForm">
+              <input type="hidden" name="assessmentId" value={assessmentId} />
+              <input type="hidden" name="submissionId" value={randomUUID()} />
+              <p className="muted">
+                {vi
+                  ? `Khi bấm Bắt đầu, đồng hồ ${String(assessment.time_limit_minutes)} phút sẽ được ghi nhận trên máy chủ.`
+                  : `When you press Start, the ${String(assessment.time_limit_minutes)}-minute server timer begins.`}
+              </p>
+              <button className="button primary" type="submit">{vi ? "Bắt đầu bài thi" : "Start timed assessment"}</button>
+            </form>
           ) : (
             <form action={submitAssessment} className="workspaceForm">
               <input type="hidden" name="assessmentId" value={assessmentId} />
-              <input type="hidden" name="submissionId" value={randomUUID()} />
+              <input type="hidden" name="submissionId" value={timed ? String(activeSession?.submission_id || "") : randomUUID()} />
+              {timed && <input type="hidden" name="sessionId" value={String(activeSession?.id || "")} />}
+              {timed && activeSession?.expires_at && <p className="muted">
+                {vi ? "Hết giờ lúc" : "Server deadline"}: {new Date(String(activeSession.expires_at)).toLocaleTimeString(vi ? "vi-VN" : "en-GB")}
+              </p>}
               {questions.map((question, index) => {
                 const options = Array.isArray(question.options) ? question.options.map(String) : [];
                 return (

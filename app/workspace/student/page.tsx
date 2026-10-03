@@ -214,7 +214,7 @@ export default async function StudentWorkspacePage() {
         </section>}
 
         <section className="metricGrid">
-          <Metric label="Book progress" value={`${averageProgress}%`} detail={`${enrollments.length} active book${enrollments.length === 1 ? "" : "s"}`} />
+          <Metric label="Book progress" value={`${averageProgress}%`} detail={`Published-unit average · unstarted units = 0 · ${enrollments.length} active book${enrollments.length === 1 ? "" : "s"}`} />
           <Metric label="Assignments" value={String(pendingAssignments)} detail="Pending / in progress" />
           <Metric label="Assessments" value={String(pendingAssessments)} detail="Quiz / exam waiting" />
           <Metric label="Learning evidence" value={String(capsules.length)} detail="Recent capsules" />
@@ -317,7 +317,7 @@ export default async function StudentWorkspacePage() {
 }
 
 function StudentHeader() {
-  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>Student Workspace</strong><div className="muted" style={{ fontSize: 12 }}>My Compass · live learning</div></div><div className="actions"><Link className="pill" href="/books">Books</Link><Link className="pill" href="/steam-lab">STEAM Lab</Link><Link className="pill" href="/workspace/student/community">Community</Link><Link className="pill" href="/workspace/student/industry">Companies & Careers</Link></div></header>;
+  return <header className="topbar"><Link className="brand" href="/"><VitechMark /><span>Career Compass Junior</span></Link><div><strong>Student Workspace</strong><div className="muted" style={{ fontSize: 12 }}>My Compass · live learning</div></div><div className="actions"><Link className="pill" href="/books">Books</Link><Link className="pill" href="/steam-lab">STEAM Lab</Link><Link className="pill" href="/workspace/student/community">Community</Link><Link className="pill" href="/workspace/student/industry">Companies & Careers</Link><Link className="pill" href="/workspace/student/data">My Data</Link></div></header>;
 }
 
 function StudentGate({ signedIn }: { signedIn: boolean }) {

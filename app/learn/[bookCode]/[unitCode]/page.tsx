@@ -5,6 +5,7 @@ import { getPublishedUnit, listPublishedUnits } from "@/lib/curriculum";
 import { getBookCatalogItem, getCatalogUnit } from "@/lib/book-catalog";
 import { getFullInteractiveBook } from "@/lib/full-interactive-books";
 import GenericActivity from "./GenericActivity";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ export default async function DatabaseUnitPage({
         title_vi: item.titleVi,
       }));
   const sourceLabel = databaseUnit ? "Database-driven" : "Interactive catalog";
+  const offlineOutboxEnabled = isRiskyFeatureEnabled("offlineOutbox");
 
   return (
     <main className="lessonApp">
@@ -75,7 +77,7 @@ export default async function DatabaseUnitPage({
             <article className="lessonCard missionCard"><div className="lessonSectionLabel">Career Compass × Mastery English</div><p><strong>{unit.careerCompassFocus}</strong></p><p className="muted">{unit.masteryEnglishFocus}</p></article>
           </div>
 
-          {unit.activities.length === 0 ? <article className="lessonCard"><p className="muted">{locale === "vi" ? "Nội dung tương tác của bài này đang được chuẩn bị." : "Interactive content for this unit is being prepared."}</p></article> : unit.activities.map((activity) => <GenericActivity activity={activity} locale={locale} bookCode={unit.bookCode} unitCode={unit.unitCode} enrollmentId={learningEnrollmentId} key={activity.id} />)}
+          {unit.activities.length === 0 ? <article className="lessonCard"><p className="muted">{locale === "vi" ? "Nội dung tương tác của bài này đang được chuẩn bị." : "Interactive content for this unit is being prepared."}</p></article> : unit.activities.map((activity) => <GenericActivity activity={activity} locale={locale} bookCode={unit.bookCode} unitCode={unit.unitCode} enrollmentId={learningEnrollmentId} ageBand={unit.ageBand} offlineOutboxEnabled={offlineOutboxEnabled} key={activity.id} />)}
         </section>
       </div>
     </main>

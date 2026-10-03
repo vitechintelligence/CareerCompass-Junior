@@ -11,6 +11,7 @@ export default function OfflinePage() {
         <p className="muted">Your private LMS work is never served from a shared offline cache. Reconnect to continue live portal, class and learning-data actions safely.</p>
         <div className="actions">
           <Link className="button primary" href="/workspace">Retry my workspace</Link>
+          <Link className="button" href="/offline-practice">Open offline practice pack</Link>
           <Link className="button" href="/international">Open public home</Link>
           <Link className="button" href="/portal/student">Student portal preview</Link>
         </div>

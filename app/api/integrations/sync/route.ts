@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import { getManagedOrganization } from "@/lib/integration-runtime";
+import { executeIntegrationJob } from "@/lib/integration-job-executor";
+import { readBoundedJson } from "@/lib/learning/request-json";
+import { randomUUID } from "node:crypto";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +15,11 @@ const DIRECTIONS = new Set(["inbound", "outbound"]);
 export async function POST(request: Request) {
   let payload: { organizationId?: string; installationId?: string; jobType?: string; direction?: string };
   try {
-    payload = await request.json();
+    const value = await readBoundedJson(request, 16 * 1024);
+    if (!value || typeof value !== "object" || Array.isArray(value)) {
+      return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
+    }
+    payload = value as typeof payload;
   } catch {
     return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 });
   }
@@ -53,11 +61,32 @@ export async function POST(request: Request) {
     returning id, status, scheduled_at
   `;
 
+  const jobId = String(rows[0].id);
+  if (jobType === "health_check" && isRiskyFeatureEnabled("integrationJobExecution")) {
+    const executed = await executeIntegrationJob({
+      jobId,
+      organizationId: access.organization.id,
+      workerKey: `request:${access.profile.id}:${randomUUID()}`,
+    });
+    return NextResponse.json({
+      ok: executed.status === "completed",
+      jobId,
+      status: executed.status,
+      scheduledAt: rows[0].scheduled_at,
+      message: executed.message,
+    }, {
+      status: executed.status === "completed" ? 200 : 202,
+      headers: { "Cache-Control": "no-store" },
+    });
+  }
+
   return NextResponse.json({
     ok: true,
-    jobId: String(rows[0].id),
+    jobId,
     status: String(rows[0].status),
     scheduledAt: rows[0].scheduled_at,
-    message: "Sync job queued for the provider worker/runtime.",
-  }, { status: 202 });
+    message: isRiskyFeatureEnabled("integrationJobExecution")
+      ? "Job queued. Provider execution is not considered live until authorization and transport are verified."
+      : "Job queued but execution is disabled by rollout flag.",
+  }, { status: 202, headers: { "Cache-Control": "no-store" } });
 }

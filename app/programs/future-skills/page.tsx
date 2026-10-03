@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { VitechMark } from "@/app/VitechMark";
 import {
+  FUTURE_SKILLS_AGE_BANDS,
   FUTURE_SKILLS_DELIVERY_MODEL,
   FUTURE_SKILLS_PATHWAYS,
   FUTURE_SKILLS_TRACKS,
@@ -9,7 +10,7 @@ import {
 
 export const dynamic = "force-dynamic";
 
-const AGE_BANDS: FutureSkillsAgeBand[] = ["7-9", "10-13", "14-16", "17-18"];
+const AGE_BANDS: readonly FutureSkillsAgeBand[] = FUTURE_SKILLS_AGE_BANDS;
 
 export default async function FutureSkillsPage({
   searchParams,
@@ -39,16 +40,16 @@ export default async function FutureSkillsPage({
             <div className="eyebrow">ViTech K12 Future Skills</div>
             <h1 className="workspaceHeroTitle">{vi ? "Học kỹ năng tương lai theo độ tuổi, theo dự án và có tiến trình rõ ràng." : "Future skills taught progressively, by age and through real projects."}</h1>
             <p className="muted">{vi
-              ? "Mỗi lộ trình gồm 12 buổi, kết hợp tiếng Anh thực hành với STEM, STEAM, nền tảng AI, AI cấp độ 2 và Robotics. Nội dung được bản địa hóa để giáo viên có thể triển khai trong môi trường Việt Nam mà không làm giảm tính quốc tế."
-              : "Each pathway uses 12 sessions combining practical English with STEM, STEAM, AI Foundations, AI Level 2 and Robotics. The curriculum is localized for Vietnamese delivery while keeping international technical language and project habits."
+              ? "Trang này là bản thiết kế chương trình 12 buổi cho từng lộ trình. Nội dung mô tả mục tiêu, dự án và tiến trình; không phải mọi lộ trình bên dưới đã có hoạt động số có thể chạy trong LMS. Các nhiệm vụ đã có runtime được mở riêng trong STEAM Lab."
+              : "This page is the 12-session curriculum blueprint for each pathway. It describes objectives, builds and progression; not every pathway below has a runnable digital LMS module yet. Missions with an implemented runtime are opened separately in STEAM Lab."
             }</p>
           </div>
-          <Link className="button primary" href="/workspace/partner">{vi ? "Dành cho đối tác" : "Partner access"}</Link>
+          <div className="actions"><Link className="button primary" href="/steam-lab">{vi ? "Mở nhiệm vụ STEAM đã chạy được" : "Open runnable STEAM missions"}</Link><Link className="button" href="/workspace/partner">{vi ? "Dành cho đối tác" : "Partner access"}</Link></div>
         </section>
 
         <section className="metricGrid">
           <Metric label={vi ? "Nhóm tuổi" : "Age bands"} value="4" detail="7–9 · 10–12 · 13–15 · 16–18" />
-          <Metric label={vi ? "Lộ trình" : "Pathways"} value="20" detail={vi ? "5 lĩnh vực × 4 nhóm tuổi" : "5 tracks × 4 age bands"} />
+          <Metric label={vi ? "Bản thiết kế lộ trình" : "Pathway blueprints"} value="20" detail={vi ? "Mô tả chương trình; runtime triển khai riêng" : "Curriculum designs; runtime tracked separately"} />
           <Metric label={vi ? "Buổi / lộ trình" : "Sessions / pathway"} value="12" detail={vi ? "2 buổi cho mỗi đơn vị học tập" : "2 sessions per learning unit"} />
           <Metric label={vi ? "Ngôn ngữ" : "Language"} value="EN + VI" detail={vi ? "Tiếng Anh dẫn dắt, tiếng Việt hỗ trợ" : "English-led with Vietnamese scaffolding"} />
         </section>
@@ -80,7 +81,7 @@ export default async function FutureSkillsPage({
                 <strong>{vi ? pathway.stageVi : pathway.stageEn}</strong>
                 <p className="muted">{vi ? pathway.pedagogyVi : pathway.pedagogyEn}</p>
               </div>
-              <span className="pill">{pathway.sessions} {vi ? "buổi" : "sessions"} · {FUTURE_SKILLS_DELIVERY_MODEL.sessionMinutes[pathway.ageBand]} min</span>
+              <span className="pill">{vi ? "Curriculum blueprint" : "Curriculum blueprint"} · {pathway.sessions} {vi ? "buổi" : "sessions"} · {FUTURE_SKILLS_DELIVERY_MODEL.sessionMinutes[pathway.ageBand]} min</span>
             </div>
 
             <div className="workspaceList">

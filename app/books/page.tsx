@@ -16,7 +16,7 @@ export default function BooksPage() {
           <div>
             <div className="eyebrow">ViTech Educational Book Collection</div>
             <h1 className="workspaceHeroTitle">Four books. One connected learning journey.</h1>
-            <p className="muted">MY COMPASS and Career Compass Junior Mastery now open as complete interactive editions. The remaining titles continue full source-to-app conversion.</p>
+            <p className="muted">Some titles include a full-source interactive book, while structured LMS units, versioned activities and evidence mapping are still being expanded. Coverage is labeled per title below.</p>
           </div>
         </section>
         <section className="cardGrid">
@@ -31,9 +31,10 @@ export default function BooksPage() {
                 <p className="muted">{book.description}</p>
                 <div className="tagRow">
                   <span className="tag">{book.bilingual ? "EN · VI" : "EN"}</span>
-                  <span className="tag">{full ? "Complete interactive edition" : "Interactive preview"}</span>
-                  <span className="tag">Evidence-ready</span>
+                  <span className="tag">{full ? "Full-source interactive book available" : "Structured interactive preview"}</span>
+                  <span className="tag">{book.conversionStatus === "lms_mapped" ? "LMS mapped" : "LMS mapping in progress"}</span>
                 </div>
+                <p className="muted" style={{ fontSize: 12 }}><strong>Current LMS coverage:</strong> {book.coverageLabel}</p>
                 <div className="actions">
                   <Link className="button primary" href={`/learn/${book.code}`}>Open book</Link>
                   <Link className="button soft" href={full ? `/learn/${book.code}?start=U01` : `/learn/${book.code}/${book.units[0].code}?lang=en`}>Start Unit 1</Link>

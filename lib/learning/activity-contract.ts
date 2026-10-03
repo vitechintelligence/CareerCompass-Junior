@@ -69,16 +69,45 @@ function record(value: unknown): Record<string, unknown> {
     : {};
 }
 
+function normalizedMatchingPairs(value: unknown) {
+  if (!Array.isArray(value) || value.length < 2 || value.length > 30) return null;
+  const pairs = value.map((item) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) return null;
+    const pair = item as Record<string, unknown>;
+    const left = typeof pair.left === "string" ? pair.left.trim() : "";
+    const right = typeof pair.right === "string" ? pair.right.trim() : "";
+    if (!left || !right || left.length > 300 || right.length > 300) return null;
+    return { left, right };
+  });
+  if (pairs.some((item) => item === null)) return null;
+  const safe = pairs as Array<{ left: string; right: string }>;
+  if (new Set(safe.map((item) => item.left)).size !== safe.length) return null;
+  if (new Set(safe.map((item) => item.right)).size !== safe.length) return null;
+  return safe;
+}
+
 function learnerContent(value: Record<string, unknown>) {
   const {
     answer: _answer,
     answerSequence: _answerSequence,
     correctAnswerId: _correctAnswerId,
+    pairs: _pairs,
     ...visible
   } = value;
   void _answer;
   void _answerSequence;
   void _correctAnswerId;
+
+  const pairs = normalizedMatchingPairs(_pairs);
+  if (pairs) {
+    return {
+      ...visible,
+      matching: {
+        left: pairs.map((item) => item.left),
+        right: pairs.map((item) => item.right).reverse(),
+      },
+    };
+  }
   return visible;
 }
 
@@ -102,6 +131,10 @@ function answerDefinition(content: Record<string, unknown>) {
   }
   if (typeof content.correctAnswerId === "string") {
     return { type: "single_choice_id", correctAnswerId: content.correctAnswerId };
+  }
+  const pairs = normalizedMatchingPairs(content.pairs);
+  if (pairs) {
+    return { type: "matching", pairs };
   }
   return null;
 }

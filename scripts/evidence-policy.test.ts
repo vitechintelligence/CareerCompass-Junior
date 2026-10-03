@@ -56,3 +56,39 @@ test("an open answer records practice; a self-check records self-report, neither
   assert.throws(() => evaluateActivityEvidence(speaking, { text: "  " }), EvidencePolicyError);
   assert.throws(() => evaluateActivityEvidence(speaking, { text: "x".repeat(4001) }), EvidencePolicyError);
 });
+
+
+test("matching is scored from the server-owned pair map", () => {
+  const matching = {
+    activityType: "matching",
+    content: {
+      pairs: [
+        { left: "doctor", right: "hospital" },
+        { left: "teacher", right: "school" },
+      ],
+    },
+    maxScore: 2,
+  };
+  const wrong = evaluateActivityEvidence(matching, {
+    matches: [
+      { left: "doctor", right: "school" },
+      { left: "teacher", right: "hospital" },
+    ],
+  });
+  assert.equal(wrong.level, "PRACTICED");
+  assert.equal(wrong.score, 0);
+
+  const correct = evaluateActivityEvidence(matching, {
+    matches: [
+      { left: "teacher", right: "school" },
+      { left: "doctor", right: "hospital" },
+    ],
+  });
+  assert.equal(correct.level, "DEMONSTRATED");
+  assert.equal(correct.score, 2);
+
+  assert.throws(
+    () => evaluateActivityEvidence(matching, { matches: [{ left: "doctor", right: "hospital" }] }),
+    EvidencePolicyError,
+  );
+});

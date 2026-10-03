@@ -22,7 +22,7 @@ jobs:
           node-version: '20.19.0'
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
 
       - name: Typecheck
         run: npm run typecheck
@@ -63,8 +63,8 @@ jobs:
       - name: Device audio and PWA safety regression
         run: npm run test:device
 
-      - name: Evidence and reporting regression
-        run: npm run test:evidence-reporting
+      - name: Operational closeout regression
+        run: npm run test:operations
 
       - name: Platform AI spend-safety regression
         run: npm run test:platform-ai

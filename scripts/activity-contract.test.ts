@@ -92,3 +92,30 @@ test("class learning context uses explicit fields and never parses the class nam
     englishLevel: "A2",
   });
 });
+
+
+test("matching contract hides pair associations from learner payload", () => {
+  const contract = buildActivityContract(base({
+    activityCode: "A-MATCH",
+    activityType: "matching",
+    content: {
+      pairs: [
+        { left: "doctor", right: "hospital" },
+        { left: "teacher", right: "school" },
+      ],
+    },
+  }) as never);
+  assert.equal(contract.inputType, "matching");
+  assert.deepEqual(contract.answerDefinition, {
+    type: "matching",
+    pairs: [
+      { left: "doctor", right: "hospital" },
+      { left: "teacher", right: "school" },
+    ],
+  });
+  assert.equal("pairs" in contract.content, false);
+  assert.deepEqual(contract.content.matching, {
+    left: ["doctor", "teacher"],
+    right: ["school", "hospital"],
+  });
+});
