@@ -116,6 +116,14 @@ Interactive activities should remain educationally coherent with the exact book 
 - Vercel-compatible runtime
 - Repository CI for type checking and production builds
 
+## Permanent production route
+
+The **permanent canonical public route** for Career Compass Junior is:
+
+**https://careercompassjunior.vinaskilltrust.com/**
+
+This domain is the application identity exposed to learners, parents, teachers, partner schools, integrations, QR codes, authentication callbacks, and external documentation. Vercel hostnames are deployment infrastructure only and are not the canonical public origin. Legacy application hostnames should redirect to the permanent route above.
+
 ## Delivery rule
 
 Changes should normally land through a feature branch and pull request. The `main` branch should stay deployable.
