@@ -4,6 +4,8 @@ export const RISKY_FEATURE_ENV = {
   offlineOutbox: "CCJ_FEATURE_OFFLINE_OUTBOX",
   integrationJobExecution: "CCJ_FEATURE_INTEGRATION_JOB_EXECUTION",
   guardianReporting: "CCJ_FEATURE_GUARDIAN_REPORTING",
+  learnerDataExport: "CCJ_FEATURE_LEARNER_DATA_EXPORT",
+  deletionReview: "CCJ_FEATURE_DELETION_REVIEW",
 } as const;
 
 export const PHASE_A_EXTENSION_ENV = {
@@ -37,5 +39,7 @@ export function riskyFeatureSnapshot() {
     guardianReporting: isRiskyFeatureEnabled("guardianReporting"),
     professorViAiStudy: isRiskyFeatureEnabled("professorViAiStudy"),
     reportCardBuilder: isRiskyFeatureEnabled("reportCardBuilder"),
+    learnerDataExport: isRiskyFeatureEnabled("learnerDataExport"),
+    deletionReview: isRiskyFeatureEnabled("deletionReview"),
   };
 }

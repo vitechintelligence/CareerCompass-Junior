@@ -2,6 +2,7 @@ import "server-only";
 
 import { reportCardPreset, type ReportCardTemplateSchema } from "@/lib/report-cards/templates";
 import { buildReportCardDraft, sanitizeAiReportCardTemplate, type ReportCardBuilderAnswers } from "@/lib/report-cards/builder";
+import { intelligenceRuntimeAvailability } from "@/lib/exchange/runtime-policy";
 
 function outputText(payload: unknown) {
   if (!payload || typeof payload !== "object") return "";
@@ -33,7 +34,8 @@ export async function runReportCardBuilder(input: {
   const enabled = process.env.CCJ_REPORT_CARD_AI_BUILDER_LIVE_ENABLED === "true";
   const forceMock = process.env.CCJ_PLATFORM_AI_FORCE_MOCK === "true";
   const apiKey = process.env.OPENAI_API_KEY?.trim();
-  if (!enabled || forceMock || !apiKey) {
+  if (!enabled || forceMock || !apiKey || !intelligenceRuntimeAvailability().available) {
+    if(input.uploadedTemplate)throw Error('report_card_import_requires_connected_runtime');
     return { schema: fallback, generationMode: "deterministic", model: null };
   }
 
@@ -42,12 +44,12 @@ export async function runReportCardBuilder(input: {
   const content: Array<Record<string, unknown>> = [];
 
   if (input.uploadedTemplate && input.uploadedTemplate.size > 0) {
-    if (input.uploadedTemplate.size > 10 * 1024 * 1024) throw new Error("report_card_import_too_large");
+    if (input.uploadedTemplate.size > 3 * 1024 * 1024) throw new Error("report_card_import_too_large");
     const bytes = Buffer.from(await input.uploadedTemplate.arrayBuffer()).toString("base64");
     const mime = input.uploadedTemplate.type || "application/pdf";
     content.push({
       type: "input_file",
-      filename: input.uploadedTemplate.name || "school-report-card",
+      filename: "blank-school-report-card.pdf",
       file_data: "data:" + mime + ";base64," + bytes,
       detail: mime === "application/pdf" ? "high" : undefined,
     });
@@ -94,10 +96,13 @@ export async function runReportCardBuilder(input: {
     },
     body: JSON.stringify({
       model,
+      store: false,
+      background: false,
       max_output_tokens: 3500,
       input: [{ role: "user", content }],
     }),
     cache: "no-store",
+    signal: AbortSignal.timeout(60000),
   });
   if (!response.ok) throw new Error("report_card_ai_builder_failed_" + response.status);
 

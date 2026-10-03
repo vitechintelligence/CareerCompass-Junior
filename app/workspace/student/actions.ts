@@ -3,10 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { requireActiveProfile, isUuidReference } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { learnerOnboardingApproved } from "@/lib/privacy/policy";
+import { requireSchoolAgreement } from "@/lib/privacy/access";
 
 async function changeInvitation(organizationId: string, nextStatus: "active" | "inactive") {
   if (!isUuidReference(organizationId)) throw new Error("Invalid institution invitation.");
   const profile = await requireActiveProfile(["student"]);
+  if (nextStatus === "active") {
+    if (!learnerOnboardingApproved()) throw new Error("Learner onboarding is awaiting privacy approval.");
+    await requireSchoolAgreement(organizationId);
+  }
   const sql = getDb();
   const rows = await sql`
     update organization_memberships om

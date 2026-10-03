@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
-import { requireActiveProfile } from "@/lib/auth/authorization";
+import { AuthorizationError, requireActiveProfile } from "@/lib/auth/authorization";
 import { getDb } from "@/lib/db";
+import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const profile = await requireActiveProfile(["student"]);
+  let profile;
+  try {
+    profile = await requireActiveProfile(["student"]);
+  } catch (error) {
+    if (!(error instanceof AuthorizationError)) throw error;
+    return NextResponse.json({ error: error.code }, {
+      status: error.status,
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  }
+  if (!isRiskyFeatureEnabled("learnerDataExport")) {
+    return NextResponse.json({ error: "learner_data_export_disabled" }, {
+      status: 503,
+      headers: { "Cache-Control": "no-store, max-age=0" },
+    });
+  }
   const sql = getDb();
 
   const [
@@ -107,6 +123,18 @@ export async function GET() {
     `,
   ]);
 
+  const schema=await sql`select to_regclass('public.optional_processing_consents') is not null as privacy_ready,
+    to_regclass('public.privacy_rights_requests') is not null as rights_ready,
+    to_regclass('public.ai_tutor_sessions') is not null as ai_ready`;
+  const optionalConsentRecords=schema[0]?.privacy_ready?await sql`select organization_id,purpose,policy_version,
+    learner_signed_at,representative_signed_at,withdrawn_at from optional_processing_consents where learner_id=${profile.id}`:[];
+  const privacyRequests=schema[0]?.rights_ready?await sql`select organization_id,request_type,status,created_at,updated_at
+    from privacy_rights_requests where learner_id=${profile.id}`:[];
+  const aiLearningRecords=schema[0]?.ai_ready?await sql`select session.organization_id,session.lesson_mode,session.status,
+    message.role,message.content,message.pedagogical_state,message.created_at
+    from ai_tutor_sessions session join ai_tutor_messages message on message.session_id=session.id
+    where session.learner_id=${profile.id} order by message.created_at`:[];
+
   const payload = {
     exportedAt: new Date().toISOString(),
     product: "Career Compass Junior",
@@ -129,6 +157,10 @@ export async function GET() {
     assessmentAttempts: assessments,
     learningEvidence: capsules,
     consentRecords: consents,
+    optionalConsentRecords,
+    privacyRequests,
+    aiLearningRecords,
+    scopeNote: "This is a CCJ educational-record export. Auth records, processor logs, backups, original provider files and institutional confidential records require a separate verified access review. AI and governance records are included only when their schema is available.",
   };
 
   return new NextResponse(JSON.stringify(payload, null, 2), {

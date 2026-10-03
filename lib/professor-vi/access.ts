@@ -9,12 +9,18 @@ import {
 import { getDb } from "@/lib/db";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
 import { getOrganizationRuntimePolicy, serverAiPermission } from "@/lib/organization-data-policy";
+import { requireOptionalProcessing, requireSchoolAgreement, requireAdultSyntheticPilot } from "@/lib/privacy/access";
+import { requireSyntheticProviderRuntime } from "@/lib/exchange/runtime-policy";
 
 export async function requireProfessorViStudentAccess(organizationId: string) {
   if (!isUuidReference(organizationId)) throw new Error("invalid_organization_reference");
   if (!isRiskyFeatureEnabled("professorViAiStudy")) throw new Error("professor_vi_rollout_disabled");
 
   const profile = await requireActiveProfile(["student"]);
+  requireSyntheticProviderRuntime();
+  await requireSchoolAgreement(organizationId,true);
+  await requireOptionalProcessing(organizationId,profile.id,"ai_assistive_features");
+  await requireAdultSyntheticPilot(profile.id,organizationId,"professorViAiStudy");
   const sql = getDb();
   const rows = await sql`
     select o.id
@@ -30,14 +36,7 @@ export async function requireProfessorViStudentAccess(organizationId: string) {
       and f.feature_key='professor_vi_ai_study_lab'
       and f.enabled=true
       and coalesce(p.enabled, false)=true
-      and exists (
-        select 1 from learner_consent_records lcr
-        where lcr.learner_id=${profile.id}
-          and lcr.organization_id=o.id
-          and lcr.consent_type='ai_assistive_features'
-          and lcr.status='active'
-          and lcr.revoked_at is null
-      )
+
     limit 1
   `;
   if (!rows[0]) throw new Error("professor_vi_not_authorized");

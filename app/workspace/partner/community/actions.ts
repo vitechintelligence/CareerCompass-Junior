@@ -7,6 +7,7 @@ import { getDb } from "@/lib/db";
 import { isLearnerAgeBand } from "@/lib/learner-age-bands";
 import { getChallengeTemplate, rubricForMode } from "@/lib/community-challenges";
 import { requireCommunityManager } from "@/lib/community-access";
+import { requireCommunityTeamSharing } from "@/lib/privacy/community";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -246,6 +247,7 @@ export async function approveCommunityShowcase(formData: FormData) {
   `;
   if (!rows[0]) throw new Error("Team not found.");
   await requireCommunityManager(String(rows[0].organization_id), "moderate");
+  await requireCommunityTeamSharing(String(rows[0].organization_id),teamId);
 
   const scope = text(formData.get("scope"), 30);
   if (!["organization","network_pending"].includes(scope)) throw new Error("Invalid showcase scope.");
@@ -285,13 +287,14 @@ export async function publishCommunityResult(formData: FormData) {
 
   const sql = getDb();
   const valid = await sql`
-    select 1
+    select ct.organization_id
     from community_teams ct
     join community_challenges cc on cc.id=ct.challenge_id
     where ct.id=${teamId} and cc.season_id=${seasonId}
     limit 1
   `;
   if (!valid[0]) throw new Error("Team does not belong to this season.");
+  await requireCommunityTeamSharing(String(valid[0].organization_id),teamId);
   const actor = await getCurrentProfile();
 
   await sql`

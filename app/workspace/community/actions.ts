@@ -5,6 +5,7 @@ import { getDb } from "@/lib/db";
 import { isLearnerAgeBand } from "@/lib/learner-age-bands";
 import { COMMUNITY_PRIVACY_VERSION, COMMUNITY_TERMS_VERSION } from "@/lib/community-terms";
 import { requireCommunityManager, requireInstitutionAdult } from "@/lib/community-access";
+import { requireOptionalProcessing } from "@/lib/privacy/access";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -156,6 +157,7 @@ export async function setCommunityStudentAccess(formData: FormData) {
     limit 1
   `;
   if (!learner[0]) throw new Error("Active learner not found in this institution.");
+  await requireOptionalProcessing(organizationId,String(learner[0].id),'community_showcase');
 
   await sql`
     insert into community_student_access (

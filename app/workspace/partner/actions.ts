@@ -7,6 +7,8 @@ import { requirePartnerClassAccess, requirePartnerOrganizationAccess } from "@/l
 import { getDb } from "@/lib/db";
 import { explicitClassLearningContext } from "@/lib/learning/learner-context";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
+import { privacySchemaReady, requireOptionalProcessing, requireSchoolAgreement } from "@/lib/privacy/access";
+import { learnerOnboardingApproved, isOptionalPurpose, PRIVACY_POLICY_VERSION } from "@/lib/privacy/policy";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SEMANTIC_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{2,99}$/;
@@ -62,7 +64,7 @@ export async function revokeLearnerConsent(formData: FormData) {
     throw new Error("Organization, learner and consent type are required.");
   }
 
-  await requirePartnerOrganization(organizationId);
+  const actor = await requirePartnerOrganization(organizationId);
   const sql = getDb();
   const learner = await sql`
     select p.id
@@ -88,7 +90,14 @@ export async function revokeLearnerConsent(formData: FormData) {
       and status='active'
     returning id
   `;
-  if (!revoked[0]) throw new Error("No active consent record exists for this learner and purpose.");
+  if (isOptionalPurpose(consentType) && await privacySchemaReady()) {
+    await sql.transaction(txn => [
+      txn`update optional_processing_consents set withdrawn_at=now(),updated_at=now()
+        where organization_id=${organizationId} and learner_id=${learnerId} and purpose=${consentType}`,
+      txn`insert into privacy_consent_events(organization_id,learner_id,actor_id,purpose,policy_version,action)
+        values(${organizationId},${learnerId},${actor.id},${consentType},${PRIVACY_POLICY_VERSION},'withdraw')`,
+    ]);
+  } else if (!revoked[0]) throw new Error("No active consent record exists for this learner and purpose.");
 
   revalidatePath("/workspace/partner");
 }
@@ -203,6 +212,8 @@ export async function inviteStudentToOrganization(formData: FormData) {
   }
 
   await requirePartnerOrganization(organizationId);
+  if (!learnerOnboardingApproved()) throw new Error("Learner onboarding is awaiting privacy approval.");
+  await requireSchoolAgreement(organizationId);
   const sql = getDb();
   const learner = await sql`
     select id
@@ -236,6 +247,8 @@ export async function enrollStudent(formData: FormData) {
   if (!UUID_RE.test(classId) || !SEMANTIC_ID_RE.test(semanticId) || !bookCode) throw new Error("Class, learner ID and published book are required.");
 
   const organizationId = await requirePartnerClass(classId);
+  if (!learnerOnboardingApproved()) throw new Error("Learner onboarding is awaiting privacy approval.");
+  await requireSchoolAgreement(organizationId);
   const sql = getDb();
   const learner = await sql`
     select p.id,
@@ -298,59 +311,9 @@ export async function enrollStudent(formData: FormData) {
 }
 
 
-export async function recordLearnerConsent(formData: FormData) {
-  const organizationId = String(formData.get("organizationId") || "");
-  const semanticId = boundedText(formData.get("studentSemanticId"), 100);
-  const consentType = String(formData.get("consentType") || "");
-  const learnerConfirmation = formData.get("learnerConfirmation") === "on";
-  const guardianConfirmation = formData.get("guardianConfirmation") === "on";
-
-  if (!UUID_RE.test(organizationId) || !SEMANTIC_ID_RE.test(semanticId)) {
-    throw new Error("Organization and valid learner ID are required.");
-  }
-
-  const allowedTypes = ["digital_learning", "learning_evidence", "guardian_reporting", "ai_assistive_features"];
-  if (!allowedTypes.includes(consentType)) throw new Error("Invalid consent type.");
-
-  const actor = await requirePartnerOrganization(organizationId);
-  const sql = getDb();
-  const learner = await sql`
-    select p.id
-    from profiles p
-    join organization_memberships om
-      on om.profile_id=p.id
-     and om.organization_id=${organizationId}
-     and om.role='student'
-     and om.status='active'
-    where p.semantic_id = ${semanticId}
-      and p.account_type = 'student'
-      and p.status = 'active'
-    limit 1
-  `;
-  const learnerId = String(learner[0]?.id || "");
-  if (!learnerId) throw new Error("Active learner profile not found.");
-
-  await sql`
-    insert into learner_consent_records (
-      learner_id, organization_id, consent_type, status,
-      learner_confirmation, guardian_confirmation, policy_version, captured_by, captured_at
-    )
-    values (
-      ${learnerId}, ${organizationId}, ${consentType}, 'active',
-      ${learnerConfirmation}, ${guardianConfirmation}, '2026-01', ${actor.id}, now()
-    )
-    on conflict (learner_id, organization_id, consent_type, policy_version) do update set
-      status = 'active',
-      learner_confirmation = excluded.learner_confirmation,
-      guardian_confirmation = excluded.guardian_confirmation,
-      captured_by = excluded.captured_by,
-      captured_at = now(),
-      revoked_at = null
-  `;
-
-  revalidatePath("/workspace/partner");
+export async function recordLearnerConsent() {
+  throw new Error("Family members must record their own consent through the verified privacy workflow.");
 }
-
 
 export async function linkGuardianReporter(formData: FormData) {
   if (!isRiskyFeatureEnabled("guardianReporting")) {
@@ -380,16 +343,7 @@ export async function linkGuardianReporter(formData: FormData) {
     where p.semantic_id=${learnerSemanticId}
       and p.account_type='student'
       and p.status='active'
-      and exists (
-        select 1
-        from learner_consent_records lcr
-        where lcr.learner_id=p.id
-          and lcr.organization_id=${organizationId}
-          and lcr.consent_type='guardian_reporting'
-          and lcr.status='active'
-          and lcr.guardian_confirmation=true
-          and lcr.revoked_at is null
-      )
+
     limit 1
   `;
   const learnerId = String(learners[0]?.id || "");
@@ -406,6 +360,8 @@ export async function linkGuardianReporter(formData: FormData) {
   if (!guardianProfileId || guardianProfileId === learnerId) {
     throw new Error("Use a different active signed-in account for guardian report access.");
   }
+
+  await requireOptionalProcessing(organizationId, learnerId, "guardian_reporting", guardianProfileId);
 
   await sql`
     insert into guardian_report_links (

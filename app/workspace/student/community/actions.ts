@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { getCurrentProfile } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { COMMUNITY_KUDOS } from "@/lib/community-challenges";
+import { requireOptionalProcessing } from "@/lib/privacy/access";
+import { requireCommunityTeamSharing } from "@/lib/privacy/community";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -65,6 +67,7 @@ async function requireStudentInOrganization(studentId: string, organizationId: s
     limit 1
   `;
   if (!rows[0]) throw new Error("Your school or teacher has not enabled community access for this account.");
+  await requireOptionalProcessing(organizationId,studentId,'community_showcase');
   return String(rows[0].age_band);
 }
 
@@ -205,7 +208,7 @@ export async function submitCommunityProject(formData: FormData) {
 
   const sql = getDb();
   const rows = await sql`
-    select ct.id, ct.challenge_id, cs.status as season_status, cs.submission_due_on
+    select ct.id, ct.organization_id, ct.challenge_id, cs.status as season_status, cs.submission_due_on
     from community_team_members ctm
     join community_teams ct on ct.id=ctm.team_id
     join community_challenges cc on cc.id=ct.challenge_id
@@ -217,6 +220,8 @@ export async function submitCommunityProject(formData: FormData) {
     limit 1
   `;
   if (!rows[0]) throw new Error("You are not an active member of this team.");
+  await requireStudentInOrganization(profile.id,String(rows[0].organization_id));
+  await requireCommunityTeamSharing(String(rows[0].organization_id),teamId);
   if (!["open","review"].includes(String(rows[0].season_status))) throw new Error("This season is not accepting submissions.");
 
   const versionRows = await sql`select coalesce(max(version_number),0)::int + 1 as next from community_submissions where team_id=${teamId}`;
@@ -271,6 +276,7 @@ export async function giveCommunityKudos(formData: FormData) {
     throw new Error("Peer kudos are not enabled for this showcase.");
   }
   await requireStudentInOrganization(profile.id, String(item.organization_id));
+  await requireCommunityTeamSharing(String(item.organization_id),teamId);
 
   const own = await sql`
     select 1 from community_team_members

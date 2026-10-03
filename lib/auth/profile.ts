@@ -1,5 +1,6 @@
 import { getDb } from "@/lib/db";
 import { getAuth } from "@/lib/auth/server";
+import { newProfileProvisioningAllowed, verifiedPlatformAdminEmailRequired } from "@/lib/auth/admin-identity-policy";
 
 export type LmsProfile = {
   id: string;
@@ -55,6 +56,8 @@ export async function ensureStudentProfile(locale: "en" | "vi" = "vi") {
     return (rows[0] ?? null) as LmsProfile | null;
   }
 
+  if (!newProfileProvisioningAllowed(user)) return null;
+
   const rows = await sql`
     insert into profiles (
       semantic_id,
@@ -96,5 +99,7 @@ export async function getCurrentProfile() {
     limit 1
   `;
 
-  return (rows[0] ?? null) as LmsProfile | null;
+  const profile=(rows[0] ?? null) as LmsProfile | null;
+  if(profile?.account_type==='platform_admin'&&verifiedPlatformAdminEmailRequired()&&user.emailVerified!==true)return null;
+  return profile;
 }

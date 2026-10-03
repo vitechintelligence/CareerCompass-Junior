@@ -10,13 +10,15 @@ test("risky rollout flags are default-off and require exact true", () => {
   assert.equal(parseFeatureFlag(" true "), true);
 });
 
-test("all five runbook rollback features have independent env names", () => {
+test("rollout and privacy rollback features have independent env names", () => {
   assert.deepEqual(Object.keys(RISKY_FEATURE_ENV).sort(), [
+    "deletionReview",
     "guardianReporting",
     "integrationJobExecution",
+    "learnerDataExport",
     "learningWriteQuotas",
     "offlineOutbox",
     "timedAssessments",
   ]);
-  assert.equal(new Set(Object.values(RISKY_FEATURE_ENV)).size, 5);
+  assert.equal(new Set(Object.values(RISKY_FEATURE_ENV)).size, 7);
 });

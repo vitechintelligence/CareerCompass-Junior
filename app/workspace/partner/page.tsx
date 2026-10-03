@@ -4,7 +4,7 @@ import { VitechMark } from "@/app/VitechMark";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getPlatformAdminContext } from "@/lib/auth/platform-admin";
 import { getDb } from "@/lib/db";
-import { activateTeacher, assignTeacher, createClass, enrollStudent, inviteStudentToOrganization, linkGuardianReporter, recordLearnerConsent, requestPartnerAccess, revokeGuardianReporter, revokeLearnerConsent } from "./actions";
+import { activateTeacher, assignTeacher, createClass, enrollStudent, inviteStudentToOrganization, linkGuardianReporter, requestPartnerAccess, revokeGuardianReporter, revokeLearnerConsent } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -148,7 +148,9 @@ export default async function PartnerWorkspacePage() {
               {featureSet.has("industry_connector") && <Link className="actionItem" href="/workspace/partner/industry-connect"><div><strong>School ↔ Company Connector</strong><div className="muted">Request company links, role profiles, skills briefings and real-work exposure.</div></div><span>→</span></Link>}
               {featureSet.has("program_steam") && <Link className="actionItem" href="/steam-lab"><div><strong>STEAM Lab</strong><div className="muted">Experiential missions: design, build, test, improve, explain and reflect.</div></div><span>→</span></Link>}
               {featureSet.has("community_challenges") && <Link className="actionItem" href="/workspace/partner/community"><div><strong>Community Challenges</strong><div className="muted">Quarterly school-controlled builds, advisor feedback and showcases.</div></div><span>→</span></Link>}
-              {featureSet.has("institution_data_modes") && <Link className="actionItem" href="/workspace/partner/data-control"><div><strong>Data & AI Control</strong><div className="muted">School-controlled evidence, VNG localization requests, BYOK, local browser or manual mode.</div></div><span>→</span></Link>}\n              {featureSet.has("professor_vi_ai_study_lab") && <Link className="actionItem" href="/workspace/partner/ai-learning"><div><strong>Professor Vi · AI Study Lab</strong><div className="muted">Control learner AI modes, answer-release policy, source uploads and teacher review.</div></div><span>→</span></Link>}\n              {featureSet.has("school_report_card_builder") && <Link className="actionItem" href="/workspace/partner/report-cards"><div><strong>Report Card Studio</strong><div className="muted">Own the school grading policy and build, import or remix report-card templates.</div></div><span>→</span></Link>}
+              {featureSet.has("institution_data_modes") && <Link className="actionItem" href="/workspace/partner/data-control"><div><strong>Data & AI Control</strong><div className="muted">School-controlled evidence, VNG localization requests, BYOK, local browser or manual mode.</div></div><span>→</span></Link>}
+              {featureSet.has("professor_vi_ai_study_lab") && <Link className="actionItem" href="/workspace/partner/ai-learning"><div><strong>Professor Vi · AI Study Lab</strong><div className="muted">Control learner AI modes, answer-release policy, source uploads and teacher review.</div></div><span>→</span></Link>}
+              {featureSet.has("school_report_card_builder") && <Link className="actionItem" href="/workspace/partner/report-cards"><div><strong>Report Card Studio</strong><div className="muted">Own the school grading policy and build, import or remix report-card templates.</div></div><span>→</span></Link>}
               {(featureSet.has("program_ai_foundation") || featureSet.has("program_ai_level_2") || featureSet.has("program_robotics")) && <Link className="actionItem" href="/programs/future-skills"><div><strong>AI & Robotics pathways</strong><div className="muted">Age-progressive technical curriculum metadata while experiential missions are expanded.</div></div><span>→</span></Link>}
             </div>
           </article>
@@ -236,16 +238,10 @@ export default async function PartnerWorkspacePage() {
         {privacyControlsEnabled && (
           <section className="workspaceGrid">
             <article className="panel">
-              <div className="eyebrow">Privacy controls</div><h2 className="workspaceTitle">Record learner / guardian confirmation</h2>
-              <p className="muted">Use this ledger for the institution’s documented consent process. It stores confirmation state and policy version, not guardian identity documents.</p>
-              <form action={recordLearnerConsent} className="workspaceForm">
-                <input type="hidden" name="organizationId" value={organizationId} />
-                <label><span>Learner semantic ID</span><input name="studentSemanticId" maxLength={100} required placeholder="vn-learner-…" /></label>
-                <label><span>Consent scope</span><select name="consentType" defaultValue="digital_learning"><option value="digital_learning">Digital learning</option><option value="learning_evidence">Learning evidence</option><option value="guardian_reporting">Guardian reporting</option><option value="ai_assistive_features">Assistive AI features</option></select></label>
-                <label><span><input type="checkbox" name="learnerConfirmation" /> Learner confirmation recorded</span></label>
-                <label><span><input type="checkbox" name="guardianConfirmation" /> Parent / guardian confirmation recorded</span></label>
-                <button className="button soft" type="submit">Save consent record</button>
-              </form>
+              <div className="eyebrow">Privacy controls</div><h2 className="workspaceTitle">Verified authority and family choices</h2>
+              <p className="muted">The school verifies the representative’s authority using its protected records. The learner and representative each record their own optional choices; staff cannot sign for them.</p>
+              <Link className="button primary" href={`/workspace/partner/privacy-governance?organizationId=${organizationId}`}>School processing & authority</Link>
+              <Link className="button soft" href="/workspace/privacy">My privacy choices & requests</Link>
               <div className="feedbackCard" style={{ marginTop: 18 }}>
                 <strong>Authenticated guardian report viewer</strong>
                 <p className="muted">The guardian first signs in to Career Compass so they have an account semantic ID. Link that account only after guardian-reporting consent is active. This link grants report access only.</p>

@@ -237,3 +237,7 @@ video {
 .earlyYearsActivity textarea {
   font-size: 1.05rem;
 }
+
+.privacyNotice { padding: 12px 20px; background: #f0f4f9; color: #152e4a; font-size: .875rem; line-height: 1.55; }
+.privacyNotice p { margin: 0 0 6px; }
+.privacyNotice a { text-decoration: underline; }

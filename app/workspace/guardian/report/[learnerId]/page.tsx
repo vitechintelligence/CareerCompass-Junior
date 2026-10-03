@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
 import { isRiskyFeatureEnabled } from "@/lib/feature-flags";
+import { isUuidReference } from "@/lib/auth/authorization-policy";
+import { optionalProcessingAllowed } from "@/lib/privacy/access";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,8 @@ export default async function GuardianReportPage({
 
   const {learnerId}=await params;
   const {organizationId}=await searchParams;
-  if(!organizationId) notFound();
+  if(!isUuidReference(learnerId) || !isUuidReference(organizationId)) notFound();
+  if(!await optionalProcessingAllowed(organizationId,learnerId,'guardian_reporting',profile.id))notFound();
 
   const sql=getDb();
   const links=await sql`
@@ -29,22 +32,15 @@ export default async function GuardianReportPage({
       learner.semantic_id, learner.display_name,
       o.name as organization_name
     from guardian_report_links grl
-    join profiles learner on learner.id=grl.learner_id and learner.status='active'
+    join profiles learner on learner.id=grl.learner_id and learner.status='active' and learner.account_type='student'
     join organizations o on o.id=grl.organization_id and o.status='active'
+    join organization_memberships om on om.organization_id=grl.organization_id
+      and om.profile_id=grl.learner_id and om.role='student' and om.status='active'
     where grl.guardian_profile_id=${profile.id}
       and grl.learner_id=${learnerId}
       and grl.organization_id=${organizationId}
       and grl.status='active'
-      and exists (
-        select 1
-        from learner_consent_records lcr
-        where lcr.learner_id=grl.learner_id
-          and lcr.organization_id=grl.organization_id
-          and lcr.consent_type='guardian_reporting'
-          and lcr.status='active'
-          and lcr.guardian_confirmation=true
-          and lcr.revoked_at is null
-      )
+
     limit 1
   `;
   const link=links[0];
@@ -56,7 +52,9 @@ export default async function GuardianReportPage({
       from learning_capsules
       where learner_id=${learnerId}
         and organization_id=${organizationId}
-        and status in ('draft','verified','released')
+        and status in ('verified','released')
+        and mastery_level in ('demonstrated','verified')
+        and sharing_scope='shareable'
       order by achieved_on desc nulls last, created_at desc
       limit 20
     `,

@@ -3,6 +3,9 @@ import { requireProfessorViStudentAccess } from "@/lib/professor-vi/access";
 import { loadProfessorViInstitutionPolicy } from "@/lib/professor-vi/context";
 import { deleteProfessorViSource, sourceHash, uploadProfessorViSource } from "@/lib/professor-vi/runtime";
 import { getDb } from "@/lib/db";
+import { AuthorizationError, requireActiveProfile, isUuidReference } from "@/lib/auth/authorization";
+import { readBoundedForm, readBoundedJson } from "@/lib/learning/request-form";
+import { sourceRetentionSeconds } from "@/lib/privacy/policy";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,7 +23,9 @@ function extension(filename: string) {
 
 export async function POST(request: Request) {
   try {
-    const form = await request.formData();
+    await requireActiveProfile(["student"]);
+    const form = await readBoundedForm(request);
+    if(form.get('sourcePermission')!=='on' && form.get('sourcePermission')!=='true')return jsonError('source_permission_required',400);
     const organizationId = String(form.get("organizationId") || "");
     const file = form.get("file");
     if (!(file instanceof File)) return jsonError("study_source_file_required", 400);
@@ -40,6 +45,10 @@ export async function POST(request: Request) {
     const bytes = new Uint8Array(await file.arrayBuffer());
     const hash = sourceHash(bytes);
     const sql = getDb();
+    // Expired rows must leave the partial unique index before a retry can save.
+    await sql`update ai_study_sources set status='expired'
+      where learner_id=${profile.id} and organization_id=${organizationId} and source_hash=${hash}
+        and status in ('uploading','ready') and expires_at<=now()`;
 
     const existing = await sql`
       select id, title, source_type, original_filename, created_at
@@ -48,6 +57,7 @@ export async function POST(request: Request) {
         and organization_id=${organizationId}
         and source_hash=${hash}
         and status='ready'
+        and (expires_at is null or expires_at>now())
       limit 1
     `;
     if (existing[0]) {
@@ -69,21 +79,34 @@ export async function POST(request: Request) {
         values (
           ${profile.id}, ${organizationId}, ${title}, ${sourceType}, ${file.name.slice(0, 255)},
           ${file.type || null}, 'openai', ${provider.id}, ${hash}, ${file.size}, 'ready',
-          now() + make_interval(days => ${policy.retentionDays})
+          now() + make_interval(secs => ${sourceRetentionSeconds(policy.retentionDays)})
         )
+        on conflict (learner_id,organization_id,source_hash) where status in ('uploading','ready') do nothing
         returning id, title, source_type, original_filename, created_at, expires_at
       `;
+      if(!rows[0]){
+        try{await deleteProfessorViSource(provider.id);}catch{/* The redundant file remains bounded by provider expiry. */}
+        const winner=await sql`select id,title,source_type,original_filename,created_at,expires_at from ai_study_sources
+          where learner_id=${profile.id} and organization_id=${organizationId} and source_hash=${hash}
+            and status='ready' and (expires_at is null or expires_at>now()) limit 1`;
+        if(!winner[0])return jsonError('study_source_metadata_save_failed',503);
+        return NextResponse.json({ok:true,source:winner[0],deduplicated:true},{headers:{'Cache-Control':'no-store'}});
+      }
       return NextResponse.json(
         { ok: true, source: rows[0], deduplicated: false },
         { status: 201, headers: { "Cache-Control": "no-store" } },
       );
     } catch {
+      try{await deleteProfessorViSource(provider.id);}catch{/* Provider deletion failure remains subject to expiry and operational review. */}
       return jsonError("study_source_metadata_save_failed", 503);
     }
   } catch (error) {
+    if(error instanceof AuthorizationError)return jsonError(error.code,error.status);
+    if(error instanceof Error&&error.message==='request_body_too_large')return jsonError(error.message,413);
     const code = error instanceof Error ? error.message : "study_source_upload_failed";
+    if(code==='request_origin_not_authorized')return jsonError(code,403);
     const forbidden = [
-      "professor_vi_rollout_disabled",
+      "professor_vi_rollout_disabled", "school_processing_not_approved", "current_family_consent_required", "adult_synthetic_pilot_required", "intelligence_runtime_disabled", "governed_intelligence_not_connected",
       "professor_vi_not_authorized",
       "professor_vi_ai_not_available",
       "platform_managed_ai_unavailable",
@@ -99,10 +122,12 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const body = await request.json() as Record<string, unknown>;
+    const profile=await requireActiveProfile(["student"]);
+    const body = await readBoundedJson(request);
+    if(!body||typeof body!=='object'||Array.isArray(body))return jsonError('invalid_source_reference',400);
     const organizationId = String(body.organizationId || "");
     const sourceId = String(body.sourceId || "");
-    const { profile } = await requireProfessorViStudentAccess(organizationId);
+    if(!isUuidReference(organizationId)||!isUuidReference(sourceId))return jsonError('invalid_source_reference',400);
     const sql = getDb();
 
     const rows = await sql`
@@ -111,7 +136,7 @@ export async function DELETE(request: Request) {
       where id=${sourceId}
         and learner_id=${profile.id}
         and organization_id=${organizationId}
-        and status='ready'
+        and status<>'deleted'
       limit 1
     `;
     if (!rows[0]) return jsonError("study_source_not_available", 404);
@@ -135,7 +160,10 @@ export async function DELETE(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
+    if(error instanceof AuthorizationError)return jsonError(error.code,error.status);
+    if(error instanceof Error&&error.message==='request_body_too_large')return jsonError(error.message,413);
     const code = error instanceof Error ? error.message : "study_source_delete_failed";
+    if(code==='request_origin_not_authorized')return jsonError(code,403);
     const forbidden = code.includes("disabled") || code.includes("not_authorized") || code.includes("not_available");
     return jsonError(forbidden ? code : "study_source_delete_failed", forbidden ? 403 : 503);
   }

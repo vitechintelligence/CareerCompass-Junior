@@ -1,0 +1,57 @@
+# Phase A recovery and closeout — 2 October 2026, Vietnam time
+
+**Decision: NO-GO for production migration/deploy or real children's onboarding. PR #50 remains Draft.** This is implementation/evidence recovery, not a repeated audit or a replacement LMS. [Implemented runtime and matrices](../architecture/CCJ_IMPLEMENTED_ARCHITECTURE_20261002.md) distinguish enforced code from disconnected targets.
+
+Published as [Draft PR #54](https://github.com/vitechintelligence/CareerCompass-Junior/pull/54), stacked on the existing Professor Vi PR #51. Application commit `7019cda008f2f3c4d0c7ee445ff4fe44676a735d`, tree `b44298b3fa45f4bf7f5bba5ff902d8cc7ba9f31c`, passed [GitHub CI run 36913079952](https://github.com/vitechintelligence/CareerCompass-Junior/actions/runs/36913079952) on Node 20.19.0, including all sixteen suites and both HTTP checks. Local checks also passed; lint has four existing image warnings. [Exact verification evidence](evidence/20261002-privacy-recovery.md) records limits. Both Vercel projects reported successful preview deployment; connected-account reads returned 403/404, so actual secrets, database scope and authenticated preview behavior remain unverified. PR #53 is an overlapping earlier Phase A subset; reconcile that stack before merging.
+
+## Recovered and implemented
+
+- Published Professor Vi/report-card baseline restored from `6d8f114`; Phase A fixes retained, including auth/database preview-production reuse denial and owned export/deletion-review boundaries.
+- Additive migration 016: school processing disclosures, independent review, verified representative authority, separate versioned optional choices, consent/governance events, scoped rights review and expiring adult/class pilot records. No legacy checkbox is backfilled as family approval.
+- Staff cannot sign learner/representative choices. Current dual decisions, active subject/representative/membership, current school agreement and exact guardian scope govern optional processing. Withdrawal remains available with feature flags off. Terminal rights status requires an execution/hold reference; it is not automated erasure.
+- Production direct learner/model egress is closed. Unsupported Halibut/Capsule modes and unconnected recipient consent fail closed. Existing provider code remains an explicit non-production adult synthetic sandbox; no native Swoosh connection is claimed.
+- Detailed bilingual login/recovery/core-learning/AI/source/report/community/device/storage/rights terms and printable separate choices; contacts and actual countries/providers/retention must be completed by the school and ViTech. Auth and workspace forms have notices; logout/account bar retained.
+- Source body/file/retention bounds, foreign-origin rejection, generic provider filename, `store:false`, bounded timeout, metadata-failure cleanup, expiry/duplicate handling and consent-independent owned source deletion. Pending generated pack content is no longer returned before teacher review.
+- New admin provisioning/promotion requires verified ownership. Existing current admin recovery remains available while tightening is off; once enabled, tightening applies at the shared profile boundary.
+
+## Latest continuation
+
+[Fresh rehearsal, admin hardening and recovered restore incident](evidence/20261003-fresh-rehearsal.md) supersedes the capacity/admin-nomination observations below. Fresh 014–016 migration and rollback-only database fixtures passed. Phase A remains open for authenticated acceptance, Vercel scope verification and independent review, including the recovered production routing incident.
+
+## Historical infrastructure observations (before the fresh rehearsal)
+
+Read-only production STEAM preflight: **0 violating active-context groups, 0 duplicate submission-ID groups, 0 null-tenant logical duplicate groups**. This does not prove a fresh data branch migration or lock duration. Production migration 014/016 tables remain absent in the observed checks.
+
+Fresh branch request `ccj-phase-a-rehearsal-20261001-restored` was rejected with `422 brancheslimitexceeded`; the project has ten branches. No branch was deleted/reset. The tool explicitly says: “Delete a branch and all its data. NEVER run autonomously; always ask the user first.” Capacity must be released or expanded before the required rehearsal.
+
+Migration 016 created ten additive tables/index statements on older QA branch `br-polished-snow-b337xdoy`, parent production snapshot dated 27 September. It is **not** the fresh production rehearsal. The QA branch lacks 014/015, so full application governance readiness intentionally remains false. Twenty-eight rollback-only PostgreSQL fixture assertions exercised the real captured consent/access/pilot queries and actual constraints; zero fixture profiles/organizations remained. No production educational rows were changed.
+
+Production admin check: **1 active platform admin, 0 verified active platform admins**; `labellesolutionservices@gmail.com` remains unverified. No email-verification boolean was fabricated and no second administrator identity was invented. The exact canonical origin `https://career-compass-junior-vitech.vercel.app` was added to Neon Auth trusted domains and read back. This fixes an origin prerequisite, not proof of successful login/recovery.
+
+Recorded production restore point: `snap-orange-meadow-b3du3v0y`, `ccj-pre-remediation-20261001`, source production, created `2026-09-30T20:31:42Z`, expires `2026-10-08T00:00:00Z`. Refresh/verify its retention before a later rollout. A new QA snapshot attempt returned `400 not allowed to snapshot non-root branch`. No restore drill/RTO/RPO acceptance is claimed.
+
+## Owner, exit criterion and rollback checklist
+
+Human names remain **required**, as the existing runbook requires named owners and an independent reviewer who is not the builder. Codex supplied implementation/tests, not independent approval.
+
+| Item | Accountable owner to nominate | Exit criterion | Rollback / fallback | Current status |
+|---|---|---|---|---|
+| Recovered source and quality | Human engineering/release owner + independent reviewer | Review the recovered stack and passing exact commit/tree evidence; retain curriculum/portals | Keep drafts; retain published baselines; revert reviewed code commit only | Published in Draft PR #54; local and exact-tree CI pass; independent review open |
+| Role/tenant/class and privacy journeys | Independent QA + privacy owner | Controlled learner, verified representative, teacher, partner and two-admin accounts; negative cross-tenant/class/recipient tests plus resulting rows | Flags off; suspend optional approval; preserve records for investigation | Automated/SQL negatives pass; real authenticated/browser journey missing |
+| Fresh 014–016 rehearsal | Database owner + watcher | Fresh production clone; duplicate preflight; migration; old deployed/new code; lock/index timings and scoped read/write checks | Abort clone rehearsal; use verified restore point; do not repair production duplicates blindly | Fresh 014–016 passed; old/new authenticated compatibility and measured lock duration open |
+| Primary admin identity | Controlled account owner + security owner | Own the primary mailbox; provider verification; successful canonical-site login/recovery/logout | Keep `CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN=false` until safe; use existing controlled recovery | Exact origin fixed; verification/login open |
+| Second admin / break glass | Named second adult account owner + security verifier | Nominated controlled email; verified identity; independent successful login and access test | Revoke only new grant if test fails; retain primary recovery | Second email nominated and existing Giong Chuan partner identified; provider verification and admin login open |
+| Preview and production secrets | Vercel/operations owner + independent verifier | Correct project access; each preview DB/Auth endpoint and credentials scoped to non-production; negative runtime check | Remove/rotate leaked preview credential; keep preview blocked; restore reviewed settings | Code guards and HTTP negatives pass; actual Vercel inventory unverified |
+| Vietnamese child-data processing | Registered ViTech privacy owner + school signatory + qualified reviewer | Signed operator/school responsibilities, lawful-purpose/age/authority/rights/incident review, actual provider/location/retention disclosures and required assessments | Onboarding off; no real-child pilot; suspend processing/release and follow rights procedure | Detailed draft notices/forms/workflow implemented; legal/operational acceptance missing |
+| Intelligence paths | Integration/security owner + institution approver | Authenticated signed schema/tenant-bound Swoosh contract, Halibut routing, accepted custody/model/provider boundary, minimized fields and auditable outcomes | Runtime disabled; manual/deterministic learning; isolate connector credentials | Disconnected and denied; not a Phase A success claim |
+| Internal risky-feature pilot | School pilot owner + QA + operations | One internal classroom, controlled adult synthetic accounts, expiring scopes, device/replay/data checks, individual feature exit gates | Turn individual flag/scope off; no destructive cleanup | Professor Vi adult/class gate implemented; other flags default off; real pilot not run |
+| Restore/rights reconciliation | Database + privacy + operations owners | Timed recovery, measured loss, consent/erasure/legal-hold reconciliation and processor response evidence | Stop rollout; restore reviewed release; keep learner onboarding off | Restore routing incident recovered; public-table fingerprints match; independent review and full RTO/RPO open |
+| PR #50 Draft conversion | Release owner + independent reviewer | All Phase A rows with named owners and signed current evidence | Keep Draft; do not merge/promote | Still Draft; cannot close yet |
+
+Phase B remains: approved migration → code deploy → authenticated synthetic acceptance → one internal-class pilot. Integration sandbox/recorded contracts, iOS devices, measured restore and curriculum content QA remain separate workstreams. Curriculum status labels stay honest and do not substitute for engineering acceptance.
+
+## Reproduction and unverified environments
+
+Run `npm run typecheck`, `npm run lint`, `npm run build`, the sixteen existing/recovered automated suites including `npm run test:privacy`, then `npm run test:learning:http` and `npm run test:phase-a:http`. Generate the rollback-only SQL with `node scripts/privacy-postgres-fixture.cjs`; execute its statements only on an approved non-production branch with 016. The source captures real module predicates/upserts; it does not seed a real school or create Auth users. Never run it on production.
+
+Unverified: canonical authenticated sign-in/recovery and two-admin path (mailbox/session/account control required); full family consent → actual guardian readback → withdrawal → denied readback and evidence/revision journeys (controlled QA identities plus 014/015/016 deployment required); correct Vercel secrets/project isolation (operations project access required); fresh migration (free branch slot required); actual iOS storage/reconnect/audio behavior (physical device and classroom accounts required); real provider/connector/Capsule/Halibut exchanges (approved endpoints/contracts/secrets required); measured restore and child-data legal acceptance (named owners/reviewer required).

@@ -1,16 +1,8 @@
 import { ensureStudentProfile, getCurrentProfile, getSessionUser } from "@/lib/auth/profile";
 import { getDb } from "@/lib/db";
-
-export const DEFAULT_PLATFORM_ADMIN_EMAIL = "labellesolutionservices@gmail.com";
-
-function configuredAdminEmails() {
-  const configured = String(process.env.PLATFORM_ADMIN_EMAILS || "")
-    .split(",")
-    .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-
-  return new Set([DEFAULT_PLATFORM_ADMIN_EMAIL, ...configured]);
-}
+import { configuredAdminEmails, verifiedPlatformAdminEmailRequired } from "@/lib/auth/admin-identity-policy";
+export { DEFAULT_PLATFORM_ADMIN_EMAIL } from "@/lib/auth/admin-identity-policy";
+export { verifiedPlatformAdminEmailRequired } from "@/lib/auth/admin-identity-policy";
 
 function userEmail(user: unknown) {
   const raw = (user as { email?: unknown } | null)?.email;
@@ -19,12 +11,6 @@ function userEmail(user: unknown) {
 
 function userEmailVerified(user: unknown) {
   return (user as { emailVerified?: unknown } | null)?.emailVerified === true;
-}
-
-export function verifiedPlatformAdminEmailRequired() {
-  return String(process.env.CCJ_REQUIRE_VERIFIED_PLATFORM_ADMIN || "")
-    .trim()
-    .toLowerCase() === "true";
 }
 
 export async function getPlatformAdminContext() {
@@ -42,19 +28,43 @@ export async function getPlatformAdminContext() {
 
   const email = userEmail(user);
   if (!email || !configuredAdminEmails().has(email)) return null;
-  if (verifiedPlatformAdminEmailRequired() && !userEmailVerified(user)) return null;
+  // New promotions always require ownership proof. Existing admins above keep
+  // the temporary recovery path until the two-admin gate permits tightening it.
+  if (!userEmailVerified(user)) return null;
 
   const sql = getDb();
   const rows = await sql`
-    update profiles
-    set account_type = 'platform_admin', updated_at = now()
-    where id = ${profile.id}
-      and status = 'active'
-    returning id, semantic_id, auth_subject, display_name, account_type, preferred_locale, status
+    with candidate as (
+      select id, account_type as previous_role
+      from profiles
+      where id = ${profile.id}
+        and auth_subject = ${String(user.id)}
+        and status = 'active'
+      for update
+    ), promoted as (
+      update profiles p
+      set account_type = 'platform_admin', updated_at = now()
+      from candidate c
+      where p.id = c.id and c.previous_role <> 'platform_admin'
+      returning p.id, p.semantic_id, p.auth_subject, p.display_name,
+        p.account_type, p.preferred_locale, p.status, c.previous_role
+    ), audited as (
+      insert into admin_audit_events(actor_profile_id,event_type,target_type,target_id,detail)
+      select id, 'platform_admin_granted', 'profile', id::text,
+        jsonb_build_object('previous_role',previous_role,'new_role','platform_admin',
+          'grant_source','verified_email_allowlist','email_verified',true)
+      from promoted
+      returning target_id
+    )
+    select p.id, p.semantic_id, p.auth_subject, p.display_name,
+      p.account_type, p.preferred_locale, p.status
+    from promoted p join audited a on a.target_id=p.id::text
   `;
 
-  const promoted = rows[0];
-  if (!promoted) return null;
+  // A concurrent request may have completed the same grant while candidate
+  // waited for the row lock. Never emit another audit event for that retry.
+  const promoted = rows[0] ?? await getCurrentProfile();
+  if (!promoted || promoted.account_type !== 'platform_admin' || promoted.status !== 'active') return null;
 
   return {
     user,

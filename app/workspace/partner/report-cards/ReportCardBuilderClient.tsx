@@ -74,7 +74,8 @@ export default function ReportCardBuilderClient({ organizationId }: { organizati
         <label><span>Print requirements</span><textarea name="printNotes" rows={4} placeholder="A4, portrait/landscape, logo/seal, photo, page numbering…" /></label>
         <label><span>Anything else the builder must not miss?</span><textarea name="additionalRequirements" rows={5} placeholder="State school or government requirements here. The builder will not invent them." /></label>
         <label><span>Existing school report-card file (optional)</span><input name="schoolTemplate" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.md" /></label>
-        <p className="muted">For migration mode, upload the school&apos;s current approved form. The builder uses it as the primary visual/field reference; the original file is not stored by this workflow.</p>
+        <p className="muted">Use a blank approved form only, up to 3 MiB. File conversion requires a connected, approved intelligence runtime and is currently unavailable in production. Built-in and blank rule-based templates remain available. Completed report cards, student names, grades, photographs and signatures must not be uploaded here.</p>
+        <label className="communityCheck"><input type="checkbox" name="noPersonalData" required /><span>I confirm these requirements and any file contain no learner personal data. / Tôi xác nhận nội dung và tệp không chứa dữ liệu cá nhân học sinh.</span></label>
         <button className="button primary" type="submit" disabled={busy}>Build report-card draft</button>
       </section>
 
